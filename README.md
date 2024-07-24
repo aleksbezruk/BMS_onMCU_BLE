@@ -17,7 +17,7 @@ Starting from __baremetal__ implementation.
 1. Software tracing on target -> QSPY & Qview: https://www.state-machine.com/qtools/qpspy.html, <br>
 https://www.state-machine.com/qtools/qview.html
 2. Python 3 as required by QSpy, Qview, QUtest 
-3. Visual Studio Code IDE
+3. Visual Studio Code IDE / ModusToolbox IDE from Cypress
 3. Arm GNUC for Embedded toolchain
 
 ### IV. Testing
