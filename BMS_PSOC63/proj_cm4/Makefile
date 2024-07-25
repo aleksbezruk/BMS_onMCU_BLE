@@ -65,14 +65,23 @@ CORE_NAME=CM4_0
 # tree for source code and builds it. The SOURCES variable can be used to
 # manually add source code to the build process from a location not searched
 # by default, or otherwise not found by the build system.
-SOURCES=../bsps/TARGET_APP_CY8CPROTO-063-BLE/BSP/BSP.c
+SOURCES=    ../bsps/TARGET_APP_CY8CPROTO-063-BLE/BSP/BSP.c \
+			qspy/qs_64bit.c \
+			qspy/qs_fp.c \
+			qspy/qs_rx.c \
+			qspy/qs.c \
+			qspy/qstamp.c \
+			qspy/qutest.c \
+			qspyHelper/qspyHelper.c
 
 # Like SOURCES, but for include directories. Value should be paths to
 # directories (without a leading -I).
-INCLUDES=SOURCES=../bsps/TARGET_APP_CY8CPROTO-063-BLE/BSP/
+INCLUDES=SOURCES= ../bsps/TARGET_APP_CY8CPROTO-063-BLE/BSP/ \
+				  qspy/ \
+				  qspyHelper
 
 # Add additional defines to the build process (without a leading -D).
-DEFINES=
+DEFINES=Q_SPY Q_UTEST
 
 # Select softfp or hardfp floating point. Default is softfp.
 VFP_SELECT=

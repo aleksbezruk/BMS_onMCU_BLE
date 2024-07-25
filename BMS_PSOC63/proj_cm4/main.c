@@ -64,7 +64,7 @@ int main(void)
     for (;;)
     {
         BSP_led_green_toggle();
-        Cy_SysLib_Delay(500);
+        Cy_SysLib_Delay(1000);
     }
 }
 

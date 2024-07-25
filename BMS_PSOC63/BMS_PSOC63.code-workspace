@@ -32,8 +32,18 @@
         "cortex-debug.JLinkGDBServerPath.linux": "JLinkGDBServerCLExe",
         "files.associations": {
             "cycfg.h": "c",
-            "cyhal_system.h": "c"
-        }
+            "cyhal_system.h": "c",
+            "qs_port.h": "c",
+            "qp_port.h": "c",
+            "cy_pdl.h": "c",
+            "cyhal.h": "c",
+            "cy_device.h": "c"
+        },
+        "clangd.arguments": [
+            "--query-driver=${config:modustoolbox.toolsPath}/gcc/bin/arm-none-eabi-gcc",
+            "--log=verbose",
+            "--background-index"
+        ]
     },
     "extensions": {
         "recommendations": [ "marus25.cortex-debug", "ms-vscode.cpptools", "dan-c-underwood.arm" ]
