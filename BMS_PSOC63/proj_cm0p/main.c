@@ -63,7 +63,7 @@ int main(void)
 
     for (;;)
     {
-        Cy_SysPm_DeepSleep(CY_SYSPM_WAIT_FOR_INTERRUPT);
+        // Cy_SysPm_DeepSleep(CY_SYSPM_WAIT_FOR_INTERRUPT);
     }
 }
 
