@@ -43,6 +43,7 @@
 #include "cy_pdl.h"
 #include "cyhal.h"
 #include "cybsp.h"
+#include "BSP.h"
 
 
 int main(void)
@@ -59,8 +60,11 @@ int main(void)
     /* Enable global interrupts */
     __enable_irq();
 
+    BSP_init_led_green();
     for (;;)
     {
+        BSP_led_green_toggle();
+        Cy_SysLib_Delay(500);
     }
 }
 

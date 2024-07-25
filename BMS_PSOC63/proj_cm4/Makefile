@@ -65,11 +65,11 @@ CORE_NAME=CM4_0
 # tree for source code and builds it. The SOURCES variable can be used to
 # manually add source code to the build process from a location not searched
 # by default, or otherwise not found by the build system.
-SOURCES=
+SOURCES=../bsps/TARGET_APP_CY8CPROTO-063-BLE/BSP/BSP.c
 
 # Like SOURCES, but for include directories. Value should be paths to
 # directories (without a leading -I).
-INCLUDES=
+INCLUDES=SOURCES=../bsps/TARGET_APP_CY8CPROTO-063-BLE/BSP/
 
 # Add additional defines to the build process (without a leading -D).
 DEFINES=

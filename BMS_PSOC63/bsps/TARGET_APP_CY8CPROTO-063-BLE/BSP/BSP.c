@@ -1,0 +1,171 @@
+/*******************************************************************************
+ * \file BSP.c
+ * \version 0.1.0
+ *
+ * Board support package source code file.
+ ********************************************************************************/
+
+#include "cy_pdl.h"
+#include "BSP.h"
+
+/********************************************************************************
+ * Code
+ *********************************************************************************/
+
+/*--------------------------*/
+/** Board init APIs section */
+/*--------------------------*/
+bsp_status_init_t BSP_init_board(bsp_board_init_t* pSettings) {
+    if (BSP_power_init() != CY_SYSPM_SUCCESS) {
+        return bsp_status_init_fail;
+    }
+
+    BSP_clock_setWaitStates();
+
+    if (BSP_clock_wcoInit() != CY_SYSCLK_SUCCESS) {
+        return bsp_status_init_fail;
+    }
+
+    if (pSettings->mainOscilSrc == bsp_main_oscil_src_ECO) {
+        if (BSP_clock_ecoInit() != CY_SYSCLK_SUCCESS) {
+            return bsp_status_init_fail;
+        }
+    }
+
+    if (BSP_clock_hifclkInit(pSettings) != CY_SYSCLK_SUCCESS) {
+        return bsp_status_init_fail;
+    }
+
+    return bsp_status_init_success;
+}
+
+void BSP_init_led_red(void) {
+    Cy_GPIO_Pin_FastInit(GPIO_LED_RED_PORT, GPIO_LED_RED_PIN, CY_GPIO_DM_STRONG_IN_OFF, 1UL, HSIOM_SEL_GPIO);
+}
+
+void BSP_init_led_green(void) {
+    Cy_GPIO_Pin_FastInit(GPIO_LED_GREEN_PORT, GPIO_LED_GREEN_PIN, CY_GPIO_DM_STRONG_IN_OFF, 1UL, HSIOM_SEL_GPIO);
+}
+
+/*----------------------------------*/
+/** Board power domain APIs section */
+/*----------------------------------*/
+
+cy_en_syspm_status_t BSP_power_init(void) {
+    cy_en_syspm_status_t status = CY_SYSPM_SUCCESS;
+
+    status = Cy_SysPm_LdoSetMode(CY_SYSPM_LDO_MODE_NORMAL);
+    if (CY_SYSPM_SUCCESS == status) {
+        status = Cy_SysPm_LdoSetVoltage(CY_SYSPM_LDO_VOLTAGE_1_1V);
+    }
+
+    return status;
+}
+
+/*----------------------------------*/
+/** Board clock domain APIs section */
+/*----------------------------------*/
+
+void BSP_clock_setWaitStates(void) {
+    Cy_SysLib_SetWaitStates(false, CLOCK_CLK_FAST_HZ / CLOCK_HZ_IN_MHZ);
+}
+
+cy_en_sysclk_status_t BSP_clock_wcoInit(void) {
+    cy_en_sysclk_status_t status;
+
+    Cy_SysLib_ResetBackupDomain();
+    Cy_SysClk_IloDisable();
+    Cy_SysClk_IloEnable();
+
+    Cy_SysPm_UnlockPmic();
+	Cy_SysPm_DisablePmicOutput();
+
+    Cy_GPIO_Pin_FastInit(GPIO_WCO_IN_PORT, GPIO_WCO_IN_PIN, CY_GPIO_DM_ANALOG, 0UL, HSIOM_SEL_GPIO); 
+    Cy_GPIO_Pin_FastInit(GPIO_WCO_OUT_PORT, GPIO_WCO_OUT_PIN, CY_GPIO_DM_ANALOG, 0UL, HSIOM_SEL_GPIO);
+    Cy_SysClk_WcoBypass(CY_SYSCLK_WCO_NOT_BYPASSED);
+    status = Cy_SysClk_WcoEnable(CLOCK_WCO_ENABLE_TIMEOUT);
+
+    if (CY_SYSCLK_SUCCESS == status) {
+        Cy_SysClk_ClkBakSetSource(CY_SYSCLK_BAK_IN_WCO);
+    }
+
+    return status;
+}
+
+cy_en_sysclk_status_t BSP_clock_ecoInit(void) {
+    cy_en_sysclk_status_t status;
+
+    Cy_SysClk_EcoDisable();
+    Cy_GPIO_Pin_FastInit(GPIO_ECO_IN_PORT, GPIO_ECO_IN_PIN, CY_GPIO_DM_ANALOG, 0UL, HSIOM_SEL_GPIO); 
+    Cy_GPIO_Pin_FastInit(GPIO_ECO_OUT_PORT, GPIO_ECO_OUT_PIN, CY_GPIO_DM_ANALOG, 0UL, HSIOM_SEL_GPIO);
+    status = Cy_SysClk_EcoEnable(CLOCK_ECO_ENABLE_TIMEOUT);
+
+    return status;
+}
+
+cy_en_sysclk_status_t BSP_clock_hifclkInit(bsp_board_init_t* pSettings) {
+    cy_en_sysclk_status_t status;
+    cy_stc_pll_config_t pllConfig = {
+        .outputFreq = CLOCK_CLK_FAST_HZ,             /* PLL output: 150 MHz */
+        .lfMode     = false,                         /* Disable low frequency mode (VCO = 200~400 MHz) */
+        .outputMode = CY_SYSCLK_FLLPLL_OUTPUT_AUTO   /* Output 100 MHz when locked. Otherwise 8 MHz */
+    };
+
+    if (pSettings->mainOscilSrc == bsp_main_oscil_src_ECO) {
+        pllConfig.inputFreq = CLOCK_CLK_ECO_HZ;
+    }
+    else {
+        pllConfig.inputFreq = CLOCK_CLK_IMO_HZ;
+    }
+
+    /* Set dividers */
+    status = Cy_SysClk_ClkHfSetDivider(CLOCK_HIFCLK0, CY_SYSCLK_CLKHF_NO_DIVIDE);
+
+    if (CY_SYSCLK_SUCCESS == status) { 
+        Cy_SysClk_ClkFastSetDivider(0UL);
+        Cy_SysClk_ClkSlowSetDivider(1UL);
+        Cy_SysClk_ClkPeriSetDivider(0UL);	
+    }
+
+    /* PLL config */
+    status = Cy_SysClk_PllDisable(CLOCK_CLKPATH1);
+    if (CY_SYSCLK_SUCCESS == status) {
+        if (pSettings->mainOscilSrc == bsp_main_oscil_src_ECO) {
+            status = Cy_SysClk_ClkPathSetSource(CLOCK_CLKPATH1, CY_SYSCLK_CLKPATH_IN_ECO);
+        }
+        else {
+            status = Cy_SysClk_ClkPathSetSource(CLOCK_CLKPATH1, CY_SYSCLK_CLKPATH_IN_IMO);
+        }
+    }
+    /* Configure Path 1 PLL with the settings in pllConfig struct */
+    if (CY_SYSCLK_SUCCESS == status) {
+        status = Cy_SysClk_PllConfigure(CLOCK_CLKPATH1, &pllConfig);
+    }
+    /* Enable the Path 1 PLL */
+    if (CY_SYSCLK_SUCCESS == status) { 
+        status = Cy_SysClk_PllEnable(CLOCK_CLKPATH1, CLOCK_PLL_ENABLE_TIMEOUT);
+    }
+
+    if (CY_SYSCLK_SUCCESS == status) { 
+        status = Cy_SysClk_ClkHfSetSource(CLOCK_HIFCLK0, CY_SYSCLK_CLKHF_IN_CLKPATH1);
+    }
+
+    SystemCoreClockUpdate();
+
+    return status;
+}
+
+/*-------------------------*/
+/** Board LED APIs section */
+/*-------------------------*/
+
+void BSP_led_red_toggle(void) {
+    Cy_GPIO_Inv(GPIO_LED_RED_PORT, GPIO_LED_RED_PIN);
+}
+
+void BSP_led_green_toggle(void) {
+    Cy_GPIO_Inv(GPIO_LED_GREEN_PORT, GPIO_LED_GREEN_PIN);
+}
+
+
+/************************** END OF FILE *****************************************/
