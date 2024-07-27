@@ -1,8 +1,8 @@
 /*******************************************************************************
- * File Name: cycfg_peripherals.h
+ * File Name: cycfg_clocks.h
  *
  * Description:
- * Peripheral Hardware Block configuration
+ * Clock configuration
  * This file was automatically generated and should not be modified.
  * Configurator Backend 3.20.0
  * device-db 4.16.0.6098
@@ -26,61 +26,33 @@
  * limitations under the License.
  ******************************************************************************/
 
-#if !defined(CYCFG_PERIPHERALS_H)
-#define CYCFG_PERIPHERALS_H
+#if !defined(CYCFG_CLOCKS_H)
+#define CYCFG_CLOCKS_H
 
 #include "cycfg_notices.h"
-#include "cy_scb_uart.h"
 #include "cy_sysclk.h"
 
 #if defined (CY_USING_HAL)
 #include "cyhal_hwmgr.h"
-#include "cyhal.h"
 #endif /* defined (CY_USING_HAL) */
-
-#if defined (CY_USING_HAL_LITE)
-#include "cyhal_hw_types.h"
-#endif /* defined (CY_USING_HAL_LITE) */
 
 #if defined(__cplusplus)
 extern "C" {
 #endif /* defined(__cplusplus) */
 
-#define CYBSP_BLE_ENABLED 1U
-#define CY_BLE_CORE_CORTEX_M4 4U
-#define CY_BLE_CORE_CORTEX_M0P 0U
-#define CY_BLE_CORE_DUAL 255U
-#ifndef CY_BLE_CORE
-    #define CY_BLE_CORE 4U
-#endif
-#define CY_BLE_IRQ bless_interrupt_IRQn
-#define scb_5_ENABLED 1U
-#define scb_5_HW SCB5
-#define scb_5_IRQ scb_5_interrupt_IRQn
+#define peri_0_div_24_5_0_ENABLED 1U
+#define peri_0_div_24_5_0_HW CY_SYSCLK_DIV_24_5_BIT
+#define peri_0_div_24_5_0_NUM 0U
 
 #if defined (CY_USING_HAL)
-extern const cyhal_resource_inst_t CYBSP_BLE_obj;
+extern const cyhal_resource_inst_t peri_0_div_24_5_0_obj;
 #endif /* defined (CY_USING_HAL) */
 
-extern const cy_stc_scb_uart_config_t scb_5_config;
-
-#if defined (CY_USING_HAL) || defined(CY_USING_HAL_LITE)
-extern const cyhal_resource_inst_t scb_5_obj;
-#endif /* defined (CY_USING_HAL) || defined(CY_USING_HAL_LITE) */
-
-#if defined(CY_USING_HAL_LITE) || defined (CY_USING_HAL)
-extern const cyhal_clock_t scb_5_clock;
-#endif /* defined(CY_USING_HAL_LITE) || defined (CY_USING_HAL) */
-
-#if defined (CY_USING_HAL) || defined(CY_USING_HAL_LITE)
-extern const cyhal_uart_configurator_t scb_5_hal_config;
-#endif /* defined (CY_USING_HAL) || defined(CY_USING_HAL_LITE) */
-
-void init_cycfg_peripherals(void);
-void reserve_cycfg_peripherals(void);
+void init_cycfg_clocks(void);
+void reserve_cycfg_clocks(void);
 
 #if defined(__cplusplus)
 }
 #endif /* defined(__cplusplus) */
 
-#endif /* CYCFG_PERIPHERALS_H */
+#endif /* CYCFG_CLOCKS_H */

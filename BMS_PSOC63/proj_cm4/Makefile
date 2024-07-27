@@ -72,13 +72,15 @@ SOURCES=    ../bsps/TARGET_APP_CY8CPROTO-063-BLE/BSP/BSP.c \
 			qspy/qs.c \
 			qspy/qstamp.c \
 			qspy/qutest.c \
-			qspyHelper/qspyHelper.c
+			qspyHelper/qspyHelper.c \
+			qutestHelper/qutestHelper.c
 
 # Like SOURCES, but for include directories. Value should be paths to
 # directories (without a leading -I).
 INCLUDES=SOURCES= ../bsps/TARGET_APP_CY8CPROTO-063-BLE/BSP/ \
 				  qspy/ \
-				  qspyHelper
+				  qspyHelper \
+				  qutestHelper
 
 # Add additional defines to the build process (without a leading -D).
 DEFINES=Q_SPY Q_UTEST

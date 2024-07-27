@@ -37,7 +37,17 @@
             "qp_port.h": "c",
             "cy_pdl.h": "c",
             "cyhal.h": "c",
-            "cy_device.h": "c"
+            "cy_device.h": "c",
+            "qs.h": "c",
+            "qspyhelper.h": "c",
+            "cycfg_notices.h": "c",
+            "cycfg_system.h": "c",
+            "cycfg_clocks.h": "c",
+            "cycfg_routing.h": "c",
+            "cycfg_peripherals.h": "c",
+            "cycfg_pins.h": "c",
+            "cyhal_hw_types.h": "c",
+            "cyhal_hw_resources.h": "c"
         },
         "clangd.arguments": [
             "--query-driver=${config:modustoolbox.toolsPath}/gcc/bin/arm-none-eabi-gcc",

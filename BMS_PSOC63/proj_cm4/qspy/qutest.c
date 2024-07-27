@@ -106,9 +106,9 @@ uint32_t QS_getTestProbe_(QSpyFunPtr const api) {
 }
 
 //............................................................................
-QSTimeCtr QS_onGetTime(void) {
-    return (++QS_tstPriv_.testTime);
-}
+// QSTimeCtr QS_onGetTime(void) {
+//     return (++QS_tstPriv_.testTime);
+// }
 
 //............................................................................
 Q_NORETURN Q_onError(

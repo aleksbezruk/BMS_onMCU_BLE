@@ -44,8 +44,16 @@
 #include "cyhal.h"
 #include "cybsp.h"
 #include "BSP.h"
+#include "qspyHelper.h"
 
+/*******************************/
+/*** Data */
+/******************************/
+uint32_t mainLoopTimer;
 
+/*******************************/
+/*** Code */
+/******************************/
 int main(void)
 {
     cy_rslt_t result;
@@ -57,14 +65,35 @@ int main(void)
         CY_ASSERT(0);
     }
 
-    /* Enable global interrupts */
+    /** Enable global interrupts */
     __enable_irq();
 
     BSP_init_led_green();
-    for (;;)
-    {
-        BSP_led_green_toggle();
-        Cy_SysLib_Delay(1000);
+    BSP_init_led_red();
+
+    /** Init QSPY */
+    QS_onStartup(NULL);
+
+    /** Init QSPY dictionary & filters */
+    QS_addUsrRecToDic(MAIN);
+    QS_initGlbFilters(); 
+
+    /** Main loop */
+    for (;;) {
+        if (mainLoopTimer == 1000U) {
+            __disable_irq();
+                mainLoopTimer = 0;
+            __enable_irq();
+    
+            BSP_led_green_toggle();
+
+            QS_BEGIN_ID(MAIN, 0 /*prio/ID for local Filters*/)
+                QS_STR("Running main loop");
+            QS_END()
+        } else {
+            /** Do job on Idle */
+            QS_onIdle();
+        }
     }
 }
 

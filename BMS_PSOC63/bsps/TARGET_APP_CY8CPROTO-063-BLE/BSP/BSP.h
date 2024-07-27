@@ -42,33 +42,41 @@
 #define CLOCK_ECO_ENABLE_TIMEOUT 20000U /// microseconds
 #define CLOCK_PLL_ENABLE_TIMEOUT 20000U /// microseconds
 
+#define BSP_TICKS_PER_SEC 1000U
+
 /*******************************************************************************
  * Types
  ******************************************************************************/
+/** BSP general satus */
 typedef enum {
     bsp_status_init_success,
     bsp_status_init_fail
 } bsp_status_init_t;
 
-/**
- * ECO isn't installed on CYBLE-063 board, only footprint is available
+/** 
+ * Main iscillator source
+ * Note: ECO isn't installed on CYBLE-063 board, only footprint is available
  */
 typedef enum {
    bsp_main_oscil_src_IMO,
    bsp_main_oscil_src_ECO
 } bsp_main_oscil_src_t;
 
+/** Board init data structure */
 typedef struct {
     bsp_main_oscil_src_t mainOscilSrc;
 } bsp_board_init_t;
+
+/** UART RX callback */
+typedef void (*bspUartRxCallback)(uint8_t *data, uint16_t len);
 
 /*******************************************************************************
  * API
  ******************************************************************************/
  
-/*--------------------------*/
-/** Board init APIs section */
-/*--------------------------*/
+/*----------------------------------------*/
+/** Board system periph init APIs section */
+/*----------------------------------------*/
 
 /**
  * @fn         BSP_init_board.
@@ -158,12 +166,64 @@ cy_en_sysclk_status_t BSP_clock_hifclkInit(bsp_board_init_t* pSettings);
 void BSP_led_red_toggle(void);
 
 /**
+ * @fn     BSP_led_red_On.
+ * @brief  On red LED.
+ * @param  None
+ * @retval None 
+ */
+void BSP_led_red_On(void);
+
+/**
+ * @fn     BSP_led_red_Off.
+ * @brief  Off red LED.
+ * @param  None
+ * @retval None 
+ */
+void BSP_led_red_Off(void);
+
+/**
  * @fn     BSP_led_green_toggle.
  * @brief  Toggle green LED.
  * @param  None
  * @retval None 
  */
 void BSP_led_green_toggle(void);
+
+/*--------------------------*/
+/** Board UART APIs section */
+/*--------------------------*/
+/**
+ * @fn     BSP_initUart.
+ * @brief  Initialize UART.
+ * @param  None
+ * @retval None 
+ */
+void BSP_initUart(bspUartRxCallback callback);
+
+/**
+ * @fn     BSP_isUartTxReady.
+ * @brief  Check if UART TX FIFO is ready to receive data.
+ * @param  None
+ * @retval true - UART is ready, false - not ready.
+ */
+bool BSP_isUartTxReady(void);
+
+/**
+ * @fn     BSP_isUartTxEmpty.
+ * @brief  Check if UART TX FIFO is empty.
+ * @param  None
+ * @retval true - empty, false - not empty.
+ */
+bool BSP_isUartTxEmpty(void);
+
+/**
+ * @fn     BSP_uartTxData.
+ * @brief  TRansmit data via UART.
+ * @param[in] data - data buffer
+ * @param[in] len - length of data
+ * @retval None 
+ */
+void BSP_uartTxData(uint8_t *data, uint16_t len);
 
 #endif  // __BSP_H__
 

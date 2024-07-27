@@ -6,26 +6,39 @@
  */
 
 #include <stdint.h>
-#include "qs.h"
+#include "qpc.h"
 
 /*******************************/
 /*** DEfinitions */
 /******************************/
+/** QSPY status */
 typedef enum {
-    QSPY_STATUS_SUCCESS,
-    QSPY_STATUS_ERROR
+    QSPY_STATUS_ERROR,
+    QSPY_STATUS_SUCCESS
 } qspy_status_t;
+
+/** Application-specific trace records */
+enum AppRecords { 
+    MAIN = QS_USER,
+    BSP
+};
+
+/** QSPY/Qview cmds */
+enum {
+    QS_CMD_RED_LED,
+    QS_CMD_MAX
+};
 
 /*******************************/
 /*** API */
 /******************************/
 /**
  * @fn QS_onStartup
- * @param None
+ * @param[in] arguments
  * 
  * @retval QSPY_STATUS_SUCCESS - on success, QSPY_STATUS_ERROR - on error
  */
-qspy_status_t QS_onStartup(void);
+uint8_t QS_onStartup(void const *arg);
 
 /**
  * @fn QS_onIdle
@@ -77,5 +90,23 @@ void QS_onCommand(uint8_t cmdId,
  * @retval None
  */
 QSTimeCtr QS_onGetTime(void);
+
+/**
+ * @fn QS_addUsrRecToDic
+ * @param[in] rec - user record  \ref AppRecords
+ * @brief Add user/app recrods group to dictionary 
+ * 
+ * @retval None
+ */
+void QS_addUsrRecToDic(enum_t const rec);
+
+/**
+ * @fn QS_initGlbFilters
+ * @param None
+ * @brief Init global filters
+ * 
+ * @retval None
+ */
+void QS_initGlbFilters(void);
 
 /******************************** END OF FILE **********************************************************************/

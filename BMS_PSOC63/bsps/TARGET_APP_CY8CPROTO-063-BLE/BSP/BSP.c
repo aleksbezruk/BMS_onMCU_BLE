@@ -7,14 +7,27 @@
 
 #include "cy_pdl.h"
 #include "BSP.h"
+#include "cycfg.h"
+
+/********************************************************************************
+ * Private data
+*********************************************************************************/
+static cyhal_uart_t uartObj;
+static bspUartRxCallback rxCallback;
+
+/********************************************************************************
+ * Functions prototype
+*********************************************************************************/
+void uart_event_callback_(void *callback_arg, cyhal_uart_event_t event);
+cy_rslt_t uart_readFifo_(uint8_t *data, size_t *len);
 
 /********************************************************************************
  * Code
  *********************************************************************************/
 
-/*--------------------------*/
-/** Board init APIs section */
-/*--------------------------*/
+/*----------------------------------------*/
+/** Board system periph init APIs section */
+/*----------------------------------------*/
 bsp_status_init_t BSP_init_board(bsp_board_init_t* pSettings) {
     if (BSP_power_init() != CY_SYSPM_SUCCESS) {
         return bsp_status_init_fail;
@@ -163,9 +176,100 @@ void BSP_led_red_toggle(void) {
     Cy_GPIO_Inv(GPIO_LED_RED_PORT, GPIO_LED_RED_PIN);
 }
 
+void BSP_led_red_On(void) {
+    cyhal_gpio_write(P6_3, false);
+}
+
+void BSP_led_red_Off(void) {
+    cyhal_gpio_write(P6_3, true);
+}
+
 void BSP_led_green_toggle(void) {
     Cy_GPIO_Inv(GPIO_LED_GREEN_PORT, GPIO_LED_GREEN_PIN);
 }
 
+/*--------------------------*/
+/** Board UART APIs section */
+/*--------------------------*/
+void BSP_initUart(bspUartRxCallback callback) {
+    cy_rslt_t result;
+
+    rxCallback = callback;
+    
+    /** Configrure & enable UART */
+     result = cyhal_uart_init_cfg(&uartObj, &scb_5_hal_config);
+     if(result != CY_RSLT_SUCCESS) {
+        while(1);
+     }
+
+     /** Setup RX interrupt */
+     cyhal_uart_register_callback(&uartObj, 
+                                  uart_event_callback_, 
+                                  /*void *callback_arg*/ NULL);
+     cyhal_uart_enable_event(&uartObj, 
+                             CYHAL_UART_IRQ_RX_NOT_EMPTY, 
+                             /* irq prio*/1U, 
+                             true);
+}
+
+/**
+ * @fn uart_event_callback_
+ * @brief Handles UART interrupts
+ * @param[in] callback_arg - additional callback's args
+ * @param[in] event - UART evts (RX not empty, TX done etc.)
+ * 
+ * @details HAL & PDL are used for implementing UART communication.
+ *          1. _cyhal_uart_irq_handler calls Cy_SCB_UART_Interrupt.
+ *             Cy_SCB_UART_Interrupt processes most IRQs .
+ *          2. _cyhal_uart_cb_wrapper - warpper callback for UART evts/IRQs
+ *             that calls Application callback ( \ref uart_event_callback_  )
+ * 
+ * @retval None
+ */
+void uart_event_callback_(void *callback_arg, cyhal_uart_event_t event) {
+    cy_rslt_t result;
+    uint8_t rxData[16];
+    size_t len = 1;
+
+    switch(event) {
+        case CYHAL_UART_IRQ_RX_NOT_EMPTY:
+        result = uart_readFifo_(rxData, &len);
+        if(result != CY_RSLT_SUCCESS) {
+            while(1);
+        }
+        rxCallback(rxData, (uint16_t) len);
+        break;
+        default:
+            for(;;) {}
+    }
+}
+
+cy_rslt_t uart_readFifo_(uint8_t *data, size_t *len) {
+    cy_rslt_t result;
+
+    result = cyhal_uart_read(&uartObj, data, len);
+
+    return result;
+}
+
+bool BSP_isUartTxReady(void) {
+    uint32_t num = cyhal_uart_writable(&uartObj);
+
+    return (num > 0);
+}
+
+bool BSP_isUartTxEmpty(void) {
+    uint32_t num = cyhal_uart_writable(&uartObj);
+
+    return (num == 0);
+}
+
+void BSP_uartTxData(uint8_t *data, uint16_t len) {
+    cy_rslt_t result = cyhal_uart_write(&uartObj, data, (size_t *) &len);
+
+    if(result != CY_RSLT_SUCCESS) {
+        while(1);
+    }
+}
 
 /************************** END OF FILE *****************************************/

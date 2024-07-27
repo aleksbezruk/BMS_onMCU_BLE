@@ -1,9 +1,8 @@
 /*******************************************************************************
- * File Name: cycfg.h
+ * File Name: cycfg_clocks.c
  *
  * Description:
- * Simple wrapper containing all generated files and function to initialize
- * all generated code.
+ * Clock configuration
  * This file was automatically generated and should not be modified.
  * Configurator Backend 3.20.0
  * device-db 4.16.0.6098
@@ -27,26 +26,26 @@
  * limitations under the License.
  ******************************************************************************/
 
-#if !defined(CYCFG_H)
-#define CYCFG_H
-
-#include "cycfg_notices.h"
-#include "cycfg_system.h"
 #include "cycfg_clocks.h"
-#include "cycfg_routing.h"
-#include "cycfg_peripherals.h"
-#include "cycfg_pins.h"
 
-#if defined(__cplusplus)
-extern "C" {
-#endif /* defined(__cplusplus) */
+#if defined (CY_USING_HAL)
+const cyhal_resource_inst_t peri_0_div_24_5_0_obj =
+{
+    .type = CYHAL_RSC_CLOCK,
+    .block_num = peri_0_div_24_5_0_HW,
+    .channel_num = peri_0_div_24_5_0_NUM,
+};
+#endif /* defined (CY_USING_HAL) */
 
-void init_cycfg_all(void);
-void cycfg_config_init(void);
-void cycfg_config_reservations(void);
-
-#if defined(__cplusplus)
+void init_cycfg_clocks(void)
+{
+    Cy_SysClk_PeriphDisableDivider(CY_SYSCLK_DIV_24_5_BIT, 0U);
+    Cy_SysClk_PeriphSetFracDivider(CY_SYSCLK_DIV_24_5_BIT, 0U, 107U, 16U);
+    Cy_SysClk_PeriphEnableDivider(CY_SYSCLK_DIV_24_5_BIT, 0U);
 }
-#endif /* defined(__cplusplus) */
-
-#endif /* CYCFG_H */
+void reserve_cycfg_clocks(void)
+{
+#if defined (CY_USING_HAL)
+    cyhal_hwmgr_reserve(&peri_0_div_24_5_0_obj);
+#endif /* defined (CY_USING_HAL) */
+}

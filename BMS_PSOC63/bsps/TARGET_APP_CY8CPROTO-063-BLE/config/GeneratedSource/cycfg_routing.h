@@ -37,6 +37,8 @@ extern "C" {
 
 #define ioss_0_port_0_pin_0_ANALOG P0_0_SRSS_WCO_IN
 #define ioss_0_port_0_pin_1_ANALOG P0_1_SRSS_WCO_OUT
+#define ioss_0_port_5_pin_0_HSIOM P5_0_SCB5_UART_RX
+#define ioss_0_port_5_pin_1_HSIOM P5_1_SCB5_UART_TX
 #define ioss_0_port_6_pin_6_HSIOM P6_6_CPUSS_SWJ_SWDIO_TMS
 #define ioss_0_port_6_pin_7_HSIOM P6_7_CPUSS_SWJ_SWCLK_TCLK
 
