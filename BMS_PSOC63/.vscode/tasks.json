@@ -10,7 +10,7 @@
             "args": [
                 "--norc",
                 "-c",
-                "make -j4 build --output-sync"
+                "make -j4 build --output-sync BUILD_CONFIG=Debug"
             ],
             "windows": {
                 "command": "${config:modustoolbox.toolsPath}/modus-shell/bin/bash.exe",
@@ -45,7 +45,7 @@
             "args": [
                 "--norc",
                 "-c",
-                "make clean"
+                "make clean BUILD_CONFIG=Debug"
             ],
             "windows": {
                 "command": "${config:modustoolbox.toolsPath}/modus-shell/bin/bash.exe",

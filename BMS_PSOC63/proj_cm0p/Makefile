@@ -66,7 +66,16 @@ CORE_NAME=CM0P_0
 # tree for source code and builds it. The SOURCES variable can be used to
 # manually add source code to the build process from a location not searched
 # by default, or otherwise not found by the build system.
+$(info Set BUILD CONFIGURATION IS -> $(BUILD_CONFIG)) 
+ifeq ($(BUILD_CONFIG), Debug)
+SOURCES= ../source/CM0p/main.c
+else ifeq ($(BUILD_CONFIG), Release)
 SOURCES=
+else ifeq ($(BUILD_CONFIG), Qutest)
+SOURCES=
+else
+$(error !!! BUILD CONFIGURATION IS udefined !!!. Please set Debug or Qutest or Release)
+endif	# BUILD configuration
 
 # Like SOURCES, but for include directories. Value should be paths to
 # directories (without a leading -I).

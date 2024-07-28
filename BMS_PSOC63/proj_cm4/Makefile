@@ -65,22 +65,44 @@ CORE_NAME=CM4_0
 # tree for source code and builds it. The SOURCES variable can be used to
 # manually add source code to the build process from a location not searched
 # by default, or otherwise not found by the build system.
-SOURCES=    ../bsps/TARGET_APP_CY8CPROTO-063-BLE/BSP/BSP.c \
-			qspy/qs_64bit.c \
-			qspy/qs_fp.c \
-			qspy/qs_rx.c \
-			qspy/qs.c \
-			qspy/qstamp.c \
-			qspy/qutest.c \
-			qspyHelper/qspyHelper.c \
-			qutestHelper/qutestHelper.c
+$(info Set BUILD CONFIGURATION IS -> $(BUILD_CONFIG)) 
+ifeq ($(BUILD_CONFIG), Debug)
+SOURCES=    ../source/CM4/main.c	\
+			../bsps/TARGET_APP_CY8CPROTO-063-BLE/BSP/BSP.c \
+			../source/CM4/qspy/qs_64bit.c \
+			../source/CM4/qspy/qs_fp.c \
+			../source/CM4/qspy/qs_rx.c \
+			../source/CM4/qspy/qs.c \
+			../source/CM4/qspy/qstamp.c \
+			../source/CM4/qspy/qutest.c \
+			../source/CM4/qspy/qf_src/qep_hsm.c \
+			../source/CM4/qspy/qf_src/qep_msm.c \
+			../source/CM4/qspy/qf_src/qf_act.c	\
+			../source/CM4/qspy/qf_src/qf_actq.c	\
+			../source/CM4/qspy/qf_src/qf_defer.c	\
+			../source/CM4/qspy/qf_src/qf_dyn.c	\
+			../source/CM4/qspy/qf_src/qf_mem.c	\
+			../source/CM4/qspy/qf_src/qf_ps.c	\
+			../source/CM4/qspy/qf_src/qf_qact.c	\
+			../source/CM4/qspy/qf_src/qf_qeq.c	\
+			../source/CM4/qspy/qf_src/qf_qmact.c	\
+			../source/CM4/qspy/qf_src/qf_time.c	\
+			../source/CM4/qspyHelper/qspyHelper.c \
+			../source/CM4/qutestHelper/qutestHelper.c
+else ifeq ($(BUILD_CONFIG), Release)
+SOURCES=
+else ifeq ($(BUILD_CONFIG), Qutest)
+SOURCES=
+else
+$(error !!! BUILD CONFIGURATION IS udefined !!!. Please set Debug or Qutest or Release)
+endif	# BUILD configuration
 
 # Like SOURCES, but for include directories. Value should be paths to
 # directories (without a leading -I).
 INCLUDES=SOURCES= ../bsps/TARGET_APP_CY8CPROTO-063-BLE/BSP/ \
-				  qspy/ \
-				  qspyHelper \
-				  qutestHelper
+				  ../source/CM4/qspy/ \
+				  ../source/CM4/qspyHelper \
+				  ../source/CM4/qutestHelper
 
 # Add additional defines to the build process (without a leading -D).
 DEFINES=Q_SPY Q_UTEST
