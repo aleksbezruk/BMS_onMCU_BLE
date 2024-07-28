@@ -37,11 +37,11 @@ makefile.init
 
 # Visual Studio Code
 openocd.tcl
-.vscode/
-!.vscode/settings.json
-!.vscode/tasks.json
-!.vscode/launch.json
-!.vscode/extensions.json
+#.vscode/
+#!.vscode/settings.json
+#!.vscode/tasks.json
+#!.vscode/launch.json
+#!.vscode/extensions.json
 # *.code-workspace
 
 # IAR Embedded Workbench files

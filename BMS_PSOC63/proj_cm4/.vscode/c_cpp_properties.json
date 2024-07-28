@@ -1,0 +1,37 @@
+{
+    "version": 4,
+    "env": {
+        "mtbCompilerArgs": [
+            "-c","-mcpu=cortex-m4","--specs=nano.specs","-Og","-mfloat-abi=softfp","-mfpu=fpv4-sp-d16","-mthumb","-ffunction-sections","-fdata-sections","-ffat-lto-objects","-g","-Wall","-pipe"
+        ],
+        "mtbDefaultIncludePath": [
+            "../bsps/TARGET_APP_CY8CPROTO-063-BLE","../bsps","../bsps/TARGET_APP_CY8CPROTO-063-BLE/bluetooth","../bsps/TARGET_APP_CY8CPROTO-063-BLE/config/GeneratedSource","../bsps/TARGET_APP_CY8CPROTO-063-BLE/config","../../mtb_shared/cat1cm0p/release-v1.5.0/COMPONENT_CAT1A","../../mtb_shared/cat1cm0p/release-v1.5.0","../../mtb_shared/cmsis/release-v5.8.0/Core/Include","../../mtb_shared/cmsis/release-v5.8.0/Core","../../mtb_shared/cmsis/release-v5.8.0","../../mtb_shared/core-lib/release-v1.4.2/include","../../mtb_shared/core-lib/release-v1.4.2","../../mtb_shared/mtb-hal-cat1/release-v2.6.1/COMPONENT_CAT1A/include/pin_packages","../../mtb_shared/mtb-hal-cat1/release-v2.6.1/COMPONENT_CAT1A/include","../../mtb_shared/mtb-hal-cat1/release-v2.6.1/COMPONENT_CAT1A","../../mtb_shared/mtb-hal-cat1/release-v2.6.1","../../mtb_shared/mtb-hal-cat1/release-v2.6.1/COMPONENT_CAT1A/include/triggers","../../mtb_shared/mtb-hal-cat1/release-v2.6.1/include","../../mtb_shared/mtb-hal-cat1/release-v2.6.1/include_pvt","../../mtb_shared/mtb-hal-cat1/release-v2.6.1/source","../../mtb_shared/mtb-pdl-cat1/release-v3.11.0/devices/COMPONENT_CAT1A/include","../../mtb_shared/mtb-pdl-cat1/release-v3.11.0/devices/COMPONENT_CAT1A","../../mtb_shared/mtb-pdl-cat1/release-v3.11.0/devices","../../mtb_shared/mtb-pdl-cat1/release-v3.11.0","../../mtb_shared/mtb-pdl-cat1/release-v3.11.0/devices/COMPONENT_CAT1A/include/ip","../../mtb_shared/mtb-pdl-cat1/release-v3.11.0/drivers/include","../../mtb_shared/mtb-pdl-cat1/release-v3.11.0/drivers","../../mtb_shared/mtb-pdl-cat1/release-v3.11.0/drivers/third_party/ethernet/include","../../mtb_shared/mtb-pdl-cat1/release-v3.11.0/drivers/third_party/ethernet","../../mtb_shared/mtb-pdl-cat1/release-v3.11.0/drivers/third_party"
+        ],
+        "mtbDefaultDefines": [
+            "COMPONENT_APP_CY8CPROTO_063_BLE","COMPONENT_BLESS_IPC","COMPONENT_CAT1","COMPONENT_CAT1A","COMPONENT_CM4","COMPONENT_CM4_0","COMPONENT_Debug","COMPONENT_GCC_ARM","COMPONENT_MW_CAT1CM0P","COMPONENT_MW_CMSIS","COMPONENT_MW_CORE_LIB","COMPONENT_MW_CORE_MAKE","COMPONENT_MW_MTB_HAL_CAT1","COMPONENT_MW_MTB_PDL_CAT1","COMPONENT_MW_RECIPE_MAKE_CAT1A","COMPONENT_PSOC6_01","COMPONENT_SOFTFP","CORE_NAME_CM4_0=1","CYBLE_416045_02_device","CY_APPNAME_proj_cm4","CY_SUPPORTS_DEVICE_VALIDATION","CY_TARGET_BOARD=APP_CY8CPROTO_063_BLE","CY_USING_HAL","DEBUG","TARGET_APP_CY8CPROTO_063_BLE"
+        ]
+    },
+    "configurations": [
+        {
+            "name": "MTB",
+            "compilerPath": "/opt/Tools/ModusToolbox/tools_3.2/gcc/bin/arm-none-eabi-gcc",
+            "compilerArgs": [
+                "${mtbCompilerArgs}"
+            ],
+            "compileCommands": "${workspaceFolder}/build/compile_commands.json",
+            "intelliSenseMode": "gcc-arm",
+            "cStandard": "c99",
+            "cppStandard": "c++11",
+            "includePath": [
+                "${mtbDefaultIncludePath}"
+            ],
+            "browse": {
+                "limitSymbolsToIncludedHeaders": true,
+                "databaseFilename": ""
+            },
+            "defines": [
+                "${mtbDefaultDefines}"
+            ]
+        }
+    ]
+}
