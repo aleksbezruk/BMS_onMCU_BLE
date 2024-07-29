@@ -50,6 +50,11 @@
 
 Q_DEFINE_THIS_MODULE("qs_rx")
 
+/*****************************************************************************
+ * DEFINITIONS
+ *****************************************************************************/
+#define QS_BAREMETAL_NON_QP
+
 enum {
     ERROR_STATE,
     WAIT4_SEQ,
@@ -593,6 +598,7 @@ static void QS_rxParseData_(uint8_t const b) {
             }
             break;
         }
+#if !defined(QS_BAREMETAL_NON_QP)
         case (uint8_t)WAIT4_EVT_LEN: {
             QS_rxPriv_.var.evt.len |= (uint16_t)((uint32_t)b << QS_rxPriv_.var.evt.idx);
             QS_rxPriv_.var.evt.idx += 8U;
@@ -629,6 +635,7 @@ static void QS_rxParseData_(uint8_t const b) {
             }
             break;
         }
+#endif  //QS_BAREMETAL_NON_QP
         case (uint8_t)WAIT4_EVT_PAR: { // event parameters
             *QS_rxPriv_.var.evt.p = b;
             ++QS_rxPriv_.var.evt.p;
@@ -736,7 +743,14 @@ static void QS_rxHandleGoodFrame_(uint8_t const state) {
             QS_processTestEvts_(); // process all events produced
     #endif  // Q_UTEST != 0
 #else
+    #if !defined(QS_BAREMETAL_NON_QP)
             QTimeEvt_tick_((uint_fast8_t)QS_rxPriv_.var.tick.rate, &QS_rxPriv_);
+    #else
+            /** 
+             * STUB for baremetal/non QP application -> commented out above QTimeEvt_tick_() call
+             */
+            __asm("NOP");
+    #endif  // QS_BAREMETAL_NON_QP
 #endif  // Q_UTEST
             QS_rxReportDone_((int8_t)QS_RX_TICK);
             break;
@@ -882,6 +896,7 @@ static void QS_rxHandleGoodFrame_(uint8_t const state) {
 #ifdef Q_UTEST
             QS_onTestEvt(QS_rxPriv_.var.evt.e); // adjust the event, if needed
 #endif // Q_UTEST
+#if !defined(QS_BAREMETAL_NON_QP)
             i = 0U; // use 'i' as status, 0 == success,no-recycle
 
             if (QS_rxPriv_.var.evt.prio == 0U) { // publish
@@ -967,6 +982,7 @@ static void QS_rxHandleGoodFrame_(uint8_t const state) {
                 QS_rxReportDone_((int8_t)QS_RX_EVENT);
             }
             break;
+#endif  //QS_BAREMETAL_NON_QP
         }
 
 #ifdef Q_UTEST
@@ -1025,6 +1041,7 @@ static void QS_rxHandleGoodFrame_(uint8_t const state) {
 static void QS_rxHandleBadFrame_(uint8_t const state) {
     QS_rxReportError_(0x50); // report error for all bad frames
 
+#if !defined(QS_BAREMETAL_NON_QP)
     switch (state) {
         case WAIT4_EVT_FRAME: {
             QS_CRIT_STAT
@@ -1041,6 +1058,7 @@ static void QS_rxHandleBadFrame_(uint8_t const state) {
             break;
         }
     }
+#endif  //QS_BAREMETAL_NON_QP
 }
 
 //............................................................................

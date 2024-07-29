@@ -34,6 +34,8 @@
 #include <stdint.h>  // Exact-width types. WG14/N843 C99 Standard
 #include <stdbool.h> // Boolean type.      WG14/N843 C99 Standard
 
+#include "cmsis_gcc.h"
+
 #ifdef QP_CONFIG
 #include "qp_config.h" // external QP configuration
 #endif
@@ -47,8 +49,14 @@
 // QACTIVE_THREAD_TYPE  not used in this port
 
 // QF interrupt disable/enable
-#define QF_INT_DISABLE()     (++QS_tstPriv_.intLock)
-#define QF_INT_ENABLE()      (--QS_tstPriv_.intLock)
+// #define QF_INT_DISABLE()     (++QS_tstPriv_.intLock)
+// #define QF_INT_ENABLE()      (--QS_tstPriv_.intLock)
+/** 
+ * Native QF implementation for QF_INT_DISABLE & QF_INT_ENABLE is commented out in order
+ * to break dependency on QUtest for App with just enabled QSPY (without QUtest) 
+ */
+#define QF_INT_DISABLE()     __disable_irq()
+#define QF_INT_ENABLE()      __enable_irq()
 
 // QF critical section
 #define QF_CRIT_STAT

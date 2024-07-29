@@ -65,6 +65,20 @@ CORE_NAME=CM4_0
 # tree for source code and builds it. The SOURCES variable can be used to
 # manually add source code to the build process from a location not searched
 # by default, or otherwise not found by the build system.
+
+# ../source/CM4/qspy/qf_src/qep_hsm.c \
+# ../source/CM4/qspy/qf_src/qep_msm.c \
+# ../source/CM4/qspy/qf_src/qf_act.c	\
+# ../source/CM4/qspy/qf_src/qf_actq.c	\
+# ../source/CM4/qspy/qf_src/qf_defer.c	\
+# ../source/CM4/qspy/qf_src/qf_dyn.c	\
+# ../source/CM4/qspy/qf_src/qf_mem.c	\
+# ../source/CM4/qspy/qf_src/qf_ps.c	\
+# ../source/CM4/qspy/qf_src/qf_qact.c	\
+# ../source/CM4/qspy/qf_src/qf_qeq.c	\
+# ../source/CM4/qspy/qf_src/qf_qmact.c	\
+# ../source/CM4/qspy/qf_src/qf_time.c	\
+
 $(info Set BUILD CONFIGURATION IS -> $(BUILD_CONFIG)) 
 ifeq ($(BUILD_CONFIG), Debug)
 SOURCES=    ../source/CM4/main.c	\
@@ -74,25 +88,12 @@ SOURCES=    ../source/CM4/main.c	\
 			../source/CM4/qspy/qs_rx.c \
 			../source/CM4/qspy/qs.c \
 			../source/CM4/qspy/qstamp.c \
-			../source/CM4/qspy/qutest.c \
-			../source/CM4/qspy/qf_src/qep_hsm.c \
-			../source/CM4/qspy/qf_src/qep_msm.c \
-			../source/CM4/qspy/qf_src/qf_act.c	\
-			../source/CM4/qspy/qf_src/qf_actq.c	\
-			../source/CM4/qspy/qf_src/qf_defer.c	\
-			../source/CM4/qspy/qf_src/qf_dyn.c	\
-			../source/CM4/qspy/qf_src/qf_mem.c	\
-			../source/CM4/qspy/qf_src/qf_ps.c	\
-			../source/CM4/qspy/qf_src/qf_qact.c	\
-			../source/CM4/qspy/qf_src/qf_qeq.c	\
-			../source/CM4/qspy/qf_src/qf_qmact.c	\
-			../source/CM4/qspy/qf_src/qf_time.c	\
-			../source/CM4/qspyHelper/qspyHelper.c \
-			../source/CM4/qutestHelper/qutestHelper.c
+			../source/CM4/qspyHelper/qspyHelper.c
 else ifeq ($(BUILD_CONFIG), Release)
 SOURCES=
 else ifeq ($(BUILD_CONFIG), Qutest)
-SOURCES=
+SOURCES=  ../source/CM4/qspy/qutest.c \
+		  ../source/CM4/qutestHelper/qutestHelper.c
 else
 $(error !!! BUILD CONFIGURATION IS udefined !!!. Please set Debug or Qutest or Release)
 endif	# BUILD configuration
@@ -105,7 +106,15 @@ INCLUDES=SOURCES= ../bsps/TARGET_APP_CY8CPROTO-063-BLE/BSP/ \
 				  ../source/CM4/qutestHelper
 
 # Add additional defines to the build process (without a leading -D).
+ifeq ($(BUILD_CONFIG), Debug)
+DEFINES=Q_SPY
+else ifeq ($(BUILD_CONFIG), Release)
+DEFINES=Q_SPY
+else ifeq ($(BUILD_CONFIG), Qutest)
 DEFINES=Q_SPY Q_UTEST
+else
+$(error !!! BUILD CONFIGURATION IS udefined !!!. Please set Debug or Qutest or Release)
+endif	# BUILD configuration
 
 # Select softfp or hardfp floating point. Default is softfp.
 VFP_SELECT=

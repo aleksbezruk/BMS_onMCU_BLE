@@ -47,7 +47,8 @@
             "cycfg_peripherals.h": "c",
             "cycfg_pins.h": "c",
             "cyhal_hw_types.h": "c",
-            "cyhal_hw_resources.h": "c"
+            "cyhal_hw_resources.h": "c",
+            "qsafe.h": "c"
         },
         "clangd.arguments": [
             "--query-driver=${config:modustoolbox.toolsPath}/gcc/bin/arm-none-eabi-gcc",
