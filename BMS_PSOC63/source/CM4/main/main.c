@@ -47,9 +47,15 @@
 #include "qspyHelper.h"
 
 /*******************************/
+/*** Functions prototypes */
+/******************************/
+static void mainTask_(void);
+static void utTask_(void);
+
+/*******************************/
 /*** Data */
 /******************************/
-uint32_t mainLoopTimer;
+volatile uint32_t mainLoopTimer;
 
 /*******************************/
 /*** Code */
@@ -60,8 +66,7 @@ int main(void)
 
     /* Initialize the device and board peripherals */
     result = cybsp_init();
-    if (result != CY_RSLT_SUCCESS)
-    {
+    if (result != CY_RSLT_SUCCESS) {
         CY_ASSERT(0);
     }
 
@@ -76,25 +81,58 @@ int main(void)
 
     /** Init QSPY dictionary & filters */
     QS_addUsrRecToDic(MAIN);
-    QS_initGlbFilters(); 
+    QS_addUsrRecToDic(UTEST);
+    QS_initGlbFilters();
+
+    /** dictionaries... */
+    QS_FUN_DICTIONARY(&mainTask_);
 
     /** Main loop */
     for (;;) {
-        if (mainLoopTimer == 1000U) {
-            __disable_irq();
-                mainLoopTimer = 0;
-            __enable_irq();
-    
-            BSP_led_green_toggle();
-
-            QS_BEGIN_ID(MAIN, 0 /*prio/ID for local Filters*/)
-                QS_STR("Running main loop");
-            QS_END()
-        } else {
-            /** Do job on Idle */
-            QS_onIdle();
-        }
+        #if !defined(Q_UTEST)
+        mainTask_();
+        #else
+        utTask_();
+        #endif //Q_UTEST
     }
+}
+
+
+/**
+ * @fn mainTask_
+ * @brief Main task/dispatcher
+ * 
+ * @param None
+ * @retval None
+ */
+static void mainTask_(void)
+{
+    if (mainLoopTimer == 1000U) {
+        __disable_irq();
+            mainLoopTimer = 0;
+        __enable_irq();
+
+        BSP_led_green_toggle();
+
+        QS_BEGIN_ID(MAIN, 0 /*prio/ID for local Filters*/)
+            QS_STR("Running main loop");
+        QS_END()
+    } else {
+        /** Do job on Idle */
+        QS_onIdle();
+    }
+}
+
+/**
+ * @fn utTask_
+ * @brief Unit tests task
+ * 
+ * @param None
+ * @retval None
+ */
+static void utTask_(void)
+{
+    QS_onIdle();
 }
 
 /* [] END OF FILE */

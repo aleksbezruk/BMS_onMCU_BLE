@@ -20,12 +20,14 @@ typedef enum {
 /** Application-specific trace records */
 enum AppRecords { 
     MAIN = QS_USER,
+    UTEST,
     BSP
 };
 
 /** QSPY/Qview cmds */
 enum {
     QS_CMD_RED_LED,
+    QS_CMD_UT_FUN,
     QS_CMD_MAX
 };
 

@@ -32,6 +32,83 @@
     "version": "0.2.0",
     "configurations": [
         {
+            "name": "Multi-Core Debug Qutest (KitProg3_MiniProg4)",
+            "type": "cortex-debug",
+            "request": "launch",
+            "cwd": "${workspaceFolder}",
+            "executable": "proj_cm0p/build/APP_CY8CPROTO-063-BLE/Debug/proj_cm0p.elf",
+            "servertype": "openocd",
+            "searchDir": [
+                "${workspaceFolder}",
+                "${config:modustoolbox.toolsPath}/../../ModusToolboxProgtools-1.2/openocd/scripts/",
+                "bsps/TARGET_APP_CY8CPROTO-063-BLE/config/GeneratedSource"
+            ],
+            "configFiles": [
+                "openocd.tcl"
+            ],
+            "openOCDPreConfigLaunchCommands": [
+
+            ],
+            "overrideLaunchCommands": [
+                "set mem inaccessible-by-default off",
+                "-enable-pretty-printing",
+                "set remotetimeout 25",
+                "monitor reset init",
+                // Comment this next lines out if you don't want to reload program
+                "monitor flash write_image erase {build/app_combined.hex}",
+                "monitor reset init",
+                "monitor psoc6 reset_halt sysresetreq"
+            ],
+            // svdFile is optional, it can be very large.
+            "svdFile": "../mtb_shared/mtb-pdl-cat1/release-v3.11.0/devices/COMPONENT_CAT1A/svd/psoc6_01.svd",
+            "numberOfProcessors": 2,
+            "targetProcessor": 0, // Set to 0 for the CM0+, set to 1 for the CM4
+            "postStartSessionCommands": [
+                // Needed if runToMain is false
+                // Following two commands are needed to get gdb and openocd and HW all in sync.
+                // Or, execution context (PC, stack, registers, etc.) look like they are from before reset.
+                // The stepi, is a pretend instruction that does not actually do a stepi, but MUST be done
+                // Its a documented workaround in openocd. Do a 'monitor help' to see more info
+                //
+                // An alternative command to use is "continue" instead of the following two
+                "monitor gdb_sync",
+                "stepi"
+            ],
+            "overrideRestartCommands": [
+                "starti"
+            ],
+            "postRestartSessionCommands": [
+            ],
+            "breakAfterReset": true,
+            "runToEntryPoint": "main",    // Specifies application entry point name where program will halt
+            "showDevDebugOutput": "none",
+            "preLaunchTask": "Build Qutest",    // Set this to run a task from tasks.json
+            "presentation": {
+                "hidden": false,
+                "group": " Multi-core"
+            },
+            "chainedConfigurations": {
+                "enabled": true,
+                "waitOnEvent": "postInit",
+                "lifecycleManagedByParent": true,
+                "launches": [                               // Array of launches. Order is respected
+                    {
+                        "name": "Attach PSoC6 CM4 (KitProg3_MiniProg4)",     // Name of another configuration
+                        "folder": "./proj_cm4",
+                        "overrides": {
+                            "overrideRestartCommands": [
+                                "monitor halt"
+                            ],
+                            "postStartSessionCommands": [
+                                "tb main",
+                                "continue"
+                            ]
+                        }
+                    }
+                ]
+            }
+        },
+        {
             "name": "Multi-Core Debug (KitProg3_MiniProg4)",
             "type": "cortex-debug",
             "request": "launch",
@@ -82,7 +159,7 @@
             "breakAfterReset": true,
             "runToEntryPoint": "main",    // Specifies application entry point name where program will halt
             "showDevDebugOutput": "none",
-            "preLaunchTask": "Build",    // Set this to run a task from tasks.json
+            "preLaunchTask": "Build Debug",    // Set this to run a task from tasks.json
             "presentation": {
                 "hidden": false,
                 "group": " Multi-core"
@@ -109,7 +186,7 @@
             }
         },
         {
-            "name": "Program Application (KitProg3_MiniProg4)",
+            "name": "Program Application Qutest (KitProg3_MiniProg4)",
             "type": "cortex-debug",
             "request": "launch",
             "cwd": "${workspaceFolder}",
@@ -139,7 +216,46 @@
             ],
 
             "numberOfProcessors": 2,
-            "preLaunchTask": "Build",    // Set this to run a task from tasks.json
+            "preLaunchTask": "Build Qutest",    // Set this to run a task from tasks.json
+                                                        // before device programming
+            "showDevDebugOutput": "none",
+            "presentation": {
+                "hidden": false,
+                "group": " Multi-core"
+            }
+        },
+        {
+            "name": "Program Application Debug (KitProg3_MiniProg4)",
+            "type": "cortex-debug",
+            "request": "launch",
+            "cwd": "${workspaceFolder}",
+            "executable": "proj_cm0p/build/APP_CY8CPROTO-063-BLE/Debug/proj_cm0p.elf",
+            "servertype": "openocd",
+            "searchDir": [
+                "${workspaceFolder}",
+                "${config:modustoolbox.toolsPath}/../../ModusToolboxProgtools-1.2/openocd/scripts/",
+                "bsps/TARGET_APP_CY8CPROTO-063-BLE/config/GeneratedSource"
+            ],
+            "configFiles": [
+                "openocd.tcl"
+            ],
+            "openOCDPreConfigLaunchCommands": [
+
+            ],
+            "overrideLaunchCommands": [
+                "set remotetimeout 25",
+                "monitor psoc6 sflash_restrictions 1",
+                "monitor program {build/app_combined.hex}",
+                "monitor reset_config srst_only",
+                "monitor reset run",
+                "monitor psoc6.dap dpreg 0x04 0x00"
+            ],
+            "postStartSessionCommands": [
+                "quit"
+            ],
+
+            "numberOfProcessors": 2,
+            "preLaunchTask": "Build Debug",    // Set this to run a task from tasks.json
                                                         // before device programming
             "showDevDebugOutput": "none",
             "presentation": {

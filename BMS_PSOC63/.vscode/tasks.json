@@ -4,7 +4,7 @@
     "version": "2.0.0",
     "tasks": [
         {
-            "label": "Build",
+            "label": "Build Debug",
             "type": "process",
             "command": "bash",
             "args": [
@@ -27,11 +27,11 @@
             }
         },
         {
-            "label": "Rebuild",
+            "label": "Rebuild Debug",
             "dependsOrder": "sequence",
             "dependsOn": [
-                "Clean",
-                "Build"
+                "Clean Debug",
+                "Build Debug"
             ],
             "group": {
                 "kind": "build",
@@ -39,13 +39,70 @@
             }
         },
         {
-            "label": "Clean",
+            "label": "Clean Debug",
             "type": "process",
             "command": "bash",
             "args": [
                 "--norc",
                 "-c",
                 "make clean BUILD_CONFIG=Debug"
+            ],
+            "windows": {
+                "command": "${config:modustoolbox.toolsPath}/modus-shell/bin/bash.exe",
+                "args": [
+                    "--norc",
+                    "-c",
+                    "export PATH=/bin:/usr/bin:$PATH ; ${config:modustoolbox.toolsPath}/modus-shell/bin/make.exe clean"
+                ]
+            },
+            "group": {
+                "kind": "build",
+                "isDefault": true
+            }
+        },
+        {
+            "label": "Build Qutest",
+            "type": "process",
+            "command": "bash",
+            "args": [
+                "--norc",
+                "-c",
+                "make -j4 build --output-sync BUILD_CONFIG=Qutest"
+            ],
+            "windows": {
+                "command": "${config:modustoolbox.toolsPath}/modus-shell/bin/bash.exe",
+                "args": [
+                    "--norc",
+                    "-c",
+                    "export PATH=/bin:/usr/bin:$PATH ; ${config:modustoolbox.toolsPath}/modus-shell/bin/make.exe -j4 build --output-sync"
+                ]
+            },
+            "problemMatcher": "$gcc",
+            "group": {
+                "kind": "build",
+                "isDefault": true
+            }
+        },
+        {
+            "label": "Rebuild Qutest",
+            "dependsOrder": "sequence",
+            "dependsOn": [
+                "Clean Qutest",
+                "Build Qutest"
+            ],
+            "group": {
+                "kind": "build",
+                "isDefault": true
+            }
+        },
+        {
+            "label": "Clean Qutest",
+            "type": "process",
+            "command": "bash",
+            "args": [
+                "--norc",
+                "-c",
+                "make clean BUILD_CONFIG=Qutest"
             ],
             "windows": {
                 "command": "${config:modustoolbox.toolsPath}/modus-shell/bin/bash.exe",

@@ -70,9 +70,9 @@ $(info Set BUILD CONFIGURATION IS -> $(BUILD_CONFIG))
 ifeq ($(BUILD_CONFIG), Debug)
 SOURCES= ../source/CM0p/main.c
 else ifeq ($(BUILD_CONFIG), Release)
-SOURCES=
+SOURCES= ../source/CM0p/main.c
 else ifeq ($(BUILD_CONFIG), Qutest)
-SOURCES=
+SOURCES= ../source/CM0p/main.c
 else
 $(error !!! BUILD CONFIGURATION IS udefined !!!. Please set Debug or Qutest or Release)
 endif	# BUILD configuration

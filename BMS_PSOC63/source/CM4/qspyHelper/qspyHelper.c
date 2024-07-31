@@ -14,11 +14,12 @@
  * Defines
  *****************************/
 #define QS_TICKS_IN_1MS (SystemCoreClock / BSP_TICKS_PER_SEC)
+typedef void (*cut)(void);
 
 /*******************************/
 /*** External data */
 /******************************/
-extern uint32_t mainLoopTimer;
+extern volatile uint32_t mainLoopTimer;
 
 /*******************************/
 /*** Private data */
@@ -62,9 +63,11 @@ void QS_onReset(void) {
     NVIC_SystemReset();
 }
 
+#if !defined(Q_UTEST)
 QSTimeCtr QS_onGetTime(void) {
     return QS_tickTime_;
 }
+#endif //Q_UTEST
 
 void QS_onFlush(void) {
     for (;;) {
@@ -88,6 +91,7 @@ void QS_onCommand(uint8_t cmdId,
     switch (cmdId)
     {
         case QS_CMD_RED_LED:
+        {
             if(param1 == 1) {
                 BSP_led_red_On();
             } else if(param1 == 0) {
@@ -96,12 +100,23 @@ void QS_onCommand(uint8_t cmdId,
                 // ignore if invalid param
             }
             break;
-        
+        }
+        case QS_CMD_UT_FUN:
+        {
+            // call the Code Under Test (CUT)
+            void(*fp)(void) = (void(*)(void)) param1;
+            (*fp)();
+            QS_BEGIN_ID(UTEST, 0U) // app-specific record
+                QS_FUN((void(*)(void)) param1); // function called
+            QS_END()
+            break;
+        }
         default:
             break;  // just igmore if cmd isn't defined
     }
 }
 
+#if !defined(Q_UTEST)
 Q_NORETURN Q_onError(char const * const module, int_t const id) {
     // NOTE: this implementation of the assertion handler is intended only
     // for debugging and MUST be changed for deployment of the application
@@ -118,6 +133,7 @@ Q_NORETURN Q_onError(char const * const module, int_t const id) {
 
     NVIC_SystemReset();
 }
+#endif  //Q_UTEST
 
 void QS_onCleanup(void) 
 {
@@ -166,6 +182,9 @@ void QS_addUsrRecToDic(enum_t const rec) {
     switch(rec) {
         case MAIN:
             QS_USR_DICTIONARY(MAIN);
+            break;
+        case UTEST:
+            QS_USR_DICTIONARY(UTEST);
             break;
         default:
             for(;;) {}

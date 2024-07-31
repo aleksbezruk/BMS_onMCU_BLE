@@ -106,9 +106,9 @@ uint32_t QS_getTestProbe_(QSpyFunPtr const api) {
 }
 
 //............................................................................
-// QSTimeCtr QS_onGetTime(void) {
-//     return (++QS_tstPriv_.testTime);
-// }
+QSTimeCtr QS_onGetTime(void) {
+    return (++QS_tstPriv_.testTime);
+}
 
 //............................................................................
 Q_NORETURN Q_onError(
@@ -565,6 +565,6 @@ void QActiveDummy_fakePostLIFO_(
 }
 //$enddef${QS::QUTest-stub} ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-#endif // Q_UTEST != 0
+#endif // Q_UTEST != 0d
 
 #endif // Q_UTEST

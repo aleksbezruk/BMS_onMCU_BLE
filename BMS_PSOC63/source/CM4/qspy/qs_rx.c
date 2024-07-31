@@ -738,7 +738,9 @@ static void QS_rxHandleGoodFrame_(uint8_t const state) {
         case WAIT4_TICK_FRAME: {
             QS_rxReportAck_((int8_t)QS_RX_TICK);
 #ifdef Q_UTEST
+    #if !defined(QS_BAREMETAL_NON_QP)
             QTimeEvt_tick1_((uint_fast8_t)QS_rxPriv_.var.tick.rate, &QS_rxPriv_);
+    #endif  // QS_BAREMETAL_NON_QP
     #if Q_UTEST != 0
             QS_processTestEvts_(); // process all events produced
     #endif  // Q_UTEST != 0

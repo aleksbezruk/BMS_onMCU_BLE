@@ -265,7 +265,8 @@ bool BSP_isUartTxEmpty(void) {
 }
 
 void BSP_uartTxData(uint8_t *data, uint16_t len) {
-    cy_rslt_t result = cyhal_uart_write(&uartObj, data, (size_t *) &len);
+    size_t txLen = (size_t) len;
+    cy_rslt_t result = cyhal_uart_write(&uartObj, data, (size_t *) &txLen);
 
     if(result != CY_RSLT_SUCCESS) {
         while(1);
