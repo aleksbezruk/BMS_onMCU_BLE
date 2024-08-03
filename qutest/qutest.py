@@ -58,7 +58,7 @@ class QUTest:
 
     # public class constants
     VERSION = 734
-    TIMEOUT = 10.000 # timeout value [seconds]
+    TIMEOUT = 1.000 # timeout value [seconds]
 
     # private class variables
     _host_exe    = [None, None] # list to be convered to a tuple
@@ -933,6 +933,7 @@ class QUTest:
             pass
 
     def _reset_target(self):
+        print("Reseting target...")
         if QUTest._host_exe[0]:
             if not QUTest._have_assert:
                 #print("quitting exe")
@@ -951,9 +952,19 @@ class QUTest:
                 QSpy.send_to(struct.pack("<B", QSpy.TO_TRG_RESET))
 
         # ignore all input until have-target-info or timeout
+        print("Receiving target info...")
         while QSpy.receive():
             if QUTest._have_info:
                 break
+
+        # ignore all input until have-dict-info or timeout
+        # Option 1 - Obtain dict automatically by sending the cmd '_QSPY_SAVE_DICT' to QSPY back-end
+        #            then save file & parse it
+        # Option 2 - Provide test with location of dict file
+        time.sleep(3)   # wait until target provides all dictionaries
+        print("Send command to QSPY back-end to save dictionaries into file...")
+        QSpy.send_to(struct.pack("<B", QSpy._QSPY_SAVE_DICT))
+        time.sleep(1)   # wait some time for target response
 
         if QUTest._have_info:
             QUTest._have_assert = False
@@ -1342,7 +1353,6 @@ class QSpy:
         QSpy._sock.close()
         QSpy._sock = None
 
-    # returns True if packet received, False if timed out
     @staticmethod
     def receive():
         # pylint: disable=protected-access
@@ -1380,6 +1390,8 @@ class QSpy:
             raise RuntimeError("UDP packet from QSpy too short")
 
         rec_id = packet[1]
+        print(rec_id)
+        print(packet)
         if rec_id == QSpy._PKT_TEXT_ECHO: # text packet (most common)
             QUTest._last_record = packet[3:].decode("utf-8")
             # QS_ASSERTION?
@@ -1423,7 +1435,6 @@ class QSpy:
             QUTest._last_record = ""
             QSpy._detach()
             QSpy._is_attached = False
-
         else:
             QUTest._last_record = ""
             raise RuntimeError("Unrecognized UDP packet type from QSpy")
