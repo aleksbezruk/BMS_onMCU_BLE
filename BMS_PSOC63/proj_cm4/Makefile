@@ -66,19 +66,6 @@ CORE_NAME=CM4_0
 # manually add source code to the build process from a location not searched
 # by default, or otherwise not found by the build system.
 
-# ../source/CM4/qspy/qf_src/qep_hsm.c \
-# ../source/CM4/qspy/qf_src/qep_msm.c \
-# ../source/CM4/qspy/qf_src/qf_act.c	\
-# ../source/CM4/qspy/qf_src/qf_actq.c	\
-# ../source/CM4/qspy/qf_src/qf_defer.c	\
-# ../source/CM4/qspy/qf_src/qf_dyn.c	\
-# ../source/CM4/qspy/qf_src/qf_mem.c	\
-# ../source/CM4/qspy/qf_src/qf_ps.c	\
-# ../source/CM4/qspy/qf_src/qf_qact.c	\
-# ../source/CM4/qspy/qf_src/qf_qeq.c	\
-# ../source/CM4/qspy/qf_src/qf_qmact.c	\
-# ../source/CM4/qspy/qf_src/qf_time.c	\
-
 $(info Set BUILD CONFIGURATION IS -> $(BUILD_CONFIG)) 
 ifeq ($(BUILD_CONFIG), Debug)
 SOURCES=    ../source/CM4/main/main.c	\
@@ -131,7 +118,11 @@ VFP_SELECT=
 #
 # NOTE: Includes and defines should use the INCLUDES and DEFINES variable
 # above.
-CFLAGS=
+ifeq ($(BUILD_CONFIG), Qutest)
+CFLAGS= -O0 -Wall -g3 -fprofile-arcs -ftest-coverage  -fprofile-filter-files="main.c;qspyHelper.c;BSP.c"
+else
+CFLAGS= -O0 -Wall -g3
+endif	# BUILD configuration
 
 # Additional / custom C++ compiler flags.
 #
@@ -146,10 +137,18 @@ CXXFLAGS=
 ASFLAGS=
 
 # Additional / custom linker flags.
+ifeq ($(BUILD_CONFIG), Qutest)
+LDFLAGS=-fprofile-arcs -lc -lgcov -lrdimon -specs=rdimon.specs
+else
 LDFLAGS=
+endif	# BUILD configuration
 
 # Additional / custom libraries to link in to the application.
+ifeq ($(BUILD_CONFIG), Qutest)
 LDLIBS=
+else
+LDLIBS=
+endif	# BUILD configuration
 
 # Path to the linker script to use (if empty, use the default linker script).
 LINKER_SCRIPT=

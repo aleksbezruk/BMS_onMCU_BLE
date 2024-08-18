@@ -134,6 +134,18 @@
                     "export PATH=/bin:/usr/bin:$PATH ; ${config:modustoolbox.toolsPath}/modus-shell/bin/make.exe modlibs MTB__JOB_BACKGROUND="
                 ]
             }
+        },
+        {
+            "type": "shell",
+            "label": "gcovr",
+            "command": "gcovr --html-details -o ./coverage_report/BMS_code_coverage.html",
+            "options": {
+                "cwd": "${workspaceFolder}"
+            },
+            "group": {
+                "kind": "build",
+                "isDefault": false
+            },
         }
     ]
 }

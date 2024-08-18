@@ -45,12 +45,19 @@
 #include "cybsp.h"
 #include "BSP.h"
 #include "qspyHelper.h"
+#if defined(Q_UTEST)
+#include <stdio.h>
+#include <gcov.h>
+#endif // Q_UTEST
 
 /*******************************/
 /*** Functions prototypes */
 /******************************/
 static void mainTask_(void);
+#if defined(Q_UTEST)
 static void utTask_(void);
+void __gcov_dump(void); /* internal gcov function to write data */
+#endif //Q_UTEST
 
 /*******************************/
 /*** Data */
@@ -60,6 +67,14 @@ volatile uint32_t mainLoopTimer;
 /*******************************/
 /*** Code */
 /******************************/
+#if defined(Q_UTEST)
+extern void initialise_monitor_handles(void);
+static void initSemihosting(void)
+{
+    initialise_monitor_handles();
+}
+#endif //Q_UTEST
+
 int main(void)
 {
     cy_rslt_t result;
@@ -73,6 +88,11 @@ int main(void)
     /** Enable global interrupts */
     __enable_irq();
 
+#if defined(Q_UTEST)
+    initSemihosting();
+    printf("Semihosting started\n");
+#endif //Q_UTEST
+
     BSP_init_led_green();
     BSP_init_led_red();
 
@@ -81,19 +101,24 @@ int main(void)
 
     /** Init QSPY dictionary & filters */
     QS_addUsrRecToDic(MAIN);
+#if defined(Q_UTEST)
     QS_addUsrRecToDic(UTEST);
+#endif //Q_UTEST
     QS_initGlbFilters();
 
     /** dictionaries... */
     QS_FUN_DICTIONARY(&mainTask_);
+#if defined(Q_UTEST)
+    QS_FUN_DICTIONARY(__gcov_dump);
+#endif //Q_UTEST
 
     /** Main loop */
     for (;;) {
-        #if !defined(Q_UTEST)
+    #if !defined(Q_UTEST)
         mainTask_();
-        #else
+    #else
         utTask_();
-        #endif //Q_UTEST
+    #endif //Q_UTEST
     }
 }
 
@@ -123,6 +148,7 @@ static void mainTask_(void)
     }
 }
 
+#if defined(Q_UTEST)
 /**
  * @fn utTask_
  * @brief Unit tests task
@@ -134,5 +160,6 @@ static void utTask_(void)
 {
     QS_onIdle();
 }
+#endif //Q_UTEST
 
 /* [] END OF FILE */

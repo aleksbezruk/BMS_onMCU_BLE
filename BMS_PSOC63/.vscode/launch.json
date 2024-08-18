@@ -297,6 +297,27 @@
                 "hidden": false,
                 "group": " Multi-core"
             }
+        },
+        {
+            "name": "JLink QUtest",
+            "cwd": "${workspaceRoot}",
+            "executable": "proj_cm4/build/APP_CY8CPROTO-063-BLE/Debug/proj_cm4.elf",
+            "request": "launch",
+            "type": "cortex-debug",
+            "runToEntryPoint": "main",
+            //"numberOfProcessors": 2,
+            "targetProcessor": 1, // Set to 0 for the CM0+, set to 1 for the CM4
+            "postLaunchCommands": [
+                //"set semihosting enable on"
+            ],
+            "servertype": "jlink",
+            "serverpath": "/home/oleksandr/IDEs/Segger/JLink_Linux_V792k_x86_64/JLinkGDBServerCLExe",
+            "armToolchainPath": "/home/oleksandr/Toolchains/gcc-arm-none-eabi-10.3-2021.10-x86_64-linux/gcc-arm-none-eabi-10.3-2021.10/bin",
+            "device": "CY8C6xx7_CM4",
+            "interface": "swd",
+            "serialNumber": "", // add J-Link serial number if having multiple attached the same time.
+            "runToMain": false,
+            "svdFile": "../mtb_shared/mtb-pdl-cat1/release-v3.11.0/devices/COMPONENT_CAT1A/svd/psoc6_01.svd",
         }
     ]
 }

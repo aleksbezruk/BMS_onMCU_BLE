@@ -27,3 +27,16 @@ https://www.state-machine.com/qtools/qview.html
 ### V. Integration testing framework
 TBD. In general, It's preferrable to use framework based on scripting language like Python <br>
 I prefer Pyhon based framework.
+
+### VI. Code covera
+1. __*gcov*__ code instrumentation feature of GCC compiler is used in order to collect a coverage data. <br>
+The coverage data can be collected on both Target & Host systems. <br> 
+In the project Target testing is used. To write coverage data to PC from targer, use semihosting feature of debug probe <br>
+> When debug session is started, send cmd to debugger via "Debug Console": <br>
+> - monitor arm semihosting enable  -> for KitProg debugger
+> - set semihosting enable on  -> for JLink
+2. To enable GCOV code profiling/coverage: <br>
+- define additional compiler flags - <br>
+> Example -> CFLAGS= -O0 -Wall -g3 -fprofile-arcs -ftest-coverage  -fprofile-filter-files="main.c qspyHelper.c;BSP.c" ;
+-  define additional linker flags - <br>
+> Example -> LDFLAGS=-fprofile-arcs -lc -lgcov -lrdimon -specs=rdimon.specs

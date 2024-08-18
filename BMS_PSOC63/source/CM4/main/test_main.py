@@ -2,6 +2,7 @@
 # see https://www.state-machine.com/qtools/qutest.html
 
 import os
+import time
 
 def get_dictionary():
     dic_file = [f for f in os.listdir('.') if f.endswith('.dic')]
@@ -33,4 +34,14 @@ func_id = get_func_id(dict, "mainTask_")
 print(func_id)
 command(1, func_id)
 expect("@timestamp UTEST mainTask_")
+expect("@timestamp Trg-Done QS_RX_COMMAND")
+
+# get code coverage data collected by GCOV
+test(''' Get code coverage data ''', NORESET)
+func_id = get_func_id(dict, "__gcov_dump")
+print(func_id)
+command(1, func_id)
+# sleep sometime to save coverage data
+time.sleep(240)
+expect("@timestamp UTEST __gcov_dump")
 expect("@timestamp Trg-Done QS_RX_COMMAND")

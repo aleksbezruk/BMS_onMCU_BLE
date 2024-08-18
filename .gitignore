@@ -1,3 +1,5 @@
 # ignore files with extrensions
 *.log
 *.dic
+*.html
+*.css

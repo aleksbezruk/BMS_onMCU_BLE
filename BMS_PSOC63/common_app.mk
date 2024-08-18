@@ -41,7 +41,8 @@ CY_TOOLS_PATHS ?= $(wildcard \
 # 
 # The default depends on the selected TOOLCHAIN (GCC_ARM uses the ModusToolbox
 # software provided compiler by default).
-CY_COMPILER_GCC_ARM_DIR=
+#CY_COMPILER_GCC_ARM_DIR=
+CY_COMPILER_GCC_ARM_DIR=/home/oleksandr/Toolchains/gcc-arm-none-eabi-10.3-2021.10-x86_64-linux/gcc-arm-none-eabi-10.3-2021.10
 
 # If you install ModusToolbox IDE in a custom location, add the path to its
 # "tools_X.Y" folder (where X and Y are the version number of the tools

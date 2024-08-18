@@ -1074,6 +1074,8 @@ static void QS_rxReportAck_(int8_t const recId) {
     QS_MEM_APP();
     QS_CRIT_EXIT();
     QS_REC_DONE(); // user callback (if defined)
+
+    QS_FLUSH();
 }
 
 //............................................................................
