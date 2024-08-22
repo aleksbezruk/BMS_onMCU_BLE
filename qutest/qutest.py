@@ -961,10 +961,10 @@ class QUTest:
         # Option 1 - Obtain dict automatically by sending the cmd '_QSPY_SAVE_DICT' to QSPY back-end
         #            then save file & parse it
         # Option 2 - Provide test with location of dict file
-        time.sleep(3)   # wait until target provides all dictionaries
-        print("Send command to QSPY back-end to save dictionaries into file...")
-        QSpy.send_to(struct.pack("<B", QSpy._QSPY_SAVE_DICT))
-        time.sleep(1)   # wait some time for target response
+        #time.sleep(3)   # wait until target provides all dictionaries
+        #print("Send command to QSPY back-end to save dictionaries into file...")
+        #QSpy.send_to(struct.pack("<B", QSpy._QSPY_SAVE_DICT))
+        #time.sleep(1)   # wait some time for target response
 
         if QUTest._have_info:
             QUTest._have_assert = False

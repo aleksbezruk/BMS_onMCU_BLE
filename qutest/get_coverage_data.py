@@ -26,12 +26,13 @@ def on_reset():
     print("---Set global filters---")
     glb_filter(GRP_ALL)
 
-# tests...
-test(''' mainTask_ test ''')
+# get code coverage data collected by GCOV
+test(''' Get code coverage data ''')
 dict = get_dictionary()
-print(dict)
-func_id = get_func_id(dict, "mainTask_")
+func_id = get_func_id(dict, "__gcov_dump")
 print(func_id)
 command(1, func_id)
-expect("@timestamp UTEST mainTask_")
+# sleep sometime to save coverage data
+time.sleep(240)
+expect("@timestamp UTEST __gcov_dump")
 expect("@timestamp Trg-Done QS_RX_COMMAND")

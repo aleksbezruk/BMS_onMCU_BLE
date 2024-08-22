@@ -1,1 +1,1 @@
-python3 ./qutest.py ../BMS_PSOC63/source/CM4/main/test_main.py
+python3 ./qutest.py ../BMS_PSOC63/source/CM4/main/test_main.py ./get_coverage_data.py
