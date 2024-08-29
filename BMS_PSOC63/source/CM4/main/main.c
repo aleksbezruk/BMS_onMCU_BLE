@@ -110,15 +110,16 @@ int main(void)
     QS_FUN_DICTIONARY(&mainTask_);
 #if defined(Q_UTEST)
     QS_FUN_DICTIONARY(__gcov_dump);
+    BSP_initUTdic();
 #endif //Q_UTEST
 
     /** Main loop */
     for (;;) {
-    #if !defined(Q_UTEST)
+#if !defined(Q_UTEST)
         mainTask_();
-    #else
+#else
         utTask_();
-    #endif //Q_UTEST
+#endif //Q_UTEST
     }
 }
 

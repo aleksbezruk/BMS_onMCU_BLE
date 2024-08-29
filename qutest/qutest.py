@@ -58,7 +58,7 @@ class QUTest:
 
     # public class constants
     VERSION = 734
-    TIMEOUT = 1.000 # timeout value [seconds]
+    TIMEOUT = 3.000 # timeout value [seconds]
 
     # private class variables
     _host_exe    = [None, None] # list to be convered to a tuple

@@ -2,12 +2,17 @@
  * \file BSP.c
  * \version 0.1.0
  *
- * Board support package source code file.
+ * Board support package header file for a CY8CPROTO-063-BLE dev board.
+ * The board contains CYBLE-416045-02 chip based on 
+ * PSoC 6 MCU CY8C6347BZI-BLD53
  ********************************************************************************/
 
 #include "cy_pdl.h"
 #include "BSP.h"
 #include "cycfg.h"
+#if defined(Q_UTEST)
+#include "../../source/CM4/qspy/qpc.h"
+#endif  // Q_UTEST
 
 /********************************************************************************
  * Private data
@@ -18,8 +23,8 @@ static bspUartRxCallback rxCallback;
 /********************************************************************************
  * Functions prototype
 *********************************************************************************/
-void uart_event_callback_(void *callback_arg, cyhal_uart_event_t event);
-cy_rslt_t uart_readFifo_(uint8_t *data, size_t *len);
+static void uart_event_callback_(void *callback_arg, cyhal_uart_event_t event);
+static cy_rslt_t uart_readFifo_(uint8_t *data, size_t *len);
 
 /********************************************************************************
  * Code
@@ -28,7 +33,8 @@ cy_rslt_t uart_readFifo_(uint8_t *data, size_t *len);
 /*----------------------------------------*/
 /** Board system periph init APIs section */
 /*----------------------------------------*/
-bsp_status_init_t BSP_init_board(bsp_board_init_t* pSettings) {
+bsp_status_init_t BSP_init_board(bsp_board_init_t* pSettings) 
+{
     if (BSP_power_init() != CY_SYSPM_SUCCESS) {
         return bsp_status_init_fail;
     }
@@ -52,11 +58,13 @@ bsp_status_init_t BSP_init_board(bsp_board_init_t* pSettings) {
     return bsp_status_init_success;
 }
 
-void BSP_init_led_red(void) {
+void BSP_init_led_red(void) 
+{
     Cy_GPIO_Pin_FastInit(GPIO_LED_RED_PORT, GPIO_LED_RED_PIN, CY_GPIO_DM_STRONG_IN_OFF, 1UL, HSIOM_SEL_GPIO);
 }
 
-void BSP_init_led_green(void) {
+void BSP_init_led_green(void) 
+{
     Cy_GPIO_Pin_FastInit(GPIO_LED_GREEN_PORT, GPIO_LED_GREEN_PIN, CY_GPIO_DM_STRONG_IN_OFF, 1UL, HSIOM_SEL_GPIO);
 }
 
@@ -64,7 +72,8 @@ void BSP_init_led_green(void) {
 /** Board power domain APIs section */
 /*----------------------------------*/
 
-cy_en_syspm_status_t BSP_power_init(void) {
+cy_en_syspm_status_t BSP_power_init(void) 
+{
     cy_en_syspm_status_t status = CY_SYSPM_SUCCESS;
 
     status = Cy_SysPm_LdoSetMode(CY_SYSPM_LDO_MODE_NORMAL);
@@ -79,11 +88,13 @@ cy_en_syspm_status_t BSP_power_init(void) {
 /** Board clock domain APIs section */
 /*----------------------------------*/
 
-void BSP_clock_setWaitStates(void) {
+void BSP_clock_setWaitStates(void) 
+{
     Cy_SysLib_SetWaitStates(false, CLOCK_CLK_FAST_HZ / CLOCK_HZ_IN_MHZ);
 }
 
-cy_en_sysclk_status_t BSP_clock_wcoInit(void) {
+cy_en_sysclk_status_t BSP_clock_wcoInit(void) 
+{
     cy_en_sysclk_status_t status;
 
     Cy_SysLib_ResetBackupDomain();
@@ -105,7 +116,8 @@ cy_en_sysclk_status_t BSP_clock_wcoInit(void) {
     return status;
 }
 
-cy_en_sysclk_status_t BSP_clock_ecoInit(void) {
+cy_en_sysclk_status_t BSP_clock_ecoInit(void) 
+{
     cy_en_sysclk_status_t status;
 
     Cy_SysClk_EcoDisable();
@@ -116,7 +128,8 @@ cy_en_sysclk_status_t BSP_clock_ecoInit(void) {
     return status;
 }
 
-cy_en_sysclk_status_t BSP_clock_hifclkInit(bsp_board_init_t* pSettings) {
+cy_en_sysclk_status_t BSP_clock_hifclkInit(bsp_board_init_t* pSettings) 
+{
     cy_en_sysclk_status_t status;
     cy_stc_pll_config_t pllConfig = {
         .outputFreq = CLOCK_CLK_FAST_HZ,             /* PLL output: 150 MHz */
@@ -172,26 +185,31 @@ cy_en_sysclk_status_t BSP_clock_hifclkInit(bsp_board_init_t* pSettings) {
 /** Board LED APIs section */
 /*-------------------------*/
 
-void BSP_led_red_toggle(void) {
+void BSP_led_red_toggle(void) 
+{
     Cy_GPIO_Inv(GPIO_LED_RED_PORT, GPIO_LED_RED_PIN);
 }
 
-void BSP_led_red_On(void) {
+void BSP_led_red_On(void) 
+{
     cyhal_gpio_write(P6_3, false);
 }
 
-void BSP_led_red_Off(void) {
+void BSP_led_red_Off(void) 
+{
     cyhal_gpio_write(P6_3, true);
 }
 
-void BSP_led_green_toggle(void) {
+void BSP_led_green_toggle(void) 
+{
     Cy_GPIO_Inv(GPIO_LED_GREEN_PORT, GPIO_LED_GREEN_PIN);
 }
 
 /*--------------------------*/
 /** Board UART APIs section */
 /*--------------------------*/
-void BSP_initUart(bspUartRxCallback callback) {
+void BSP_initUart(bspUartRxCallback callback) 
+{
     cy_rslt_t result;
 
     rxCallback = callback;
@@ -226,7 +244,8 @@ void BSP_initUart(bspUartRxCallback callback) {
  * 
  * @retval None
  */
-void uart_event_callback_(void *callback_arg, cyhal_uart_event_t event) {
+void uart_event_callback_(void *callback_arg, cyhal_uart_event_t event) 
+{
     cy_rslt_t result;
     uint8_t rxData[16];
     size_t len = 1;
@@ -244,7 +263,17 @@ void uart_event_callback_(void *callback_arg, cyhal_uart_event_t event) {
     }
 }
 
-cy_rslt_t uart_readFifo_(uint8_t *data, size_t *len) {
+/**
+ * @fn uart_readFifo_
+ * @brief Reads data form UART FIFO
+ * @param[out] data - ptr to buf
+ * @param[out] len - ptr to data len
+ * 
+ * 
+ * @retval 0 - if success, otherwise - failed status
+ */
+cy_rslt_t uart_readFifo_(uint8_t *data, size_t *len) 
+{
     cy_rslt_t result;
 
     result = cyhal_uart_read(&uartObj, data, len);
@@ -252,19 +281,22 @@ cy_rslt_t uart_readFifo_(uint8_t *data, size_t *len) {
     return result;
 }
 
-bool BSP_isUartTxReady(void) {
+bool BSP_isUartTxReady(void) 
+{
     uint32_t num = cyhal_uart_writable(&uartObj);
 
     return (num > 0);
 }
 
-bool BSP_isUartTxEmpty(void) {
+bool BSP_isUartTxEmpty(void) 
+{
     uint32_t num = cyhal_uart_writable(&uartObj);
 
     return (num == 0);
 }
 
-void BSP_uartTxData(uint8_t *data, uint16_t len) {
+void BSP_uartTxData(uint8_t *data, uint16_t len) 
+{
     size_t txLen = (size_t) len;
     cy_rslt_t result = cyhal_uart_write(&uartObj, data, (size_t *) &txLen);
 
@@ -272,5 +304,23 @@ void BSP_uartTxData(uint8_t *data, uint16_t len) {
         while(1);
     }
 }
+
+#if defined(Q_UTEST)
+void BSP_initUTdic(void)
+{
+    QS_FUN_DICTIONARY(BSP_init_led_red);
+    QS_FUN_DICTIONARY(BSP_init_led_green);
+    QS_FUN_DICTIONARY(BSP_power_init);
+    QS_FUN_DICTIONARY(BSP_clock_setWaitStates);
+    QS_FUN_DICTIONARY(BSP_clock_wcoInit);
+    QS_FUN_DICTIONARY(BSP_clock_ecoInit);
+    QS_FUN_DICTIONARY(BSP_led_red_toggle);
+    QS_FUN_DICTIONARY(BSP_led_red_On);
+    QS_FUN_DICTIONARY(BSP_led_red_Off);
+    QS_FUN_DICTIONARY(BSP_led_green_toggle);
+    QS_FUN_DICTIONARY(BSP_isUartTxReady);
+    QS_FUN_DICTIONARY(BSP_isUartTxEmpty);
+}
+#endif //Q_UTEST
 
 /************************** END OF FILE *****************************************/

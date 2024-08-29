@@ -26,6 +26,9 @@ extern volatile uint32_t mainLoopTimer;
 /******************************/
 static uint8_t qsTxBuf[2048]; // buffer for QS-TX channel
 static uint8_t qsRxBuf[100];    // buffer for QS-RX channel
+#if defined(Q_UTEST)
+static uint8_t qsTestFuncArgs[50];  // buffer for functions args received from UT scripts
+#endif //Q_UTEST
 
 static QSTimeCtr QS_tickTime_;      // ms
 static QSTimeCtr QS_tickPeriod_;    // ms
@@ -111,6 +114,31 @@ void QS_onCommand(uint8_t cmdId,
             QS_END()
             break;
         }
+        case QS_CMD_MCU_READ_REG:
+        {
+            uint32_t *mcuReg = (uint32_t *) param1;
+            uint32_t mcuRegVal = *mcuReg;
+            QS_BEGIN_ID(UTEST, 0U)              // app-specific record
+                QS_STR("READ_MCU_REG");         // operation info
+                QS_U32(0, (uint32_t) mcuReg);   // reg addr to read
+                QS_U32(0, mcuRegVal);           // reg value
+            QS_END()
+            QS_FLUSH();
+            break;
+        }
+        case QS_CMD_MCU_WRITE_REG:
+        {
+            uint32_t *mcuReg = (uint32_t *) param1;
+            uint32_t mcuRegVal = param2;
+            *mcuReg = mcuRegVal;
+            QS_BEGIN_ID(UTEST, 0U)              // app-specific record
+                QS_STR("WRITE_MCU_REG");         // operation info
+                QS_U32(0, (uint32_t) mcuReg);   // reg addr to write
+                QS_U32(0, mcuRegVal);           // reg value
+            QS_END()
+            QS_FLUSH();
+            break;
+        }
         default:
             break;  // just igmore if cmd isn't defined
     }
@@ -160,6 +188,10 @@ uint8_t QS_onStartup(void const *arg) {
     // QS_tickPeriod_ = SystemCoreClock / BSP_TICKS_PER_SEC;
     QS_tickPeriod_ = 1;
     QS_tickTime_ = 0; // to start the timestamp at zero
+
+#if defined(Q_UTEST)
+    QS_OBJ_DICTIONARY(qsTestFuncArgs);
+#endif //Q_UTEST
 
     return QSPY_STATUS_SUCCESS;
 }

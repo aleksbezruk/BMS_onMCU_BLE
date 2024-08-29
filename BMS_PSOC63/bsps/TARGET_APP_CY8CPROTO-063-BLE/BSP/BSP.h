@@ -2,7 +2,9 @@
  * \file BSP.h
  * \version 0.1.0
  *
- * Board support package header file.
+ * Board support package header file for a CY8CPROTO-063-BLE dev board.
+ * The board contains CYBLE-416045-02 chip based on 
+ * PSoC 6 MCU CY8C6347BZI-BLD53
  ********************************************************************************/
 
 #ifndef __BSP_H__
@@ -77,7 +79,6 @@ typedef void (*bspUartRxCallback)(uint8_t *data, uint16_t len);
 /*----------------------------------------*/
 /** Board system periph init APIs section */
 /*----------------------------------------*/
-
 /**
  * @fn         BSP_init_board.
  * @brief      Init board: power, clocks.
@@ -105,7 +106,6 @@ void BSP_init_led_green(void);
 /*----------------------------------*/
 /** Board power domain APIs section */
 /*----------------------------------*/
-
 /**
  * @fn      BSP_power_init.
  * @brief   Initialize board power domain.
@@ -120,7 +120,6 @@ cy_en_syspm_status_t BSP_power_init(void);
 /*----------------------------------*/
 /** Board clock domain APIs section */
 /*----------------------------------*/
-
 /**
  * @fn     BSP_clock_setWaitStates.
  * @brief  Set wait states for ROM, SRAM, FLASH before setting HIFCLK.
@@ -156,7 +155,6 @@ cy_en_sysclk_status_t BSP_clock_hifclkInit(bsp_board_init_t* pSettings);
 /*-------------------------*/
 /** Board LED APIs section */
 /*-------------------------*/
-
 /**
  * @fn     BSP_led_red_toggle.
  * @brief  Toggle red LED.
@@ -224,6 +222,16 @@ bool BSP_isUartTxEmpty(void);
  * @retval None 
  */
 void BSP_uartTxData(uint8_t *data, uint16_t len);
+
+#if defined(Q_UTEST)
+/**
+ * @fn     BSP_initUTdic.
+ * @brief  Initi dictionaries for BSP UTs.
+ * @param  None
+ * @retval None 
+ */
+void BSP_initUTdic(void);
+#endif //Q_UTEST
 
 #endif  // __BSP_H__
 
