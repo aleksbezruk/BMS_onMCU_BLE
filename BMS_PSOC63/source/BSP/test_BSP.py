@@ -131,3 +131,6 @@ expect("@timestamp TstProbe Fun=BSP_power_init,Data=255")
 expect("@timestamp BSP BSP_power_init_test RETURN_VAL 255")
 expect("@timestamp UTEST BSP_power_init_test")
 expect("@timestamp Trg-Done QS_RX_COMMAND")
+
+test(''' BSP_clock_setWaitStates ''')
+

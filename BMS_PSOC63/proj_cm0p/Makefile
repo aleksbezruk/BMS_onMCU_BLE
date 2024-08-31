@@ -74,7 +74,8 @@ SOURCES= ../source/CM0p/main.c
 else ifeq ($(BUILD_CONFIG), Qutest)
 SOURCES= ../source/CM0p/main.c
 else
-$(error !!! BUILD CONFIGURATION IS udefined !!!. Please set Debug or Qutest or Release)
+# $(error !!! BUILD CONFIGURATION IS udefined !!!. Please set Debug or Qutest or Release)
+$(info Set BUILD CONFIGURATION IS nor defined. Please doublecheck. Maybe it's Cypress Device Confidurator running)
 endif	# BUILD configuration
 
 # Like SOURCES, but for include directories. Value should be paths to
