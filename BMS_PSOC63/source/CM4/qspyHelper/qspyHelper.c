@@ -112,6 +112,7 @@ void QS_onCommand(uint8_t cmdId,
             QS_BEGIN_ID(UTEST, 0U) // app-specific record
                 QS_FUN((void(*)(void)) param1); // function called
             QS_END()
+            QS_FLUSH();
             break;
         }
         case QS_CMD_MCU_READ_REG:
@@ -217,6 +218,9 @@ void QS_addUsrRecToDic(enum_t const rec) {
             break;
         case UTEST:
             QS_USR_DICTIONARY(UTEST);
+            break;
+        case BSP:
+            QS_USR_DICTIONARY(BSP);
             break;
         default:
             for(;;) {}

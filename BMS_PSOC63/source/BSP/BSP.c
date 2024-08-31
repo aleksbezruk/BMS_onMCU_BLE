@@ -11,7 +11,7 @@
 #include "BSP.h"
 #include "cycfg.h"
 #if defined(Q_UTEST)
-#include "../../source/CM4/qspy/qpc.h"
+#include "qpc.h"
 #endif  // Q_UTEST
 
 /********************************************************************************
@@ -25,6 +25,10 @@ static bspUartRxCallback rxCallback;
 *********************************************************************************/
 static void uart_event_callback_(void *callback_arg, cyhal_uart_event_t event);
 static cy_rslt_t uart_readFifo_(uint8_t *data, size_t *len);
+
+#if defined(Q_UTEST)
+void BSP_test_init(void);
+#endif  // Q_UTEST
 
 /********************************************************************************
  * Code
@@ -77,6 +81,12 @@ cy_en_syspm_status_t BSP_power_init(void)
     cy_en_syspm_status_t status = CY_SYSPM_SUCCESS;
 
     status = Cy_SysPm_LdoSetMode(CY_SYSPM_LDO_MODE_NORMAL);
+
+    QS_TEST_PROBE_DEF(&BSP_power_init)
+    QS_TEST_PROBE(
+        status = qs_tp_;
+    )
+
     if (CY_SYSPM_SUCCESS == status) {
         status = Cy_SysPm_LdoSetVoltage(CY_SYSPM_LDO_VOLTAGE_1_1V);
     }
@@ -320,6 +330,8 @@ void BSP_initUTdic(void)
     QS_FUN_DICTIONARY(BSP_led_green_toggle);
     QS_FUN_DICTIONARY(BSP_isUartTxReady);
     QS_FUN_DICTIONARY(BSP_isUartTxEmpty);
+
+    BSP_test_init();
 }
 #endif //Q_UTEST
 

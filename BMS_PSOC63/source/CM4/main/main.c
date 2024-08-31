@@ -103,6 +103,7 @@ int main(void)
     QS_addUsrRecToDic(MAIN);
 #if defined(Q_UTEST)
     QS_addUsrRecToDic(UTEST);
+    QS_addUsrRecToDic(BSP);
 #endif //Q_UTEST
     QS_initGlbFilters();
 

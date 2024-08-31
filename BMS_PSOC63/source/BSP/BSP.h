@@ -110,8 +110,10 @@ void BSP_init_led_green(void);
  * @fn      BSP_power_init.
  * @brief   Initialize board power domain.
  * @details Use Linear core regulator:
- *              - 1.1 V mode;
- *              - set high current/normal mode.
+ *           - 1.1 V mode;
+ *           - set high current/normal mode;
+ * @note    Consider using of Buck converter instaed of LDO in Power save modes (Deep Sleep etc.)
+ *          Typically firmware set LDO as default regulator at start up
  * @param   None
  * @retval  cy_en_syspm_status_t
  */

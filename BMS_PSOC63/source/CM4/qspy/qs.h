@@ -844,7 +844,7 @@ void QActiveDummy_fakePostLIFO_(
 #endif // Q_UTEST != 0
 
 #define QS_TEST_PROBE_DEF(fun_) \
-    uint32_t const qs_tp_ = QS_getTestProbe_((void (*)(void))(fun_));
+    volatile uint32_t const qs_tp_ = QS_getTestProbe_((void (*)(void))(fun_));
 
 #define QS_TEST_PROBE(code_) \
     if (qs_tp_ != 0U) { code_ }

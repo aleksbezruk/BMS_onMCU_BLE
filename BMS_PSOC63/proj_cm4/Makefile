@@ -69,7 +69,7 @@ CORE_NAME=CM4_0
 $(info Set BUILD CONFIGURATION IS -> $(BUILD_CONFIG)) 
 ifeq ($(BUILD_CONFIG), Debug)
 SOURCES=    ../source/CM4/main/main.c	\
-			../bsps/TARGET_APP_CY8CPROTO-063-BLE/BSP/BSP.c \
+			../source/BSP/BSP.c \
 			../source/CM4/qspy/qs_64bit.c \
 			../source/CM4/qspy/qs_fp.c \
 			../source/CM4/qspy/qs_rx.c \
@@ -82,7 +82,8 @@ else ifeq ($(BUILD_CONFIG), Qutest)
 SOURCES=    ../source/CM4/qspy/qutest.c \
 		    ../source/CM4/qutestHelper/qutestHelper.c	\
 			../source/CM4/main/main.c	\
-		    ../bsps/TARGET_APP_CY8CPROTO-063-BLE/BSP/BSP.c \
+		    ../source/BSP/BSP.c \
+			../source/BSP/test_BSP.c \
 			../source/CM4/qspy/qs_64bit.c \
 			../source/CM4/qspy/qs_fp.c \
 			../source/CM4/qspy/qs_rx.c \
@@ -95,7 +96,7 @@ endif	# BUILD configuration
 
 # Like SOURCES, but for include directories. Value should be paths to
 # directories (without a leading -I).
-INCLUDES=SOURCES= ../bsps/TARGET_APP_CY8CPROTO-063-BLE/BSP/ \
+INCLUDES=SOURCES= ../source/BSP/ \
 				  ../source/CM4/qspy/ \
 				  ../source/CM4/qspyHelper \
 				  ../source/CM4/qutestHelper
