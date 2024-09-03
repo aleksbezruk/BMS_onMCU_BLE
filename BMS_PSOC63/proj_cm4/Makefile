@@ -121,7 +121,7 @@ VFP_SELECT=
 # NOTE: Includes and defines should use the INCLUDES and DEFINES variable
 # above.
 ifeq ($(BUILD_CONFIG), Qutest)
-CFLAGS= -O0 -Wall -g3 -fprofile-arcs -ftest-coverage  -fprofile-filter-files="main.c;qspyHelper.c;BSP.c"
+CFLAGS= -O0 -Wall -g3 -fprofile-arcs -ftest-coverage  -fprofile-filter-files="main.c;qspyHelper.c;../source/BSP/BSP.c"
 else
 CFLAGS= -O0 -Wall -g3
 endif	# BUILD configuration

@@ -36,7 +36,7 @@
 /** Clock section */
 #define CLOCK_CLKPATH1           1U
 #define CLOCK_HIFCLK0            0U
-#define CLOCK_CLK_FAST_HZ        150000000U
+#define CLOCK_CLK_FAST_HZ        100000000U
 #define CLOCK_HZ_IN_MHZ          1000000U
 #define CLOCK_CLK_ECO_HZ         24000000U
 #define CLOCK_CLK_IMO_HZ         8000000U
@@ -45,6 +45,11 @@
 #define CLOCK_PLL_ENABLE_TIMEOUT 20000U /// microseconds
 
 #define BSP_TICKS_PER_SEC 1000U
+
+/** BSP -> project config */
+#define BSP_ENABLE_ECO_CONFIG           false
+#define BSP_ENABLE_PLL_CONFIG           false
+#define BSP_ENABLE_UART_EXTENDED_FUNCS  false
 
 /*******************************************************************************
  * Types
@@ -134,14 +139,21 @@ void BSP_clock_setWaitStates(void);
  * @fn     BSP_clock_wcoInit.
  * @brief  Init WCO 32 kHz clock.
  * @param  None
+ * 
+ * @details External Crystal 32768 Hz (ECS-.327-12.5-34B-TR) 
+ * is installed on the Dev Board. 
+ * 
  * @retval cy_en_sysclk_status_t 
  */
 cy_en_sysclk_status_t BSP_clock_wcoInit(void);
 
 /**
  * @fn     BSP_clock_ecoInit.
- * @brief  Init ECO 24 kHz clock.
+ * @brief  Init ECO (EXTERNAL crystal oscillator) 24 MHz clock.
  * @param  None
+ * 
+ * @details External oscillator isn't instaled on PCBA by default
+ * 
  * @retval cy_en_sysclk_status_t 
  */
 cy_en_sysclk_status_t BSP_clock_ecoInit(void);
@@ -196,9 +208,9 @@ void BSP_led_green_toggle(void);
  * @fn     BSP_initUart.
  * @brief  Initialize UART.
  * @param  None
- * @retval None 
+ * @retval 0 - success, otherwise - fail status
  */
-void BSP_initUart(bspUartRxCallback callback);
+bsp_status_init_t BSP_initUart(bspUartRxCallback callback);
 
 /**
  * @fn     BSP_isUartTxReady.

@@ -14,6 +14,7 @@
 #include "qpc.h"
 #endif  // Q_UTEST
 
+
 /********************************************************************************
  * Private data
 *********************************************************************************/
@@ -37,6 +38,7 @@ void BSP_test_init(void);
 /*----------------------------------------*/
 /** Board system periph init APIs section */
 /*----------------------------------------*/
+#if BSP_ENABLE_PLL_CONFIG == true
 bsp_status_init_t BSP_init_board(bsp_board_init_t* pSettings) 
 {
     if (BSP_power_init() != CY_SYSPM_SUCCESS) {
@@ -61,16 +63,7 @@ bsp_status_init_t BSP_init_board(bsp_board_init_t* pSettings)
 
     return bsp_status_init_success;
 }
-
-void BSP_init_led_red(void) 
-{
-    Cy_GPIO_Pin_FastInit(GPIO_LED_RED_PORT, GPIO_LED_RED_PIN, CY_GPIO_DM_STRONG_IN_OFF, 1UL, HSIOM_SEL_GPIO);
-}
-
-void BSP_init_led_green(void) 
-{
-    Cy_GPIO_Pin_FastInit(GPIO_LED_GREEN_PORT, GPIO_LED_GREEN_PIN, CY_GPIO_DM_STRONG_IN_OFF, 1UL, HSIOM_SEL_GPIO);
-}
+#endif  //BSP_ENABLE_PLL_CONFIG
 
 /*----------------------------------*/
 /** Board power domain APIs section */
@@ -116,16 +109,25 @@ cy_en_sysclk_status_t BSP_clock_wcoInit(void)
 
     Cy_GPIO_Pin_FastInit(GPIO_WCO_IN_PORT, GPIO_WCO_IN_PIN, CY_GPIO_DM_ANALOG, 0UL, HSIOM_SEL_GPIO); 
     Cy_GPIO_Pin_FastInit(GPIO_WCO_OUT_PORT, GPIO_WCO_OUT_PIN, CY_GPIO_DM_ANALOG, 0UL, HSIOM_SEL_GPIO);
-    Cy_SysClk_WcoBypass(CY_SYSCLK_WCO_NOT_BYPASSED);
+    Cy_SysClk_WcoBypass(CY_SYSCLK_WCO_NOT_BYPASSED);    // WCO is not bypassed crystal is used 
     status = Cy_SysClk_WcoEnable(CLOCK_WCO_ENABLE_TIMEOUT);
 
+    QS_TEST_PROBE_DEF(&BSP_clock_wcoInit)
+    QS_TEST_PROBE(
+        status = qs_tp_;
+    )
+
     if (CY_SYSCLK_SUCCESS == status) {
-        Cy_SysClk_ClkBakSetSource(CY_SYSCLK_BAK_IN_WCO);
+        Cy_SysClk_ClkBakSetSource(CY_SYSCLK_BAK_IN_WCO); // Backup domain clock input is WCO
     }
+#if defined(Q_UTEST)
+    Cy_SysClk_ClkBakSetSource(CY_SYSCLK_BAK_IN_WCO); 
+#endif //Q_UTEST
 
     return status;
 }
 
+#if BSP_ENABLE_ECO_CONFIG == true
 cy_en_sysclk_status_t BSP_clock_ecoInit(void) 
 {
     cy_en_sysclk_status_t status;
@@ -137,12 +139,14 @@ cy_en_sysclk_status_t BSP_clock_ecoInit(void)
 
     return status;
 }
+#endif //BSP_ENABLE_ECO_CONFIG
 
+#if BSP_ENABLE_PLL_CONFIG == true 
 cy_en_sysclk_status_t BSP_clock_hifclkInit(bsp_board_init_t* pSettings) 
 {
     cy_en_sysclk_status_t status;
     cy_stc_pll_config_t pllConfig = {
-        .outputFreq = CLOCK_CLK_FAST_HZ,             /* PLL output: 150 MHz */
+        .outputFreq = CLOCK_CLK_FAST_HZ,             /* PLL output desired frequency in Hz */
         .lfMode     = false,                         /* Disable low frequency mode (VCO = 200~400 MHz) */
         .outputMode = CY_SYSCLK_FLLPLL_OUTPUT_AUTO   /* Output 100 MHz when locked. Otherwise 8 MHz */
     };
@@ -190,10 +194,21 @@ cy_en_sysclk_status_t BSP_clock_hifclkInit(bsp_board_init_t* pSettings)
 
     return status;
 }
+#endif  //BSP_ENABLE_PLL_CONFIG 
 
 /*-------------------------*/
 /** Board LED APIs section */
 /*-------------------------*/
+
+void BSP_init_led_red(void) 
+{
+    Cy_GPIO_Pin_FastInit(GPIO_LED_RED_PORT, GPIO_LED_RED_PIN, CY_GPIO_DM_STRONG_IN_OFF, 1UL, HSIOM_SEL_GPIO);
+}
+
+void BSP_init_led_green(void) 
+{
+    Cy_GPIO_Pin_FastInit(GPIO_LED_GREEN_PORT, GPIO_LED_GREEN_PIN, CY_GPIO_DM_STRONG_IN_OFF, 1UL, HSIOM_SEL_GPIO);
+}
 
 void BSP_led_red_toggle(void) 
 {
@@ -218,28 +233,50 @@ void BSP_led_green_toggle(void)
 /*--------------------------*/
 /** Board UART APIs section */
 /*--------------------------*/
-void BSP_initUart(bspUartRxCallback callback) 
+bsp_status_init_t BSP_initUart(bspUartRxCallback callback) 
 {
     cy_rslt_t result;
-
+    bsp_status_init_t status = bsp_status_init_success;
     rxCallback = callback;
-    
-    /** Configrure & enable UART */
-     result = cyhal_uart_init_cfg(&uartObj, &scb_5_hal_config);
-     if(result != CY_RSLT_SUCCESS) {
-        while(1);
-     }
 
-     /** Setup RX interrupt */
-     cyhal_uart_register_callback(&uartObj, 
-                                  uart_event_callback_, 
-                                  /*void *callback_arg*/ NULL);
-     cyhal_uart_enable_event(&uartObj, 
-                             CYHAL_UART_IRQ_RX_NOT_EMPTY, 
-                             /* irq prio*/1U, 
-                             true);
+    /** Configrure & enable UART */
+    result = cyhal_uart_init_cfg(&uartObj, &scb_5_hal_config);
+
+    QS_TEST_PROBE_DEF(&BSP_initUart)
+    QS_TEST_PROBE(
+        result = qs_tp_;
+    )
+    if(result == CY_RSLT_SUCCESS) {
+        /** Setup RX interrupt */
+        cyhal_uart_register_callback(&uartObj, 
+                                    uart_event_callback_, 
+                                    /*void *callback_arg*/ NULL);
+        cyhal_uart_enable_event(&uartObj, 
+                                CYHAL_UART_IRQ_RX_NOT_EMPTY, 
+                                /* irq prio*/1U, 
+                                true);
+    } else {
+        status = bsp_status_init_fail;
+#if defined (Q_UTEST)
+        cyhal_uart_register_callback(&uartObj, 
+                                    uart_event_callback_, 
+                                    /*void *callback_arg*/ NULL);
+        cyhal_uart_enable_event(&uartObj, 
+                                CYHAL_UART_IRQ_RX_NOT_EMPTY, 
+                                /* irq prio*/1U, 
+                                true);
+#endif //Q_UTEST
+    }
+
+    return status;
 }
 
+#if defined(Q_UTEST)
+void uart_event_callback_test(void)
+{
+    uart_event_callback_(NULL, CYHAL_UART_IRQ_TX_ERROR);    // not nominal path of execution
+}
+#endif //Q_UTEST
 /**
  * @fn uart_event_callback_
  * @brief Handles UART interrupts
@@ -254,22 +291,20 @@ void BSP_initUart(bspUartRxCallback callback)
  * 
  * @retval None
  */
-void uart_event_callback_(void *callback_arg, cyhal_uart_event_t event) 
+static void uart_event_callback_(void *callback_arg, cyhal_uart_event_t event) 
 {
-    cy_rslt_t result;
     uint8_t rxData[16];
     size_t len = 1;
 
     switch(event) {
         case CYHAL_UART_IRQ_RX_NOT_EMPTY:
-        result = uart_readFifo_(rxData, &len);
-        if(result != CY_RSLT_SUCCESS) {
-            while(1);
+        {
+            uart_readFifo_(rxData, &len);
+            rxCallback(rxData, (uint16_t) len);
+            break;
         }
-        rxCallback(rxData, (uint16_t) len);
-        break;
         default:
-            for(;;) {}
+            break;
     }
 }
 
@@ -298,21 +333,19 @@ bool BSP_isUartTxReady(void)
     return (num > 0);
 }
 
+#if BSP_ENABLE_UART_EXTENDED_FUNCS == true
 bool BSP_isUartTxEmpty(void) 
 {
     uint32_t num = cyhal_uart_writable(&uartObj);
 
     return (num == 0);
 }
+#endif //BSP_ENABLE_UART_EXTENDED_FUNCS
 
 void BSP_uartTxData(uint8_t *data, uint16_t len) 
 {
     size_t txLen = (size_t) len;
-    cy_rslt_t result = cyhal_uart_write(&uartObj, data, (size_t *) &txLen);
-
-    if(result != CY_RSLT_SUCCESS) {
-        while(1);
-    }
+    cyhal_uart_write(&uartObj, data, (size_t *) &txLen);
 }
 
 #if defined(Q_UTEST)
@@ -323,13 +356,19 @@ void BSP_initUTdic(void)
     QS_FUN_DICTIONARY(BSP_power_init);
     QS_FUN_DICTIONARY(BSP_clock_setWaitStates);
     QS_FUN_DICTIONARY(BSP_clock_wcoInit);
+#if BSP_ENABLE_ECO_CONFIG == true
     QS_FUN_DICTIONARY(BSP_clock_ecoInit);
+#endif //BSP_ENABLE_ECO_CONFIG
     QS_FUN_DICTIONARY(BSP_led_red_toggle);
     QS_FUN_DICTIONARY(BSP_led_red_On);
     QS_FUN_DICTIONARY(BSP_led_red_Off);
     QS_FUN_DICTIONARY(BSP_led_green_toggle);
     QS_FUN_DICTIONARY(BSP_isUartTxReady);
+#if BSP_ENABLE_UART_EXTENDED_FUNCS == true
     QS_FUN_DICTIONARY(BSP_isUartTxEmpty);
+#endif  //BSP_ENABLE_UART_EXTENDED_FUNCS
+    QS_FUN_DICTIONARY(BSP_initUart);
+    QS_FUN_DICTIONARY(uart_event_callback_test);
 
     BSP_test_init();
 }

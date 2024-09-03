@@ -84,11 +84,15 @@ mcu_reg = read_mcu_reg(GPIO_PRT6_OUT_REG)
 ensure(mcu_reg[0] == GPIO_PRT6_OUT_REG)
 ensure(((mcu_reg[1] & GPIO_PRT6_OUT_MASK)>>GPIO_PRT6_OUT_SHIFT) == GPIO_PRT6_OUT_LOW)
 
+##########################################################
+##########################################################
+note("LED tests", SCREEN)
+##########################################################
+##########################################################
 scenario("BSP_init_led_red test: call CUT to config MCU registers", NORESET)
 command(1, func_id)
 expect("@timestamp UTEST BSP_init_led_red")
 expect("@timestamp Trg-Done QS_RX_COMMAND")
-
 scenario("BSP_init_led_red test: verify registers", NORESET)
 # read MCU regs to verify -> GPIO_PRT6, HSIOM_PRT6_PORT_SEL0 :
 # 1. HSIOM_PRT6_PORT_SEL0: addr=0x40310060, bits [28:24] = 0x00 (GPIO controls "out") ;
@@ -113,6 +117,36 @@ command(1, func_id)
 expect("@timestamp UTEST BSP_init_led_green")
 expect("@timestamp Trg-Done QS_RX_COMMAND")
 
+test(''' BSP_led_red_toggle test''', NORESET)
+func_id = get_func_id(dict, "BSP_led_red_toggle")
+command(1, func_id)
+expect("@timestamp UTEST BSP_led_red_toggle")
+expect("@timestamp Trg-Done QS_RX_COMMAND")
+
+test(''' BSP_led_red_On test''', NORESET)
+func_id = get_func_id(dict, "BSP_led_red_On")
+command(1, func_id)
+expect("@timestamp UTEST BSP_led_red_On")
+expect("@timestamp Trg-Done QS_RX_COMMAND")
+
+test(''' BSP_led_red_Off test''', NORESET)
+func_id = get_func_id(dict, "BSP_led_red_Off")
+command(1, func_id)
+expect("@timestamp UTEST BSP_led_red_Off")
+expect("@timestamp Trg-Done QS_RX_COMMAND")
+
+test(''' BSP_led_green_toggle test''', NORESET)
+func_id = get_func_id(dict, "BSP_led_green_toggle")
+command(1, func_id)
+expect("@timestamp UTEST BSP_led_green_toggle")
+expect("@timestamp Trg-Done QS_RX_COMMAND")
+
+
+##########################################################
+##########################################################
+note("Power domain tests", SCREEN)
+##########################################################
+##########################################################
 test("BSP_power_init: call CUT to config MCU registers", NORESET)
 # Just code execution test, actual veriification should be done 
 # by functional and characterization tests (power consumption, power save mode transition etc.)
@@ -132,5 +166,67 @@ expect("@timestamp BSP BSP_power_init_test RETURN_VAL 255")
 expect("@timestamp UTEST BSP_power_init_test")
 expect("@timestamp Trg-Done QS_RX_COMMAND")
 
-test(''' BSP_clock_setWaitStates ''')
+##########################################################
+##########################################################
+note("Clock system tests", SCREEN)
+##########################################################
+##########################################################
+test(''' BSP_clock_setWaitStates ''', NORESET)
+func_id = get_func_id(dict, "BSP_clock_setWaitStates")
+command(1, func_id)
+expect("@timestamp UTEST BSP_clock_setWaitStates")
+expect("@timestamp Trg-Done QS_RX_COMMAND")
 
+test(''' BSP_clock_wcoInit test (32 kHz clock) ''', NORESET)
+note("BSP_clock_wcoInit: normal path execution", SCREEN)
+func_id = get_func_id(dict, "BSP_clock_wcoInit_test")
+command(1, func_id)
+expect("@timestamp BSP BSP_clock_wcoInit_test RETURN_VAL 0")
+expect("@timestamp UTEST BSP_clock_wcoInit_test")
+expect("@timestamp Trg-Done QS_RX_COMMAND")
+##############################################################
+note("BSP_clock_wcoInit: FAILED path execution", SCREEN)
+probe('BSP_clock_wcoInit', 255)    # status isn't success
+command(1, func_id)
+expect("@timestamp TstProbe Fun=BSP_clock_wcoInit,Data=255")
+expect("@timestamp BSP BSP_clock_wcoInit_test RETURN_VAL 255")
+expect("@timestamp UTEST BSP_clock_wcoInit_test")
+expect("@timestamp Trg-Done QS_RX_COMMAND")
+
+##########################################################
+##########################################################
+note("UART tests", SCREEN)
+##########################################################
+##########################################################
+test(''' BSP_initUart test ''', NORESET)
+note("BSP_initUart: normal path execution", SCREEN)
+func_id = get_func_id(dict, "BSP_initUart_test")
+command(1, func_id)
+expect("@timestamp BSP BSP_initUart_test RETURN_VAL 0")
+expect("@timestamp UTEST BSP_initUart_test")
+expect("@timestamp Trg-Done QS_RX_COMMAND")
+note("BSP_initUart: FAILED path execution", SCREEN)
+probe('BSP_initUart', 1)    # status fail
+command(1, func_id)
+expect("@timestamp TstProbe Fun=BSP_initUart,Data=1")
+expect("@timestamp BSP BSP_initUart_test RETURN_VAL 1")
+expect("@timestamp UTEST BSP_initUart_test")
+expect("@timestamp Trg-Done QS_RX_COMMAND")
+#########################################################
+test(''' uart_event_callback_ test ''', NORESET)
+func_id = get_func_id(dict, "uart_event_callback_test")
+command(1, func_id)
+expect("@timestamp UTEST uart_event_callback_test")
+expect("@timestamp Trg-Done QS_RX_COMMAND")
+
+# get code coverage data collected by GCOV
+test(''' Get code coverage data ''', NORESET)
+func_id = get_func_id(dict, "__gcov_dump")
+print(func_id)
+command(1, func_id)
+# sleep sometime to save coverage data
+time.sleep(270)
+expect("@timestamp UTEST __gcov_dump")
+expect("@timestamp Trg-Done QS_RX_COMMAND")
+
+######################### End of test ####################

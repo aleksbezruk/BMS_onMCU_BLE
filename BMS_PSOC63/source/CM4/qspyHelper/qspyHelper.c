@@ -51,7 +51,7 @@ void SysTick_Handler(void) {
     QS_tickTime_ += QS_tickPeriod_; // account for the clock rollover
 }
 
-void QS_rxCallback_(uint8_t *data, uint16_t len) {
+void QS_rxCallback(uint8_t *data, uint16_t len) {
     uint16_t i;
 
     for(i = 0; i < len; i++) {
@@ -183,7 +183,10 @@ uint8_t QS_onStartup(void const *arg) {
     QS_rxInitBuf(qsRxBuf, sizeof(qsRxBuf));
 
     /** Configure QSPY link layer -> UART */
-    BSP_initUart(QS_rxCallback_);
+    bsp_status_init_t status = BSP_initUart(QS_rxCallback);
+    if (status != bsp_status_init_success) {
+        return QSPY_STATUS_ERROR;
+    }
 
     /** Configure QSPY tick */
     // QS_tickPeriod_ = SystemCoreClock / BSP_TICKS_PER_SEC;

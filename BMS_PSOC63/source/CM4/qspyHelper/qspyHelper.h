@@ -113,4 +113,14 @@ void QS_addUsrRecToDic(enum_t const rec);
  */
 void QS_initGlbFilters(void);
 
+/**
+ * @fn QS_rxCallback
+ * @param data - pointer to buffer for incoming UART data
+ * @param len  - amount of received UART data
+ * @brief Init global filters
+ * 
+ * @retval None
+ */
+void QS_rxCallback(uint8_t *data, uint16_t len);
+
 /******************************** END OF FILE **********************************************************************/
