@@ -46,7 +46,9 @@
 #include "qstamp.h"       // QP time-stamp
 #include "qsafe.h"        // QP Functional Safety (FuSa) Subsystem
 
+#if defined(Q_UTEST)
 Q_DEFINE_THIS_MODULE("qs")
+#endif // Q_UTEST
 
 // ensure that the predefined records don't overlap the
 // user records (application-specific).

@@ -43,12 +43,20 @@
 #define QP_IMPL           // this is QP implementation
 #include "qs_port.h"      // QS port
 #include "qs_pkg.h"       // QS package-scope interface
+
+/** Q_onError */
+#if !defined(Q_UTEST)
+#define Q_onError(module, id) ((void)0)
+#endif // Q_UTEST
+
 #include "qsafe.h"        // QP Functional Safety (FuSa) Subsystem
 
 //============================================================================
 //! @cond INTERNAL
 
+#if defined(Q_UTEST)
 Q_DEFINE_THIS_MODULE("qs_rx")
+#endif // Q_UTEST
 
 /*****************************************************************************
  * DEFINITIONS

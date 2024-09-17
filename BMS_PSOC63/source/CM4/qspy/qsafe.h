@@ -164,9 +164,11 @@ typedef int int_t;
 #endif // ndef QP_VERSION
 
 //${QP-FuSa::Q_onError} ......................................................
+#if defined(Q_UTEST)
 Q_NORETURN Q_onError(
     char const * const module,
     int_t const id);
+#endif // Q_UTEST
 
 //${QP-FuSa::Q_DIM} ..........................................................
 #ifndef QP_VERSION

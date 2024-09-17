@@ -63,6 +63,11 @@
 #define QF_CRIT_ENTRY()      QF_INT_DISABLE()
 #define QF_CRIT_EXIT()       QF_INT_ENABLE()
 
+/** Q_onError */
+#if !defined(Q_UTEST)
+#define Q_onError(module, id) ((void)0)
+#endif // Q_UTEST
+
 // QF_LOG2 not defined -- use the internal LOG2() implementation
 
 // include files -------------------------------------------------------------

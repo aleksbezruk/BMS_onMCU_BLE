@@ -145,25 +145,6 @@ void QS_onCommand(uint8_t cmdId,
     }
 }
 
-#if !defined(Q_UTEST)
-Q_NORETURN Q_onError(char const * const module, int_t const id) {
-    // NOTE: this implementation of the assertion handler is intended only
-    // for debugging and MUST be changed for deployment of the application
-    // (assuming that you ship your production code with assertions enabled).
-    Q_UNUSED_PAR(module);
-    Q_UNUSED_PAR(id);
-    QS_ASSERTION(module, id, 10000U);
-
-#ifndef NDEBUG
-    // for debugging, hang on in an endless loop...
-    for (;;) {
-    }
-#endif
-
-    NVIC_SystemReset();
-}
-#endif  //Q_UTEST
-
 void QS_onCleanup(void) 
 {
     // just stub
