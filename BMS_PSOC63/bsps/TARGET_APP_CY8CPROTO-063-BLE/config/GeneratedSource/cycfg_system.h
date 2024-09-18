@@ -78,12 +78,12 @@ extern "C" {
 #define CY_CFG_PWR_SYS_ACTIVE_MODE CY_CFG_PWR_MODE_LP
 #define CY_CFG_PWR_DEEPSLEEP_LATENCY 0UL
 #define CY_CFG_PWR_USING_LDO 1
-#define CY_CFG_PWR_VDDA_MV 2500
-#define CY_CFG_PWR_VDDD_MV 2500
-#define CY_CFG_PWR_VBACKUP_MV 2500
-#define CY_CFG_PWR_VDD_NS_MV 2500
-#define CY_CFG_PWR_VDDIO0_MV 2500
-#define CY_CFG_PWR_VDDIO1_MV 2500
+#define CY_CFG_PWR_VDDA_MV 2490
+#define CY_CFG_PWR_VDDD_MV 2490
+#define CY_CFG_PWR_VBACKUP_MV 2490
+#define CY_CFG_PWR_VDD_NS_MV 2490
+#define CY_CFG_PWR_VDDIO0_MV 2490
+#define CY_CFG_PWR_VDDIO1_MV 2490
 
 #if defined (CY_USING_HAL)
 extern const cyhal_resource_inst_t srss_0_clock_0_pathmux_0_obj;

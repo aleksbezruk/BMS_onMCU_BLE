@@ -21,7 +21,8 @@ typedef enum {
 enum AppRecords { 
     MAIN = QS_USER,
     UTEST,
-    BSP
+    BSP,
+    ADC
 };
 
 /** QSPY/Qview cmds */

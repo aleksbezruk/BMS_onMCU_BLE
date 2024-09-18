@@ -75,7 +75,8 @@ SOURCES=    ../source/CM4/main/main.c	\
 			../source/CM4/qspy/qs_rx.c \
 			../source/CM4/qspy/qs.c \
 			../source/CM4/qspy/qstamp.c \
-			../source/CM4/qspyHelper/qspyHelper.c
+			../source/CM4/qspyHelper/qspyHelper.c \
+			../source/CM4/ADC/ADC.c
 else ifeq ($(BUILD_CONFIG), Release)
 SOURCES=
 else ifeq ($(BUILD_CONFIG), Qutest)
@@ -89,7 +90,8 @@ SOURCES=    ../source/CM4/qspy/qutest.c \
 			../source/CM4/qspy/qs_rx.c \
 			../source/CM4/qspy/qs.c \
 			../source/CM4/qspy/qstamp.c \
-			../source/CM4/qspyHelper/qspyHelper.c
+			../source/CM4/qspyHelper/qspyHelper.c \
+			../source/CM4/ADC/ADC.c
 else
 # $(error !!! BUILD CONFIGURATION IS udefined !!!. Please set Debug or Qutest or Release)
 $(info Set BUILD CONFIGURATION IS nor defined. Please doublecheck. Maybe it's Cypress Device Confidurator running) 
@@ -100,7 +102,8 @@ endif	# BUILD configuration
 INCLUDES=SOURCES= ../source/BSP/ \
 				  ../source/CM4/qspy/ \
 				  ../source/CM4/qspyHelper \
-				  ../source/CM4/qutestHelper
+				  ../source/CM4/qutestHelper \
+				  ../source/CM4/ADC
 
 # Add additional defines to the build process (without a leading -D).
 ifeq ($(BUILD_CONFIG), Debug)

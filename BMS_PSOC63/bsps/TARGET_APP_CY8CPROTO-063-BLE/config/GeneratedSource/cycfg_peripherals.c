@@ -37,6 +37,67 @@ const cyhal_resource_inst_t CYBSP_BLE_obj =
 };
 #endif /* defined (CY_USING_HAL) */
 
+const cy_stc_sysanalog_config_t pass_0_aref_0_config =
+{
+    .startup = CY_SYSANALOG_STARTUP_FAST,
+    .iztat = CY_SYSANALOG_IZTAT_SOURCE_LOCAL,
+    .vref = CY_SYSANALOG_VREF_SOURCE_LOCAL_1_2V,
+    .deepSleep = CY_SYSANALOG_DEEPSLEEP_DISABLE,
+};
+const cy_stc_sar_config_t pass_0_sar_0_config =
+{
+    .ctrl = (uint32_t) pass_0_sar_0_CTL,
+    .sampleCtrl = (uint32_t) pass_0_sar_0_SAMPLE,
+    .sampleTime01 = (1023UL << (uint32_t)CY_SAR_SAMPLE_TIME0_SHIFT) | (1023UL << (uint32_t)CY_SAR_SAMPLE_TIME1_SHIFT),
+    .sampleTime23 = (2UL << (uint32_t)CY_SAR_SAMPLE_TIME2_SHIFT) | (2UL << (uint32_t)CY_SAR_SAMPLE_TIME3_SHIFT),
+    .rangeThres = (0UL << (uint32_t)CY_SAR_RANGE_HIGH_SHIFT) | (0UL << (uint32_t)CY_SAR_RANGE_LOW_SHIFT),
+    .rangeCond = CY_SAR_RANGE_COND_BELOW,
+    .chanEn = 15UL,
+    .chanConfig = {(uint32_t) pass_0_sar_0_CH0_CONFIG, (uint32_t) pass_0_sar_0_CH1_CONFIG, (uint32_t) pass_0_sar_0_CH2_CONFIG, (uint32_t) pass_0_sar_0_CH3_CONFIG, 0UL, 0UL, 0UL, 0UL, 0UL, 0UL, 0UL, 0UL, 0UL, 0UL, 0UL, 0UL, 0UL},
+    .intrMask = CY_SAR_INTR_EOS,
+    .satIntrMask = 0UL,
+    .rangeIntrMask = 0UL,
+    .configRouting = false,
+    .vrefMvValue = pass_0_sar_0_VREF_MV,
+    .clock = CY_SAR_CLK_PERI,
+    .fifoCfgPtr = NULL,
+    .trTimer = false,
+    .scanCnt = false,
+    .scanCntIntr = false,
+};
+
+#if defined (CY_USING_HAL) || defined(CY_USING_HAL_LITE)
+const cyhal_resource_inst_t pass_0_sar_0_obj =
+{
+    .type = CYHAL_RSC_ADC,
+    .block_num = 0,
+    .channel_num = 0,
+};
+#endif /* defined (CY_USING_HAL) || defined(CY_USING_HAL_LITE) */
+
+#if defined(CY_USING_HAL_LITE) || defined (CY_USING_HAL)
+const cyhal_clock_t pass_0_sar_0_clock =
+{
+    .block = CYHAL_CLOCK_BLOCK_PERIPHERAL_16BIT,
+    .channel = 0,
+#if defined (CY_USING_HAL)
+    .reserved = false,
+    .funcs = NULL,
+#endif /* defined (CY_USING_HAL) */
+};
+#endif /* defined(CY_USING_HAL_LITE) || defined (CY_USING_HAL) */
+
+#if defined (CY_USING_HAL) || defined(CY_USING_HAL_LITE)
+const cyhal_adc_configurator_t pass_0_sar_0_hal_config =
+{
+    .resource = &pass_0_sar_0_obj,
+    .config = &pass_0_sar_0_config,
+    .clock = &pass_0_sar_0_clock,
+    .num_channels = 4,
+    .achieved_acquisition_time = NULL,
+};
+#endif /* defined (CY_USING_HAL) || defined(CY_USING_HAL_LITE) */
+
 const cy_stc_scb_uart_config_t scb_5_config =
 {
     .uartMode = CY_SCB_UART_STANDARD,
@@ -101,12 +162,16 @@ const cyhal_uart_configurator_t scb_5_hal_config =
 
 void init_cycfg_peripherals(void)
 {
+    SAR_MUX_SWITCH0(pass_0_sar_0_HW) |= CY_SAR_MUX_FW_VSSA_VMINUS;
+    SAR_MUX_SWITCH_SQ_CTRL(pass_0_sar_0_HW) |= CY_SAR_MUX_SQ_CTRL_VSSA;
+    Cy_SysClk_PeriphAssignDivider(PCLK_PASS_CLOCK_SAR, CY_SYSCLK_DIV_16_BIT, 0U);
     Cy_SysClk_PeriphAssignDivider(PCLK_SCB5_CLOCK, CY_SYSCLK_DIV_24_5_BIT, 0U);
 }
 void reserve_cycfg_peripherals(void)
 {
 #if defined (CY_USING_HAL)
     cyhal_hwmgr_reserve(&CYBSP_BLE_obj);
+    cyhal_hwmgr_reserve(&pass_0_sar_0_obj);
     cyhal_hwmgr_reserve(&scb_5_obj);
 #endif /* defined (CY_USING_HAL) */
 }

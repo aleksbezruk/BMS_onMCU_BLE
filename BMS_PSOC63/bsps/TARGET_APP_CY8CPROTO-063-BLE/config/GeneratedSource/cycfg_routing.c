@@ -1,8 +1,8 @@
 /*******************************************************************************
- * File Name: cycfg_clocks.h
+ * File Name: cycfg_routing.c
  *
  * Description:
- * Clock configuration
+ * Establishes all necessary connections between hardware elements.
  * This file was automatically generated and should not be modified.
  * Configurator Backend 3.20.0
  * device-db 4.16.0.6098
@@ -26,37 +26,20 @@
  * limitations under the License.
  ******************************************************************************/
 
-#if !defined(CYCFG_CLOCKS_H)
-#define CYCFG_CLOCKS_H
+#include "cycfg_routing.h"
+#include "cy_trigmux.h"
+#include "stdbool.h"
+#include "cy_device_headers.h"
 
-#include "cycfg_notices.h"
-#include "cy_sysclk.h"
-
-#if defined (CY_USING_HAL)
-#include "cyhal_hwmgr.h"
-#endif /* defined (CY_USING_HAL) */
-
-#if defined(__cplusplus)
-extern "C" {
-#endif /* defined(__cplusplus) */
-
-#define peri_0_div_16_0_ENABLED 1U
-#define peri_0_div_16_0_HW CY_SYSCLK_DIV_16_BIT
-#define peri_0_div_16_0_NUM 0U
-#define peri_0_div_24_5_0_ENABLED 1U
-#define peri_0_div_24_5_0_HW CY_SYSCLK_DIV_24_5_BIT
-#define peri_0_div_24_5_0_NUM 0U
-
-#if defined (CY_USING_HAL)
-extern const cyhal_resource_inst_t peri_0_div_16_0_obj;
-extern const cyhal_resource_inst_t peri_0_div_24_5_0_obj;
-#endif /* defined (CY_USING_HAL) */
-
-void init_cycfg_clocks(void);
-void reserve_cycfg_clocks(void);
-
-#if defined(__cplusplus)
+void init_cycfg_routing(void)
+{
+    SAR->MUX_SWITCH0 = SAR_MUX_SWITCH0_MUX_FW_P0_VPLUS_Msk |
+        SAR_MUX_SWITCH0_MUX_FW_P1_VPLUS_Msk |
+        SAR_MUX_SWITCH0_MUX_FW_P2_VPLUS_Msk |
+        SAR_MUX_SWITCH0_MUX_FW_P3_VPLUS_Msk;
+    SAR->MUX_SWITCH_SQ_CTRL = SAR_MUX_SWITCH_SQ_CTRL_MUX_SQ_CTRL_P0_Msk |
+        SAR_MUX_SWITCH_SQ_CTRL_MUX_SQ_CTRL_P1_Msk |
+        SAR_MUX_SWITCH_SQ_CTRL_MUX_SQ_CTRL_P2_Msk |
+        SAR_MUX_SWITCH_SQ_CTRL_MUX_SQ_CTRL_P3_Msk;
+    SAR->CTRL |= SAR_CTRL_ENABLED_Msk;
 }
-#endif /* defined(__cplusplus) */
-
-#endif /* CYCFG_CLOCKS_H */

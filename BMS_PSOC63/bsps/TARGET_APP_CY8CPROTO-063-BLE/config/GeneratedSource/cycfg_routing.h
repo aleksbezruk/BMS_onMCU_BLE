@@ -41,8 +41,20 @@ extern "C" {
 #define ioss_0_port_5_pin_1_HSIOM P5_1_SCB5_UART_TX
 #define ioss_0_port_6_pin_6_HSIOM P6_6_CPUSS_SWJ_SWDIO_TMS
 #define ioss_0_port_6_pin_7_HSIOM P6_7_CPUSS_SWJ_SWCLK_TCLK
+#define ioss_0_port_10_pin_0_ANALOG P10_0_PASS_SARMUX_PADS0
+#define ioss_0_port_10_pin_1_ANALOG P10_1_PASS_SARMUX_PADS1
+#define ioss_0_port_10_pin_2_ANALOG P10_2_PASS_SARMUX_PADS2
+#define ioss_0_port_10_pin_3_ANALOG P10_3_PASS_SARMUX_PADS3
+#define SAR0_VPLUS0_PIN 3
+#define SAR0_VPLUS0_PORT 0
+#define SAR0_VPLUS1_PIN 2
+#define SAR0_VPLUS1_PORT 0
+#define SAR0_VPLUS2_PIN 1
+#define SAR0_VPLUS2_PORT 0
+#define SAR0_VPLUS3_PIN 0
+#define SAR0_VPLUS3_PORT 0
 
-static inline void init_cycfg_routing(void) {}
+void init_cycfg_routing(void);
 
 #if defined(__cplusplus)
 }

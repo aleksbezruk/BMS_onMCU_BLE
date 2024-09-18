@@ -80,6 +80,110 @@ const cyhal_resource_inst_t WCO_OUT_obj =
 };
 #endif /* defined (CY_USING_HAL) */
 
+const cy_stc_gpio_pin_config_t ioss_0_port_10_pin_0_config =
+{
+    .outVal = 1,
+    .driveMode = CY_GPIO_DM_ANALOG,
+    .hsiom = ioss_0_port_10_pin_0_HSIOM,
+    .intEdge = CY_GPIO_INTR_DISABLE,
+    .intMask = 0UL,
+    .vtrip = CY_GPIO_VTRIP_CMOS,
+    .slewRate = CY_GPIO_SLEW_FAST,
+    .driveSel = CY_GPIO_DRIVE_1_2,
+    .vregEn = 0UL,
+    .ibufMode = 0UL,
+    .vtripSel = 0UL,
+    .vrefSel = 0UL,
+    .vohSel = 0UL,
+};
+
+#if defined (CY_USING_HAL)
+const cyhal_resource_inst_t ioss_0_port_10_pin_0_obj =
+{
+    .type = CYHAL_RSC_GPIO,
+    .block_num = ioss_0_port_10_pin_0_PORT_NUM,
+    .channel_num = ioss_0_port_10_pin_0_PIN,
+};
+#endif /* defined (CY_USING_HAL) */
+
+const cy_stc_gpio_pin_config_t ioss_0_port_10_pin_1_config =
+{
+    .outVal = 1,
+    .driveMode = CY_GPIO_DM_ANALOG,
+    .hsiom = ioss_0_port_10_pin_1_HSIOM,
+    .intEdge = CY_GPIO_INTR_DISABLE,
+    .intMask = 0UL,
+    .vtrip = CY_GPIO_VTRIP_CMOS,
+    .slewRate = CY_GPIO_SLEW_FAST,
+    .driveSel = CY_GPIO_DRIVE_1_2,
+    .vregEn = 0UL,
+    .ibufMode = 0UL,
+    .vtripSel = 0UL,
+    .vrefSel = 0UL,
+    .vohSel = 0UL,
+};
+
+#if defined (CY_USING_HAL)
+const cyhal_resource_inst_t ioss_0_port_10_pin_1_obj =
+{
+    .type = CYHAL_RSC_GPIO,
+    .block_num = ioss_0_port_10_pin_1_PORT_NUM,
+    .channel_num = ioss_0_port_10_pin_1_PIN,
+};
+#endif /* defined (CY_USING_HAL) */
+
+const cy_stc_gpio_pin_config_t ioss_0_port_10_pin_2_config =
+{
+    .outVal = 1,
+    .driveMode = CY_GPIO_DM_ANALOG,
+    .hsiom = ioss_0_port_10_pin_2_HSIOM,
+    .intEdge = CY_GPIO_INTR_DISABLE,
+    .intMask = 0UL,
+    .vtrip = CY_GPIO_VTRIP_CMOS,
+    .slewRate = CY_GPIO_SLEW_FAST,
+    .driveSel = CY_GPIO_DRIVE_1_2,
+    .vregEn = 0UL,
+    .ibufMode = 0UL,
+    .vtripSel = 0UL,
+    .vrefSel = 0UL,
+    .vohSel = 0UL,
+};
+
+#if defined (CY_USING_HAL)
+const cyhal_resource_inst_t ioss_0_port_10_pin_2_obj =
+{
+    .type = CYHAL_RSC_GPIO,
+    .block_num = ioss_0_port_10_pin_2_PORT_NUM,
+    .channel_num = ioss_0_port_10_pin_2_PIN,
+};
+#endif /* defined (CY_USING_HAL) */
+
+const cy_stc_gpio_pin_config_t ioss_0_port_10_pin_3_config =
+{
+    .outVal = 1,
+    .driveMode = CY_GPIO_DM_ANALOG,
+    .hsiom = ioss_0_port_10_pin_3_HSIOM,
+    .intEdge = CY_GPIO_INTR_DISABLE,
+    .intMask = 0UL,
+    .vtrip = CY_GPIO_VTRIP_CMOS,
+    .slewRate = CY_GPIO_SLEW_FAST,
+    .driveSel = CY_GPIO_DRIVE_1_2,
+    .vregEn = 0UL,
+    .ibufMode = 0UL,
+    .vtripSel = 0UL,
+    .vrefSel = 0UL,
+    .vohSel = 0UL,
+};
+
+#if defined (CY_USING_HAL)
+const cyhal_resource_inst_t ioss_0_port_10_pin_3_obj =
+{
+    .type = CYHAL_RSC_GPIO,
+    .block_num = ioss_0_port_10_pin_3_PORT_NUM,
+    .channel_num = ioss_0_port_10_pin_3_PIN,
+};
+#endif /* defined (CY_USING_HAL) */
+
 const cy_stc_gpio_pin_config_t CYBSP_UART_RX_config =
 {
     .outVal = 1,
@@ -186,6 +290,10 @@ const cyhal_resource_inst_t SWCLK_obj =
 
 void init_cycfg_pins(void)
 {
+    Cy_GPIO_Pin_Init(ioss_0_port_10_pin_0_PORT, ioss_0_port_10_pin_0_PIN, &ioss_0_port_10_pin_0_config);
+    Cy_GPIO_Pin_Init(ioss_0_port_10_pin_1_PORT, ioss_0_port_10_pin_1_PIN, &ioss_0_port_10_pin_1_config);
+    Cy_GPIO_Pin_Init(ioss_0_port_10_pin_2_PORT, ioss_0_port_10_pin_2_PIN, &ioss_0_port_10_pin_2_config);
+    Cy_GPIO_Pin_Init(ioss_0_port_10_pin_3_PORT, ioss_0_port_10_pin_3_PIN, &ioss_0_port_10_pin_3_config);
     Cy_GPIO_Pin_Init(CYBSP_UART_RX_PORT, CYBSP_UART_RX_PIN, &CYBSP_UART_RX_config);
     Cy_GPIO_Pin_Init(CYBSP_UART_TX_PORT, CYBSP_UART_TX_PIN, &CYBSP_UART_TX_config);
     Cy_GPIO_Pin_Init(SWDIO_PORT, SWDIO_PIN, &SWDIO_config);
@@ -196,6 +304,10 @@ void reserve_cycfg_pins(void)
 #if defined (CY_USING_HAL)
     cyhal_hwmgr_reserve(&WCO_IN_obj);
     cyhal_hwmgr_reserve(&WCO_OUT_obj);
+    cyhal_hwmgr_reserve(&ioss_0_port_10_pin_0_obj);
+    cyhal_hwmgr_reserve(&ioss_0_port_10_pin_1_obj);
+    cyhal_hwmgr_reserve(&ioss_0_port_10_pin_2_obj);
+    cyhal_hwmgr_reserve(&ioss_0_port_10_pin_3_obj);
     cyhal_hwmgr_reserve(&CYBSP_UART_RX_obj);
     cyhal_hwmgr_reserve(&CYBSP_UART_TX_obj);
     cyhal_hwmgr_reserve(&SWDIO_obj);

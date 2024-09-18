@@ -10,10 +10,7 @@
 #include "cy_pdl.h"
 #include "BSP.h"
 #include "cycfg.h"
-// #if defined(Q_UTEST)
 #include "qpc.h"
-// #endif  // Q_UTEST
-
 
 /********************************************************************************
  * Private data

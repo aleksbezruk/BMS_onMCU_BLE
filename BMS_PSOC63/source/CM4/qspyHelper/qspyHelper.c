@@ -222,6 +222,9 @@ void QS_addUsrRecToDic(enum_t const rec)
         case BSP:
             QS_USR_DICTIONARY(BSP);
             break;
+        case ADC:
+            QS_USR_DICTIONARY(ADC);
+            break;
         default:
             break;
     }
