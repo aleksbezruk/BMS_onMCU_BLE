@@ -1,0 +1,1 @@
+python3 ./qutest.py ../BMS_PSOC63/source/CM4/qspyHelper/test_qspyHelper.py

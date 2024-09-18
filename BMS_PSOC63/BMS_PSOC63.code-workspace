@@ -51,7 +51,9 @@
             "qsafe.h": "c",
             "qpc.h": "c",
             "bsp.h": "c",
-            "qs_pkg.h": "c"
+            "qs_pkg.h": "c",
+            "qutesthelper.h": "c",
+            "stdint.h": "c"
         },
         "clangd.arguments": [
             "--query-driver=${config:modustoolbox.toolsPath}/gcc/bin/arm-none-eabi-gcc",

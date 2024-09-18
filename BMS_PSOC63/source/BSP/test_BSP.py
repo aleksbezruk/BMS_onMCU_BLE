@@ -225,7 +225,7 @@ func_id = get_func_id(dict, "__gcov_dump")
 print(func_id)
 command(1, func_id)
 # sleep sometime to save coverage data
-time.sleep(270)
+time.sleep(500)
 expect("@timestamp UTEST __gcov_dump")
 expect("@timestamp Trg-Done QS_RX_COMMAND")
 

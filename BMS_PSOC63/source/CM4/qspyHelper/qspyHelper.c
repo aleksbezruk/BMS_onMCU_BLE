@@ -9,6 +9,7 @@
 #include "cy_pdl.h"
 #include "BSP.h"
 #include "qspyHelper.h"
+#include "qutestHelper.h"
 
 /*****************************
  * Defines
@@ -27,7 +28,14 @@ extern volatile uint32_t mainLoopTimer;
 static uint8_t qsTxBuf[2048]; // buffer for QS-TX channel
 static uint8_t qsRxBuf[100];    // buffer for QS-RX channel
 #if defined(Q_UTEST)
-static uint8_t qsTestFuncArgs[50];  // buffer for functions args received from UT scripts
+//static uint8_t qsTestFuncArgs[50];  // buffer for functions args received from UT scripts
+void QUTEST_runUTfunc(void(*func)(void));
+void QUTEST_readMcuReg(uint32_t regAddr);
+void QUTEST_writeMcuReg(uint32_t regAddr, uint32_t value);
+void __gcov_dump(void); /* internal gcov function to write data */
+void QUTEST_printError(uint32_t errCode);
+void QUTEST_injectError(uint32_t err);
+void QUTEST_init(void);
 #endif //Q_UTEST
 
 static QSTimeCtr QS_tickTime_;      // ms
@@ -36,12 +44,14 @@ static QSTimeCtr QS_tickPeriod_;    // ms
 /*******************************/
 /*** Private functions */
 /******************************/
-static void QS_initTimer_(void) {
-    SysTick_Config(SystemCoreClock / BSP_TICKS_PER_SEC);
+static void QS_initTimer_(void) 
+{
+    (void)SysTick_Config(SystemCoreClock / BSP_TICKS_PER_SEC);
     NVIC_SetPriority(SysTick_IRQn, 1U);
 }
 
-void SysTick_Handler(void) {
+void SysTick_Handler(void) 
+{
     volatile uint32_t tmp;
 
     mainLoopTimer++;
@@ -51,7 +61,8 @@ void SysTick_Handler(void) {
     QS_tickTime_ += QS_tickPeriod_; // account for the clock rollover
 }
 
-void QS_rxCallback(uint8_t *data, uint16_t len) {
+void QS_rxCallback(uint8_t *data, uint16_t len) 
+{
     uint16_t i;
 
     for(i = 0; i < len; i++) {
@@ -62,17 +73,28 @@ void QS_rxCallback(uint8_t *data, uint16_t len) {
 /*******************************/
 /*** Helper functions */
 /******************************/
-void QS_onReset(void) {
+void QS_onReset(void) 
+{
+    QS_TEST_PROBE_DEF(&QS_onReset)
+    QS_TEST_PROBE(
+        QS_FLUSH();
+        __disable_irq();
+        __gcov_dump();  // dump memory before reset
+        __enable_irq();
+    )
+
     NVIC_SystemReset();
 }
 
 #if !defined(Q_UTEST)
-QSTimeCtr QS_onGetTime(void) {
+QSTimeCtr QS_onGetTime(void)
+{
     return QS_tickTime_;
 }
 #endif //Q_UTEST
 
-void QS_onFlush(void) {
+void QS_onFlush(void) 
+{
     for (;;) {
         uint16_t b = QS_getByte();
         if (b != QS_EOD) {
@@ -95,66 +117,57 @@ void QS_onCommand(uint8_t cmdId,
     {
         case QS_CMD_RED_LED:
         {
-            if(param1 == 1) {
+            switch (param1)
+            {
+            case 1:
                 BSP_led_red_On();
-            } else if(param1 == 0) {
+                break;
+            case 0:
                 BSP_led_red_Off();
-            } else {
-                // ignore if invalid param
+                break;
+            default:
+                break;
             }
             break;
         }
+#if defined(Q_UTEST)
         case QS_CMD_UT_FUN:
         {
             // call the Code Under Test (CUT)
             void(*fp)(void) = (void(*)(void)) param1;
-            (*fp)();
-            QS_BEGIN_ID(UTEST, 0U) // app-specific record
-                QS_FUN((void(*)(void)) param1); // function called
-            QS_END()
-            QS_FLUSH();
+            QUTEST_runUTfunc(fp);
             break;
         }
         case QS_CMD_MCU_READ_REG:
         {
-            uint32_t *mcuReg = (uint32_t *) param1;
-            uint32_t mcuRegVal = *mcuReg;
-            QS_BEGIN_ID(UTEST, 0U)              // app-specific record
-                QS_STR("READ_MCU_REG");         // operation info
-                QS_U32(0, (uint32_t) mcuReg);   // reg addr to read
-                QS_U32(0, mcuRegVal);           // reg value
-            QS_END()
-            QS_FLUSH();
+            QUTEST_readMcuReg(param1);
             break;
         }
         case QS_CMD_MCU_WRITE_REG:
         {
-            uint32_t *mcuReg = (uint32_t *) param1;
-            uint32_t mcuRegVal = param2;
-            *mcuReg = mcuRegVal;
-            QS_BEGIN_ID(UTEST, 0U)              // app-specific record
-                QS_STR("WRITE_MCU_REG");         // operation info
-                QS_U32(0, (uint32_t) mcuReg);   // reg addr to write
-                QS_U32(0, mcuRegVal);           // reg value
-            QS_END()
-            QS_FLUSH();
+            QUTEST_writeMcuReg(param1, param2);
             break;
         }
+        case QS_CMD_INJECT_ERROR:
+        {
+            QUTEST_injectError(param1);
+            break;
+        }
+#endif //Q_UTEST
         default:
             break;  // just igmore if cmd isn't defined
     }
 }
 
-void QS_onCleanup(void) 
-{
-    // just stub
-}
-
 /*******************************/
 /*** Public API */
 /******************************/
-uint8_t QS_onStartup(void const *arg) {
+uint8_t QS_onStartup(void const *arg) 
+{
     Q_UNUSED_PAR(arg);
+    uint8_t status = QSPY_STATUS_SUCCESS;
+
+    QUTEST_init();
 
     /** Configure QSPY timer */
     QS_initTimer_();
@@ -164,9 +177,14 @@ uint8_t QS_onStartup(void const *arg) {
     QS_rxInitBuf(qsRxBuf, sizeof(qsRxBuf));
 
     /** Configure QSPY link layer -> UART */
-    bsp_status_init_t status = BSP_initUart(QS_rxCallback);
+    status = BSP_initUart(QS_rxCallback);
+    /** Config dictionaries */
+    QS_FUN_DICTIONARY(QS_onReset);
+
+    QUTEST_EMUL_ERR(status);
     if (status != bsp_status_init_success) {
-        return QSPY_STATUS_ERROR;
+        QUTEST_printError((uint32_t) status);
+        status = QSPY_STATUS_ERROR;
     }
 
     /** Configure QSPY tick */
@@ -174,14 +192,11 @@ uint8_t QS_onStartup(void const *arg) {
     QS_tickPeriod_ = 1;
     QS_tickTime_ = 0; // to start the timestamp at zero
 
-#if defined(Q_UTEST)
-    QS_OBJ_DICTIONARY(qsTestFuncArgs);
-#endif //Q_UTEST
-
-    return QSPY_STATUS_SUCCESS;
+    return status;
 }
 
-void QS_onIdle(void) {
+void QS_onIdle(void) 
+{
     QS_rxParse();  // parse all the received bytes
 
     if (BSP_isUartTxReady() == true ) {
@@ -195,7 +210,8 @@ void QS_onIdle(void) {
     }
 }
 
-void QS_addUsrRecToDic(enum_t const rec) {
+void QS_addUsrRecToDic(enum_t const rec) 
+{
     switch(rec) {
         case MAIN:
             QS_USR_DICTIONARY(MAIN);
@@ -207,11 +223,12 @@ void QS_addUsrRecToDic(enum_t const rec) {
             QS_USR_DICTIONARY(BSP);
             break;
         default:
-            for(;;) {}
+            break;
     }
 }
 
-void QS_initGlbFilters(void) {
+void QS_initGlbFilters(void) 
+{
     QS_GLB_FILTER(QS_ALL_RECORDS);   // enable all records
 }
 

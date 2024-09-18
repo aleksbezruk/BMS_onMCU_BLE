@@ -694,7 +694,12 @@ uint8_t QS_onStartup(void const * arg);
 
 //${QS::QS-TX::onCleanup} ....................................................
 //! @static @public @memberof QS
+//#define QS_ENABLE_CLEANUP
+#if defined (QS_ENABLE_CLEANUP)
 void QS_onCleanup(void);
+#else
+#define QS_onCleanup()
+#endif //QS_ENABLE_CLEANUP
 
 //${QS::QS-TX::onFlush} ......................................................
 //! @static @public @memberof QS

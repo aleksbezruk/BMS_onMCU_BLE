@@ -30,6 +30,7 @@ enum {
     QS_CMD_UT_FUN,
     QS_CMD_MCU_READ_REG,
     QS_CMD_MCU_WRITE_REG,
+    QS_CMD_INJECT_ERROR,
     QS_CMD_MAX
 };
 

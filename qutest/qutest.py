@@ -569,7 +569,7 @@ class QUTest:
             assert 0, "invalid state in expect_run"
 
     # command DSL command ....................................................
-    def command(self, cmd_id, param1 = 0, param2 = 0, param3 = 0):
+    def command(self, cmd_id, param1 = 0, param2 = 0, param3 = 0, verify_response = True):
         if self._to_skip > 0:
             pass # ignore
         if self._state == QUTest._INIT:
@@ -583,7 +583,8 @@ class QUTest:
                 QSpy.send_to(struct.pack(
                     fmt, QSpy.TO_SPY_TRG_COMMAND, 0, param1, param2, param3),
                     param1) # add string cmdId to end
-            self.expect("           Trg-Ack  QS_RX_COMMAND", True)
+            if verify_response == True:
+                self.expect("           Trg-Ack  QS_RX_COMMAND", True)
         elif self._state in (QUTest._FAIL, QUTest._SKIP):
             pass # ignore
         else:

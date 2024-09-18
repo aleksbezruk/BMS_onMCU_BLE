@@ -433,7 +433,7 @@ def continue_test():
 # @usage
 # @include command.py
 #
-def command(cmdId, param1=0, param2=0, param3=0):
+def command(cmdId, param1=0, param2=0, param3=0, verify_response = True):
 
 ## @brief take the top-most initial transition in the
 # current SM object in the Target
