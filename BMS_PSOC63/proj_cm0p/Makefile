@@ -53,7 +53,7 @@ VERBOSE=
 # ... then code in directories named COMPONENT_foo and COMPONENT_bar will be
 # added to the build
 #
-COMPONENTS=
+COMPONENTS=FREERTOS WICED_BLE
 
 # Like COMPONENTS, but disable optional code that was enabled by default.
 DISABLE_COMPONENTS=CM0P_SLEEP CM0P_SECURE CM0P_CRYPTO CM0P_BLESS
@@ -80,10 +80,10 @@ endif	# BUILD configuration
 
 # Like SOURCES, but for include directories. Value should be paths to
 # directories (without a leading -I).
-INCLUDES=
+INCLUDES= ../source/CM0p/
 
 # Add additional defines to the build process (without a leading -D).
-DEFINES+=CY_CORTEX_M4_APPL_ADDR=CY_FLASH_BASE+0x4400U
+DEFINES+=CY_CORTEX_M4_APPL_ADDR=CY_FLASH_BASE+0x7800U CY_RTOS_AWARE
 
 # Select softfp or hardfp floating point. Default is softfp.
 VFP_SELECT=

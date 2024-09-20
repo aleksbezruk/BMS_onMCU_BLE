@@ -53,7 +53,7 @@ VERBOSE=
 # ... then code in directories named COMPONENT_foo and COMPONENT_bar will be
 # added to the build
 #
-COMPONENTS=
+COMPONENTS=FREERTOS WICED_BLE
 
 # Like COMPONENTS, but disable optional code that was enabled by default.
 DISABLE_COMPONENTS=CM0P_SLEEP CM0P_SECURE CM0P_CRYPTO CM0P_BLESS
@@ -76,7 +76,8 @@ SOURCES=    ../source/CM4/main/main.c	\
 			../source/CM4/qspy/qs.c \
 			../source/CM4/qspy/qstamp.c \
 			../source/CM4/qspyHelper/qspyHelper.c \
-			../source/CM4/ADC/ADC.c
+			../source/CM4/ADC/ADC.c	\
+			../source/CM4/BLE/BLE.c
 else ifeq ($(BUILD_CONFIG), Release)
 SOURCES=
 else ifeq ($(BUILD_CONFIG), Qutest)
@@ -91,7 +92,8 @@ SOURCES=    ../source/CM4/qspy/qutest.c \
 			../source/CM4/qspy/qs.c \
 			../source/CM4/qspy/qstamp.c \
 			../source/CM4/qspyHelper/qspyHelper.c \
-			../source/CM4/ADC/ADC.c
+			../source/CM4/ADC/ADC.c	\
+			../source/CM4/BLE/BLE.c
 else
 # $(error !!! BUILD CONFIGURATION IS udefined !!!. Please set Debug or Qutest or Release)
 $(info Set BUILD CONFIGURATION IS nor defined. Please doublecheck. Maybe it's Cypress Device Confidurator running) 
@@ -103,17 +105,19 @@ INCLUDES=SOURCES= ../source/BSP/ \
 				  ../source/CM4/qspy/ \
 				  ../source/CM4/qspyHelper \
 				  ../source/CM4/qutestHelper \
-				  ../source/CM4/ADC
+				  ../source/CM4/ADC	\
+				  ../source/CM4/BLE	\
+				  ../source/CM4/main
 
 # Add additional defines to the build process (without a leading -D).
 ifeq ($(BUILD_CONFIG), Debug)
-DEFINES=Q_SPY
+DEFINES=Q_SPY CY_RTOS_AWARE
 else ifeq ($(BUILD_CONFIG), Release)
-DEFINES=Q_SPY
+DEFINES=Q_SPY CY_RTOS_AWARE
 else ifeq ($(BUILD_CONFIG), Qutest)
-DEFINES=Q_SPY Q_UTEST=0
+DEFINES=Q_SPY Q_UTEST=0 CY_RTOS_AWARE
 else
-$(error !!! BUILD CONFIGURATION IS udefined !!!. Please set Debug or Qutest or Release)
+#$(error !!! BUILD CONFIGURATION IS udefined !!!. Please set Debug or Qutest or Release)
 endif	# BUILD configuration
 
 # Select softfp or hardfp floating point. Default is softfp.

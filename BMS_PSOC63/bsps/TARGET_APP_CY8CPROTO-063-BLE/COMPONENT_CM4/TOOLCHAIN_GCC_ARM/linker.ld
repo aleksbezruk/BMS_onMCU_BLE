@@ -85,7 +85,7 @@ MEMORY
 }
 
 /* Size and start address of the Cortex-M0+ application image */
-FLASH_CM0P_SIZE  = 0x4400;
+FLASH_CM0P_SIZE  = 0x7800;
 FLASH_CM0P_START = ORIGIN(flash);
 /* Size and start address of the Cortex-M4 application image */
 FLASH_CM4_SIZE   = LENGTH(flash) - FLASH_CM0P_SIZE;

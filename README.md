@@ -49,4 +49,17 @@ In the project Target testing is used. To write coverage data to PC from targer,
 > appropriate bash terminal window: <br>
 > __*make device-configurator*__
 2. Bluetooth Configurator <br>
-> __*make bt-configurator*__
+> __*make bt-configurator*__ <br>
+3. Project libraries manager <br>
+> To add, remove, or modify libraries, open the Library Manager using the following command: <br>
+> __*make library-manager*__
+
+### VIII. BLE stack
+1. PSoC™ 63 Bluetooth® LE only Legacy Stack => look like is deprecated, Cypress suggest to use a new Stack <br>
+> Source: https://github.com/Infineon/bless <br>
+> Documentation: https://infineon.github.io/bless/ble_api_reference_manual/html/page_ble_quick_start.html <br>
+> New stack: AIROCTM BTSTACK with Bluetooth® LE only (CYW20829, PSoC™ 63, PSoC™ 6 with CYW43xxx Connectivity device) : <br>
+>            https://github.com/Infineon/btstack 
+2. https://documentation.infineon.com/html/psoc6/jag1667482600571.html
+3. https://documentation.infineon.com/html/psoc6/moa1717991724927.html#moa1717991724927 
+4. https://github.com/infineon 
