@@ -31,6 +31,7 @@
     //
     "version": "0.2.0",
     "configurations": [
+        
         {
             "name": "Multi-Core Debug Qutest (KitProg3_MiniProg4)",
             "type": "cortex-debug",
@@ -126,6 +127,9 @@
             "openOCDPreConfigLaunchCommands": [
 
             ],
+            "openOCDLaunchCommands": [
+                "adapter speed 20000"
+            ],
             "overrideLaunchCommands": [
                 "set mem inaccessible-by-default off",
                 "-enable-pretty-printing",
@@ -139,6 +143,7 @@
             // svdFile is optional, it can be very large.
             "svdFile": "../mtb_shared/mtb-pdl-cat1/release-v3.11.0/devices/COMPONENT_CAT1A/svd/psoc6_01.svd",
             "numberOfProcessors": 2,
+            "interface": "swd",
             "targetProcessor": 0, // Set to 0 for the CM0+, set to 1 for the CM4
             "postStartSessionCommands": [
                 // Needed if runToMain is false
@@ -175,6 +180,10 @@
                         "overrides": {
                             "overrideRestartCommands": [
                                 "monitor halt"
+                                //"monitor reset init"
+                            ],
+                            "openOCDLaunchCommands": [
+                                "adapter speed 20000"
                             ],
                             "postStartSessionCommands": [
                                 "tb main",

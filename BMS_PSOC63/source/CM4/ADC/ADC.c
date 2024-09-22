@@ -25,6 +25,11 @@
 #include "ADC.h"
 #include "qspyHelper.h"
 
+// RTOS includes
+#include "FreeRTOS.h"
+#include "task.h"
+#include "cyabs_rtos.h"
+
 /*******************************/
 /*** Defines */
 /******************************/
@@ -37,6 +42,8 @@
  */
 #define ADC_ERR 4.0f
 #define ADC_MEAS_COMPENSATE(val)    (int32_t)((float) val * (1.0f - ADC_ERR/100.0f))  // val in [mV] 
+
+#define ADC_TASK_STACK_SIZE 400U   // bytes, aligned to 8 bytes
 
 /*******************************/
 /*** Private data */
@@ -54,77 +61,106 @@ static cyhal_adc_channel_t* channels_[ADC_NUM_CHNLS] = {
 };
 static uint8_t num_channels_ = ADC_NUM_CHNLS;  // allocate memory to keep count
 
+static cy_thread_t adcTaskHandle_;
+/** 
+ *  In stack words because stack pointer should be aligned to 
+ *  8 bytes per the RTOS requirements.
+ */
+static uint64_t adcTaskStack_[ADC_TASK_STACK_SIZE/8U];
+
+/*******************************/
+/*** Functions prototype */
+/******************************/
+static void adcTask_(cy_thread_arg_t arg);
+
 /*******************************/
 /*** Code */
 /******************************/
 ADC_status_t ADC_init(void)
 {
     ADC_status_t status = ADC_STATUS_OK;
-    cy_rslt_t adcInitStatus;
-    // cy_en_sysanalog_status_t arefStatus = CY_SYSANALOG_SUCCESS;
+    cy_rslt_t result;
 
     /** Init ADC periph */
-    adcInitStatus = cyhal_adc_init_cfg(
+    result = cyhal_adc_init_cfg(
         &adc_, 
         channels_, 
         &num_channels_,
         &pass_0_sar_0_hal_config
     );
 
-    /** Enbale AREF */
-    // if (adcInitStatus == CY_RSLT_SUCCESS) {
-    //     arefStatus = Cy_SysAnalog_Init(&pass_0_aref_0_config);
-    // }
-
     /** Check operation status */
-    if (adcInitStatus != CY_RSLT_SUCCESS) {
+    if (result != CY_RSLT_SUCCESS) {
         status = ADC_STATUS_FAIL;
+    }
+
+    /** Create RTOS task */
+    if (status == ADC_STATUS_OK) {
+        result = cy_rtos_thread_create(
+            &adcTaskHandle_, 
+            adcTask_,
+            "adcTask", 
+            adcTaskStack_,          // should be aligned to 8 bytes
+            ADC_TASK_STACK_SIZE,    // in bytes
+            CY_RTOS_PRIORITY_LOW,   // prio
+            NULL                    // no args
+        );
+        if (result != CY_RSLT_SUCCESS) {
+            status = ADC_STATUS_FAIL;
+        }
     }
 
     return status;
 }
 
-void ADC_task(void)
+static void adcTask_(cy_thread_arg_t arg)
 {
-    /** Measure Bat Cell4 */
-    int32_t uv = cyhal_adc_read_uv(&channel3_);
-    int32_t mv = ADC_CONVERT_UV_TO_MV(uv);
-    mv = ADC_MEAS_COMPENSATE(mv);
+    (void) arg;
+    int32_t uv, mv;
 
-    QS_BEGIN_ID(ADC, 0 /*prio/ID for local Filters*/)
-        QS_STR("Bat_Cell4 = ");
-        QS_I32(0, mv); 
-    QS_END()
+    while(1) {
+        (void)cy_rtos_delay_milliseconds(1000U);    // the API always returns SUCCESS becaause of hardcode
 
-    /** 3 */
-    uv = cyhal_adc_read_uv(&channel2_);
-    mv = ADC_CONVERT_UV_TO_MV(uv);
-    mv = ADC_MEAS_COMPENSATE(mv);
+        /** Measure Bat Cell4 */
+        uv = cyhal_adc_read_uv(&channel3_);
+        mv = ADC_CONVERT_UV_TO_MV(uv);
+        mv = ADC_MEAS_COMPENSATE(mv);
 
-    QS_BEGIN_ID(ADC, 0 /*prio/ID for local Filters*/)
-        QS_STR("Bat_Cell3 = ");
-        QS_I32(0, mv); 
-    QS_END()
+        QS_BEGIN_ID(ADC, 0 /*prio/ID for local Filters*/)
+            QS_STR("Bat_Cell4 = ");
+            QS_I32(0, mv); 
+        QS_END()
 
-    /** 2 */
-    uv = cyhal_adc_read_uv(&channel1_);
-    mv = ADC_CONVERT_UV_TO_MV(uv);
-    mv = ADC_MEAS_COMPENSATE(mv);
+        /** Measure Bat Cell3 */
+        uv = cyhal_adc_read_uv(&channel2_);
+        mv = ADC_CONVERT_UV_TO_MV(uv);
+        mv = ADC_MEAS_COMPENSATE(mv);
 
-    QS_BEGIN_ID(ADC, 0 /*prio/ID for local Filters*/)
-        QS_STR("Bat_Cell2 = ");
-        QS_I32(0, mv); 
-    QS_END()
+        QS_BEGIN_ID(ADC, 0 /*prio/ID for local Filters*/)
+            QS_STR("Bat_Cell3 = ");
+            QS_I32(0, mv); 
+        QS_END()
 
-    /** 1 */
-    uv = cyhal_adc_read_uv(&channel0_);
-    mv = ADC_CONVERT_UV_TO_MV(uv);
-    mv = ADC_MEAS_COMPENSATE(mv);
+        /** Measure Bat Cell2 */
+        uv = cyhal_adc_read_uv(&channel1_);
+        mv = ADC_CONVERT_UV_TO_MV(uv);
+        mv = ADC_MEAS_COMPENSATE(mv);
 
-    QS_BEGIN_ID(ADC, 0 /*prio/ID for local Filters*/)
-        QS_STR("Bat_Cell1 = ");
-        QS_I32(0, mv); 
-    QS_END()
+        QS_BEGIN_ID(ADC, 0 /*prio/ID for local Filters*/)
+            QS_STR("Bat_Cell2 = ");
+            QS_I32(0, mv); 
+        QS_END()
+
+        /** Measure Bat Cell1 */
+        uv = cyhal_adc_read_uv(&channel0_);
+        mv = ADC_CONVERT_UV_TO_MV(uv);
+        mv = ADC_MEAS_COMPENSATE(mv);
+
+        QS_BEGIN_ID(ADC, 0 /*prio/ID for local Filters*/)
+            QS_STR("Bat_Cell1 = ");
+            QS_I32(0, mv); 
+        QS_END()
+    }
 }
 
 /* [] END OF FILE */

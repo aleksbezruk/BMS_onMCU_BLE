@@ -17,19 +17,34 @@
 #endif // Q_UTEST
 #include "ADC.h"
 
+// RTOS includes
+#include "FreeRTOS.h"
+#include "task.h"
+#include "cyabs_rtos.h"
+
 /*******************************/
 /*** Functions prototypes */
 /******************************/
-static void mainTask_(void);
+static void mainTask_(cy_thread_arg_t arg);
 #if defined(Q_UTEST)
-static void utTask_(void);
 void __gcov_dump(void); /* internal gcov function to write data */
 #endif //Q_UTEST
+void vApplicationIdleHook(void);
+
+/*******************************/
+/*** Definitions */
+/******************************/
+#define MAIN_TASK_STACK_SIZE 400U   // bytes, aligned to 8 bytes
 
 /*******************************/
 /*** Data */
 /******************************/
-volatile uint32_t mainLoopTimer;
+static cy_thread_t mainTaskHandle_;
+/** 
+ *  In stack words because stack pointer should be aligned to 
+ *  8 bytes per the RTOS requirements.
+ */
+static uint64_t mainTaskStack_[MAIN_TASK_STACK_SIZE/8U];
 
 /*******************************/
 /*** Code */
@@ -83,20 +98,26 @@ int main(void)
     BSP_initUTdic();
 #endif //Q_UTEST
 
-    /** Init ADC */
-    ADC_status_t adcStatus = ADC_init();
-    if (adcStatus != ADC_STATUS_OK) {
+    /** Create main task */
+    result = cy_rtos_thread_create(
+        &mainTaskHandle_, 
+        mainTask_,
+        "mainTask", 
+        mainTaskStack_,         // should be aligned to 8 bytes
+        MAIN_TASK_STACK_SIZE,   // in bytes
+        CY_RTOS_PRIORITY_HIGH,  // prio
+        NULL                    // no args
+    );
+    if (result != CY_RSLT_SUCCESS) {
         CY_ASSERT(0);
     }
 
-    /** Main loop */
-    for (;;) {
-#if !defined(Q_UTEST)
-        mainTask_();
-#else
-        utTask_();
-#endif //Q_UTEST
-    }
+    /** Start FreeRTOS scheduler */
+    vTaskStartScheduler();
+
+    /** Never reach the point unless error conditions */
+    CY_ASSERT(0);
+    while(1) {}
 }
 
 
@@ -104,42 +125,47 @@ int main(void)
  * @fn mainTask_
  * @brief Main task/dispatcher
  * 
- * @param None
+ * @param[in] arg the argument passed from the thread create call 
+ *            to the entry function
  * @retval None
  */
-static void mainTask_(void)
+static void mainTask_(cy_thread_arg_t arg)
 {
-    if (mainLoopTimer == 1000U) {
-        __disable_irq();
-            mainLoopTimer = 0;
-        __enable_irq();
+    (void) arg;
+    /** Init ADC peripheral & create ADC task */
+    ADC_status_t status = ADC_init();
+    if (status != ADC_STATUS_OK) {
+        CY_ASSERT(0);
+    }
+
+    while(1) {
+        (void)cy_rtos_delay_milliseconds(1000U);    // the API always returns SUCCESS becaause of hardcode
 
         BSP_led_green_toggle();
 
+#if !defined(Q_UTEST)
         QS_BEGIN_ID(MAIN, 0 /*prio/ID for local Filters*/)
-            QS_STR("Running main loop");
+            QS_STR("Running main task");
         QS_END()
-
-        /** ADC measurements */
-        ADC_task();
-    } else {
-        /** Do job on Idle */
-        QS_onIdle();
+#endif //Q_UTEST
     }
 }
 
-#if defined(Q_UTEST)
 /**
- * @fn utTask_
- * @brief Unit tests task
+ * @fn vApplicationIdleHook
+ * @brief Callback for Idle task
+ * 
+ * @details In case of main build it performs actions on Idle condition.
+ *          In case of test/Q_UTEST build it BEHAVES additionally as part 
+ *          of Q_UTEST framework by parsing incoming messages on QSPY.
  * 
  * @param None
  * @retval None
  */
-static void utTask_(void)
+void vApplicationIdleHook(void)
 {
-    QS_onIdle();
+     /** Do job on Idle */
+     QS_onIdle();
 }
-#endif //Q_UTEST
 
 /* [] END OF FILE */

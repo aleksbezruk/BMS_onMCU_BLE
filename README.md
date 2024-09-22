@@ -12,6 +12,9 @@ MCU firmware is untended be simple, there is no need for complex multitasking sc
 Based on this, there is no need to use complex RTOS like FreeRTOS or QP framework. <br>
 It can be implemented on baremetal OR using lightweight custom RTOS. <br>
 Starting from __baremetal__ implementation.
+!!! UPDATE: Cypress/Infineon BLE stack requires multitasking environment and <br> 
+the manufacturer BLE stack porting layer is based on RTOS implementation (FreeRTOS, THtreadX etc.). <br>
+Decided to use FreeRTOS.  
 
 ### III. Tools
 1. Software tracing on target -> QSPY & Qview: https://www.state-machine.com/qtools/qpspy.html, <br>
@@ -63,3 +66,21 @@ In the project Target testing is used. To write coverage data to PC from targer,
 2. https://documentation.infineon.com/html/psoc6/jag1667482600571.html
 3. https://documentation.infineon.com/html/psoc6/moa1717991724927.html#moa1717991724927 
 4. https://github.com/infineon 
+
+### IX. Debugging
+1. The main debug probe for now is native Cypress KitProg3. <br>
+   There is also an option to use Segger J-Link debug probe.
+2. VScode has pluggings to support debugging for Cortex-M. <br>
+   Like 'cortex-debug', 'RTOS view' and CPU & MCU peripherals viewers. <br>
+   These pluggings makes VSCode suitable as development environment for Cortex-M MCUs.
+3. Debug settings defined in the 'launch.json' file.
+4. OpenOCD settings defined in such files:
+> BMS_PSOC63/openocd.tcl <br>
+> BMS_PSOC63/proj_cm4/openocd.tcl <br>
+> BMS_PSOC63/proj_cm0/openocd.tcl
+5. In order to improve debuggeing session performance (increase speed, reduce latency etc.) <br>
+   in 'openocd.tcl' not used RTOS-viewer '-rtos auto ': <br>
+> ${TARGET}.cm0 configure -rtos auto -rtos-wipe-on-reset-halt 1 <br>
+> ${TARGET}.cm4 configure -rtos auto -rtos-wipe-on-reset-halt 1 <br>
+> Note: I believe the performance issue is due to Host-PC performance issue. <br>
+>       So upgrading my Host-PC or moving to new machine will fix the issue.

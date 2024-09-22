@@ -11,6 +11,9 @@
 #include "qspyHelper.h"
 #include "qutestHelper.h"
 
+#include "FreeRTOS.h"
+#include "task.h"
+
 /*****************************
  * Defines
  *****************************/
@@ -20,7 +23,6 @@ typedef void (*cut)(void);
 /*******************************/
 /*** External data */
 /******************************/
-extern volatile uint32_t mainLoopTimer;
 
 /*******************************/
 /*** Private data */
@@ -54,11 +56,22 @@ void SysTick_Handler(void)
 {
     volatile uint32_t tmp;
 
-    mainLoopTimer++;
-
     tmp = SysTick->CTRL; // clear CTRL_COUNTFLAG
     (void) tmp;
     QS_tickTime_ += QS_tickPeriod_; // account for the clock rollover
+
+    // RTOS tick
+    portDISABLE_INTERRUPTS();
+    {
+        /* Increment the RTOS tick. */
+        if( xTaskIncrementTick() != pdFALSE )
+        {
+            /* A context switch is required.  Context switching is performed in
+             * the PendSV interrupt.  Pend the PendSV interrupt. */
+            portNVIC_INT_CTRL_REG = portNVIC_PENDSVSET_BIT;
+        }
+    }
+    portENABLE_INTERRUPTS();
 }
 
 void QS_rxCallback(uint8_t *data, uint16_t len) 

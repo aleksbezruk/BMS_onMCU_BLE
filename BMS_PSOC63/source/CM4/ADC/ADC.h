@@ -18,6 +18,5 @@ typedef enum {
 /*** Code */
 /******************************/
 ADC_status_t ADC_init(void);
-void ADC_task(void);
 
 /* [] END OF FILE */
