@@ -164,7 +164,7 @@ BLE_status_t BLE_init(void)
 }
 
 /**************************************************************************************************
-* Function Name: app_bt_management_callback
+* Function Name: app_bt_management_callback_
 ***************************************************************************************************
 * Summary:
 *   This is a Bluetooth stack event handler function to receive management events from
@@ -225,15 +225,20 @@ wiced_result_t app_bt_management_callback_(
             }
             break;
         }
-/*
         case BTM_BLE_CONNECTION_PARAM_UPDATE:
-            printf("Connection parameter update status:%d, Connection Interval: %d, Connection Latency: %d, Connection Timeout: %d\n",
-                                           p_event_data->ble_connection_param_update.status,
-                                           p_event_data->ble_connection_param_update.conn_interval,
-                                           p_event_data->ble_connection_param_update.conn_latency,
-                                           p_event_data->ble_connection_param_update.supervision_timeout);
+        {
+            QS_BEGIN_ID(BLE_TRACE, 0 /*prio/ID for local Filters*/)
+                QS_STR("Conn params upd sts: "); 
+                QS_U8(0, p_event_data->ble_connection_param_update.status);
+                QS_STR("ConnInt: ");
+                QS_U16(0, p_event_data->ble_connection_param_update.conn_interval);
+                QS_STR("ConnLat: ");
+                QS_U16(0, p_event_data->ble_connection_param_update.conn_latency);
+                QS_STR("Timeout: ");
+                QS_U16(0, p_event_data->ble_connection_param_update.supervision_timeout);
+            QS_END()
             break;
-*/
+        }
         default:
         {
             QS_BEGIN_ID(BLE_TRACE, 0 /*prio/ID for local Filters*/)
@@ -266,14 +271,23 @@ static void le_app_init(void)
 {
     wiced_result_t wiced_result;
 
-    wiced_bt_set_pairable_mode(FALSE, FALSE);   // no paring
+    /** 
+     * Paring & bonding (link encryption) isn't supported for now 
+     *
+     * TODO: add authontication & link encryption in future 
+     */
+    wiced_bt_set_pairable_mode(FALSE, FALSE);
 
     /* Set Advertisement Data */
     wiced_bt_ble_set_raw_advertisement_data(CY_BT_ADV_PACKET_DATA_SIZE, cy_bt_adv_packet_data);
 
     /* Start Undirected LE Advertisements on device startup.
      * The corresponding parameters are contained in 'app_bt_cfg.c' */
-    wiced_result = wiced_bt_start_advertisements(BTM_BLE_ADVERT_UNDIRECTED_HIGH, 0, NULL);
+    wiced_result = wiced_bt_start_advertisements(
+        BTM_BLE_ADVERT_UNDIRECTED_HIGH, 
+        BLE_ADDR_PUBLIC, 
+        NULL
+    );
 
     /* Failed to start advertisement. Stop program execution */
     if (WICED_BT_SUCCESS != wiced_result) {

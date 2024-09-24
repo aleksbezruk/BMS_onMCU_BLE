@@ -99,28 +99,28 @@
 /* Advertisement settings */
 #define CY_BT_CHANNEL_MAP                                     (BTM_BLE_ADVERT_CHNL_37 | BTM_BLE_ADVERT_CHNL_38 | BTM_BLE_ADVERT_CHNL_39)
 
-#define CY_BT_HIGH_DUTY_ADV_MIN_INTERVAL                      48
-#define CY_BT_HIGH_DUTY_ADV_MAX_INTERVAL                      48
-#define CY_BT_HIGH_DUTY_ADV_DURATION                          60
+#define CY_BT_HIGH_DUTY_ADV_MIN_INTERVAL                      8000
+#define CY_BT_HIGH_DUTY_ADV_MAX_INTERVAL                      8000
+#define CY_BT_HIGH_DUTY_ADV_DURATION                          0
 
-#define CY_BT_LOW_DUTY_ADV_MIN_INTERVAL                       2048
-#define CY_BT_LOW_DUTY_ADV_MAX_INTERVAL                       2048
-#define CY_BT_LOW_DUTY_ADV_DURATION                           60
+#define CY_BT_LOW_DUTY_ADV_MIN_INTERVAL                       11200
+#define CY_BT_LOW_DUTY_ADV_MAX_INTERVAL                       11200
+#define CY_BT_LOW_DUTY_ADV_DURATION                           0
 
-#define CY_BT_HIGH_DUTY_DIRECTED_ADV_MIN_INTERVAL             400
-#define CY_BT_HIGH_DUTY_DIRECTED_ADV_MAX_INTERVAL             800
+#define CY_BT_HIGH_DUTY_DIRECTED_ADV_MIN_INTERVAL             8000
+#define CY_BT_HIGH_DUTY_DIRECTED_ADV_MAX_INTERVAL             8000
 
-#define CY_BT_LOW_DUTY_DIRECTED_ADV_MIN_INTERVAL              48
-#define CY_BT_LOW_DUTY_DIRECTED_ADV_MAX_INTERVAL              48
-#define CY_BT_LOW_DUTY_DIRECTED_ADV_DURATION                  30
+#define CY_BT_LOW_DUTY_DIRECTED_ADV_MIN_INTERVAL              8000
+#define CY_BT_LOW_DUTY_DIRECTED_ADV_MAX_INTERVAL              8000
+#define CY_BT_LOW_DUTY_DIRECTED_ADV_DURATION                  0
 
-#define CY_BT_HIGH_DUTY_NONCONN_ADV_MIN_INTERVAL              160
-#define CY_BT_HIGH_DUTY_NONCONN_ADV_MAX_INTERVAL              160
-#define CY_BT_HIGH_DUTY_NONCONN_ADV_DURATION                  30
+#define CY_BT_HIGH_DUTY_NONCONN_ADV_MIN_INTERVAL              8000
+#define CY_BT_HIGH_DUTY_NONCONN_ADV_MAX_INTERVAL              8000
+#define CY_BT_HIGH_DUTY_NONCONN_ADV_DURATION                  0
 
-#define CY_BT_LOW_DUTY_NONCONN_ADV_MIN_INTERVAL               2048
-#define CY_BT_LOW_DUTY_NONCONN_ADV_MAX_INTERVAL               2048
-#define CY_BT_LOW_DUTY_NONCONN_ADV_DURATION                   30
+#define CY_BT_LOW_DUTY_NONCONN_ADV_MIN_INTERVAL               11200
+#define CY_BT_LOW_DUTY_NONCONN_ADV_MAX_INTERVAL               11200
+#define CY_BT_LOW_DUTY_NONCONN_ADV_DURATION                   0
 
 
 /* Advertisement and scan response packets defines */
