@@ -9,10 +9,14 @@
 /*******************************/
 /*** Defines */
 /******************************/
+typedef enum {
+    BLE_STATUS_OK,
+    BLE_STATUS_FAIL
+} BLE_status_t;
 
 /*******************************/
 /*** Code */
 /******************************/
-void BLE_init(void);
+BLE_status_t BLE_init(void);
 
 /* [] END OF FILE */

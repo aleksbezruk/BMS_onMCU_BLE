@@ -53,10 +53,10 @@ VERBOSE=
 # ... then code in directories named COMPONENT_foo and COMPONENT_bar will be
 # added to the build
 #
-COMPONENTS=FREERTOS WICED_BLE
+COMPONENTS=CM0P_BLESS FREERTOS #WICED_BLE 
 
 # Like COMPONENTS, but disable optional code that was enabled by default.
-DISABLE_COMPONENTS=CM0P_SLEEP CM0P_SECURE CM0P_CRYPTO CM0P_BLESS
+DISABLE_COMPONENTS=CM0P_SLEEP CM0P_SECURE CM0P_CRYPTO
 
 # Set this application to run at the CM0+
 CORE=CM0P
@@ -70,9 +70,9 @@ $(info Set BUILD CONFIGURATION IS -> $(BUILD_CONFIG))
 ifeq ($(BUILD_CONFIG), Debug)
 SOURCES= ../source/CM0p/main.c
 else ifeq ($(BUILD_CONFIG), Release)
-SOURCES= ../source/CM0p/main.c
+SOURCES= #../source/CM0p/main.c
 else ifeq ($(BUILD_CONFIG), Qutest)
-SOURCES= ../source/CM0p/main.c
+SOURCES= #../source/CM0p/main.c
 else
 # $(error !!! BUILD CONFIGURATION IS udefined !!!. Please set Debug or Qutest or Release)
 $(info Set BUILD CONFIGURATION IS nor defined. Please doublecheck. Maybe it's Cypress Device Confidurator running)
@@ -83,7 +83,7 @@ endif	# BUILD configuration
 INCLUDES= ../source/CM0p/
 
 # Add additional defines to the build process (without a leading -D).
-DEFINES+=CY_CORTEX_M4_APPL_ADDR=CY_FLASH_BASE+0x7800U CY_RTOS_AWARE
+DEFINES+=CY_CORTEX_M4_APPL_ADDR=CY_FLASH_BASE+0x20000U CY_RTOS_AWARE CYBSP_BT_PLATFORM_CFG_SLEEP_MODE_LP_ENABLED=0
 
 # Select softfp or hardfp floating point. Default is softfp.
 VFP_SELECT=

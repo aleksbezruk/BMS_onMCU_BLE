@@ -31,12 +31,13 @@
     //
     "version": "0.2.0",
     "configurations": [
+        
         {
-            "name": "Debug Qutest (KitProg3_MiniProg4)",
+            "name": "Multi-Core Debug Qutest (KitProg3_MiniProg4)",
             "type": "cortex-debug",
             "request": "launch",
             "cwd": "${workspaceFolder}",
-            "executable": "proj_cm4/build/APP_CY8CPROTO-063-BLE/Debug/proj_cm4.elf",
+            "executable": "proj_cm0p/build/APP_CY8CPROTO-063-BLE/Debug/proj_cm0p.elf",
             "servertype": "openocd",
             "searchDir": [
                 "${workspaceFolder}",
@@ -62,7 +63,7 @@
             // svdFile is optional, it can be very large.
             "svdFile": "../mtb_shared/mtb-pdl-cat1/release-v3.11.0/devices/COMPONENT_CAT1A/svd/psoc6_01.svd",
             "numberOfProcessors": 2,
-            "targetProcessor": 1, // Set to 0 for the CM0+, set to 1 for the CM4
+            "targetProcessor": 0, // Set to 0 for the CM0+, set to 1 for the CM4
             "postStartSessionCommands": [
                 // Needed if runToMain is false
                 // Following two commands are needed to get gdb and openocd and HW all in sync.
@@ -85,15 +86,35 @@
             "preLaunchTask": "Build Qutest",    // Set this to run a task from tasks.json
             "presentation": {
                 "hidden": false,
-                "group": "CM4"
+                "group": " Multi-core"
+            },
+            "chainedConfigurations": {
+                "enabled": true,
+                "waitOnEvent": "postInit",
+                "lifecycleManagedByParent": true,
+                "launches": [                               // Array of launches. Order is respected
+                    {
+                        "name": "Attach PSoC6 CM4 (KitProg3_MiniProg4)",     // Name of another configuration
+                        "folder": "./proj_cm4",
+                        "overrides": {
+                            "overrideRestartCommands": [
+                                "monitor halt"
+                            ],
+                            "postStartSessionCommands": [
+                                "tb main",
+                                "continue"
+                            ]
+                        }
+                    }
+                ]
             }
         },
         {
-            "name": "Debug Main build (KitProg3_MiniProg4)",
+            "name": "Multi-Core Debug (KitProg3_MiniProg4)",
             "type": "cortex-debug",
             "request": "launch",
             "cwd": "${workspaceFolder}",
-            "executable": "proj_cm4/build/APP_CY8CPROTO-063-BLE/Debug/proj_cm4.elf",
+            "executable": "proj_cm0p/build/APP_CY8CPROTO-063-BLE/Debug/proj_cm0p.elf",
             "servertype": "openocd",
             "searchDir": [
                 "${workspaceFolder}",
@@ -123,7 +144,7 @@
             "svdFile": "../mtb_shared/mtb-pdl-cat1/release-v3.11.0/devices/COMPONENT_CAT1A/svd/psoc6_01.svd",
             "numberOfProcessors": 2,
             "interface": "swd",
-            "targetProcessor": 1, // Set to 0 for the CM0+, set to 1 for the CM4
+            "targetProcessor": 0, // Set to 0 for the CM0+, set to 1 for the CM4
             "postStartSessionCommands": [
                 // Needed if runToMain is false
                 // Following two commands are needed to get gdb and openocd and HW all in sync.
@@ -146,7 +167,31 @@
             "preLaunchTask": "Build Debug",    // Set this to run a task from tasks.json
             "presentation": {
                 "hidden": false,
-                "group": "CM4"
+                "group": " Multi-core"
+            },
+            "chainedConfigurations": {
+                "enabled": true,
+                "waitOnEvent": "postInit",
+                "lifecycleManagedByParent": true,
+                "launches": [                               // Array of launches. Order is respected
+                    {
+                        "name": "Attach PSoC6 CM4 (KitProg3_MiniProg4)",     // Name of another configuration
+                        "folder": "./proj_cm4",
+                        "overrides": {
+                            "overrideRestartCommands": [
+                                "monitor halt"
+                                //"monitor reset init"
+                            ],
+                            "openOCDLaunchCommands": [
+                                "adapter speed 20000"
+                            ],
+                            "postStartSessionCommands": [
+                                "tb main",
+                                "continue"
+                            ]
+                        }
+                    }
+                ]
             }
         },
         {
@@ -154,7 +199,7 @@
             "type": "cortex-debug",
             "request": "launch",
             "cwd": "${workspaceFolder}",
-            "executable": "proj_cm4/build/APP_CY8CPROTO-063-BLE/Debug/proj_cm4.elf",
+            "executable": "proj_cm0p/build/APP_CY8CPROTO-063-BLE/Debug/proj_cm0p.elf",
             "servertype": "openocd",
             "searchDir": [
                 "${workspaceFolder}",
@@ -193,7 +238,7 @@
             "type": "cortex-debug",
             "request": "launch",
             "cwd": "${workspaceFolder}",
-            "executable": "proj_cm4/build/APP_CY8CPROTO-063-BLE/Debug/proj_cm4.elf",
+            "executable": "proj_cm0p/build/APP_CY8CPROTO-063-BLE/Debug/proj_cm0p.elf",
             "servertype": "openocd",
             "searchDir": [
                 "${workspaceFolder}",
@@ -232,7 +277,7 @@
             "type": "cortex-debug",
             "request": "launch",
             "cwd": "${workspaceFolder}",
-            "executable": "proj_cm4/build/APP_CY8CPROTO-063-BLE/Debug/proj_cm4.elf",
+            "executable": "proj_cm0p/build/APP_CY8CPROTO-063-BLE/Debug/proj_cm0p.elf",
             "servertype": "openocd",
             "searchDir": [
                 "${workspaceFolder}",
@@ -263,7 +308,7 @@
             }
         },
         {
-            "name": "JLink Debug QUtest",
+            "name": "JLink QUtest",
             "cwd": "${workspaceRoot}",
             "executable": "proj_cm4/build/APP_CY8CPROTO-063-BLE/Debug/proj_cm4.elf",
             "request": "launch",

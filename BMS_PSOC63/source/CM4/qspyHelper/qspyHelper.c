@@ -238,6 +238,9 @@ void QS_addUsrRecToDic(enum_t const rec)
         case ADC:
             QS_USR_DICTIONARY(ADC);
             break;
+        case BLE_TRACE:
+            QS_USR_DICTIONARY(BLE_TRACE);
+            break;
         default:
             break;
     }

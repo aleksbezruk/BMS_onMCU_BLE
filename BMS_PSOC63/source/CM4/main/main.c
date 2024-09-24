@@ -16,6 +16,7 @@
 #include <gcov.h>
 #endif // Q_UTEST
 #include "ADC.h"
+#include "BLE.h"
 
 // RTOS includes
 #include "FreeRTOS.h"
@@ -85,6 +86,7 @@ int main(void)
     /** Init QSPY dictionary & filters */
     QS_addUsrRecToDic(MAIN);
     QS_addUsrRecToDic(ADC);
+    QS_addUsrRecToDic(BLE_TRACE);
 #if defined(Q_UTEST)
     QS_addUsrRecToDic(UTEST);
     QS_addUsrRecToDic(BSP);
@@ -133,8 +135,14 @@ static void mainTask_(cy_thread_arg_t arg)
 {
     (void) arg;
     /** Init ADC peripheral & create ADC task */
-    ADC_status_t status = ADC_init();
-    if (status != ADC_STATUS_OK) {
+    ADC_status_t adcStatus = ADC_init();
+    if (adcStatus != ADC_STATUS_OK) {
+        CY_ASSERT(0);
+    }
+
+    /** Init BLE peripheral & create BLE tasks */
+    BLE_status_t bleStatus = BLE_init();
+    if (bleStatus != BLE_STATUS_OK) {
         CY_ASSERT(0);
     }
 

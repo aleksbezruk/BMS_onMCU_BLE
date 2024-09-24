@@ -22,7 +22,8 @@ enum AppRecords {
     MAIN = QS_USER,
     UTEST,
     BSP,
-    ADC
+    ADC,
+    BLE_TRACE
 };
 
 /** QSPY/Qview cmds */
