@@ -7,15 +7,15 @@
 
 #include "qspyHelper.h"
 
-/*************************************
- * Data
- *************************************/
+///////////////////////
+// Data
+///////////////////////
 uint32_t errCode    __attribute__((section(".noinit")));
 uint32_t errCodeStatus  __attribute__((section(".noinit")));
 
-/*************************************
- * Code
- *************************************/
+///////////////////////
+// Code
+///////////////////////
 void QS_onTestEvt(QEvt * e) {
     // TODO: implement
 }

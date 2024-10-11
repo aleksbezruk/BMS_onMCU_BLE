@@ -1,24 +1,26 @@
-/******************************************************************************
-* @file  ADC.c
-*
-* @brief Analog to digital converter module functions definition.
-* @details 
-*           1. Hardware details:
-*               1.1 BAT cell4 -> P10_0 sarmux[0] .
-*               1.2 BAT cell3 -> P10_1 sarmux[1] .
-*               1.3 BAT cell2 -> P10_2 sarmux[2] .
-*               1.4 BAT cell1 -> P10_3 sarmux[3] .
-*               1.5 temperature sensor connected to ADC.
-*               1.6 One 12-bit SAR (successive approximation register) ADC
-*               1.7 Reference voltage -> VDDA = 2.5V referenced form VDD
-*           2. Software details:
-*               2.1 Use Cypress HAL library: 
-*                   - mtb-hal-cat1/release-v2.6.1/source/cyhal_adc_sar.c ;
-*                   - mtb-hal-cat1/release-v2.6.1/include/cyhal_adc.h ;
-*                   - mtb-hal-cat1/release-v2.6.1/include_pvt/cyhal_analog_common.h .
-*               2.2 Cypress ModToolBox is used to define ADC peripheral (pins, clocks, etc) .
-* @version 0.1.0
-*/
+/**
+ * @file  ADC.c
+ *
+ * @brief Analog to digital converter module functions definition
+ * 
+ * @details ## **Details** 
+ *           ### 1. Hardware details: <br>
+ *               1.1 BAT cell4 -> P10_0 sarmux[0] <br>
+ *               1.2 BAT cell3 -> P10_1 sarmux[1] <br>
+ *               1.3 BAT cell2 -> P10_2 sarmux[2] <br>
+ *               1.4 BAT cell1 -> P10_3 sarmux[3] <br>
+ *               1.5 temperature sensor connected to ADC <br>
+ *               1.6 One 12-bit SAR (successive approximation register) ADC <br>
+ *               1.7 Reference voltage -> VDDA = 2.5V referenced form VDD <br>
+ *           ### 2. Software details:
+ *               2.1 Use Cypress HAL library: <br> 
+ *                   - mtb-hal-cat1/release-v2.6.1/source/cyhal_adc_sar.c ;
+ *                   - mtb-hal-cat1/release-v2.6.1/include/cyhal_adc.h ;
+ *                   - mtb-hal-cat1/release-v2.6.1/include_pvt/cyhal_analog_common.h . <br>
+ *               2.2 Cypress ModToolBox is used to config ADC peripheral (pins, clocks, etc) .
+ * 
+ * @version 0.1.0
+ */
 
 #include "cyhal_adc.h"
 #include "cycfg.h"
@@ -30,9 +32,9 @@
 #include "task.h"
 #include "cyabs_rtos.h"
 
-/*******************************/
-/*** Defines */
-/******************************/
+///////////////////////
+// Defines
+///////////////////////
 #define ADC_NUM_CHNLS   4U
 #define ADC_CONVERT_UV_TO_MV(uv)    (uv / (int32_t) 1000)
 /** 
@@ -43,12 +45,12 @@
 #define ADC_ERR 4.0f
 #define ADC_MEAS_COMPENSATE(val)    (int32_t)((float) val * (1.0f - ADC_ERR/100.0f))  // val in [mV] 
 
-#define ADC_TASK_STACK_SIZE 400U   // bytes, aligned to 8 bytes
+#define ADC_TASK_STACK_SIZE 400U   /**< bytes, aligned to 8 bytes */
 
-/*******************************/
-/*** Private data */
-/******************************/
-static cyhal_adc_t adc_;    // allocate some memory for HAL ADC
+///////////////////////
+// Private data
+///////////////////////
+static cyhal_adc_t adc_;               // allocate some memory for HAL ADC
 static cyhal_adc_channel_t channel0_;  // allocate memory for channel0 (BAT cell1)
 static cyhal_adc_channel_t channel1_;  // allocate memory for channel0 (BAT cell2)
 static cyhal_adc_channel_t channel2_;  // allocate memory for channel2 (BAT cell3)
@@ -64,18 +66,26 @@ static uint8_t num_channels_ = ADC_NUM_CHNLS;  // allocate memory to keep count
 static cy_thread_t adcTaskHandle_;
 /** 
  *  In stack words because stack pointer should be aligned to 
- *  8 bytes per the RTOS requirements.
+ *  8 bytes boundaru per the RTOS requirements.
  */
 static uint64_t adcTaskStack_[ADC_TASK_STACK_SIZE/8U];
 
-/*******************************/
-/*** Functions prototype */
-/******************************/
+///////////////////////
+// Functions prototype
+///////////////////////
 static void adcTask_(cy_thread_arg_t arg);
 
-/*******************************/
-/*** Code */
-/******************************/
+///////////////////////
+// Code
+///////////////////////
+/**
+ * @brief Init ADC peripheral and create RTOS task
+ * 
+ * @param None
+ * 
+ * @retval See \ref ADC_status_t
+ * 
+ */
 ADC_status_t ADC_init(void)
 {
     ADC_status_t status = ADC_STATUS_OK;
@@ -113,6 +123,14 @@ ADC_status_t ADC_init(void)
     return status;
 }
 
+/**
+ * @brief ADC task handler
+ * 
+ * @param[in] arg task input argument
+ * 
+ * @retval None (never returns because endless task)
+ * 
+ */
 static void adcTask_(cy_thread_arg_t arg)
 {
     (void) arg;

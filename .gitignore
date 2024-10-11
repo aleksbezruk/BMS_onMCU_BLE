@@ -3,3 +3,7 @@
 *.dic
 *.html
 *.css
+*.png
+
+# ignore folders
+doxygen/

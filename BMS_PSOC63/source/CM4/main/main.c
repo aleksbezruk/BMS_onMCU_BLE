@@ -1,10 +1,10 @@
-/******************************************************************************
-* @file  main.c
-*
-* @brief This is the source code for CM4 in the the Dual CPU Application.
-*
-* @version 0.1.0
-*/
+/**
+ * @file  main.c
+ *
+ * @brief Implementa main() function entry and main Task's business logic.
+ *
+ * @version 0.1.0
+ */
 
 #include "cy_pdl.h"
 #include "cyhal.h"
@@ -23,33 +23,34 @@
 #include "task.h"
 #include "cyabs_rtos.h"
 
-/*******************************/
-/*** Functions prototypes */
-/******************************/
+///////////////////
+// Functions prototypes
+///////////////////
 static void mainTask_(cy_thread_arg_t arg);
 #if defined(Q_UTEST)
-void __gcov_dump(void); /* internal gcov function to write data */
+/** internal gcov library function to write data */
+void __gcov_dump(void);
 #endif //Q_UTEST
 void vApplicationIdleHook(void);
 
-/*******************************/
-/*** Definitions */
-/******************************/
-#define MAIN_TASK_STACK_SIZE 400U   // bytes, aligned to 8 bytes
+///////////////////
+// Definitions
+///////////////////
+#define MAIN_TASK_STACK_SIZE 400U   /**< size in bytes, aligned to 8 bytes */
 
-/*******************************/
-/*** Data */
-/******************************/
+///////////////////
+// Private data
+///////////////////
 static cy_thread_t mainTaskHandle_;
 /** 
  *  In stack words because stack pointer should be aligned to 
- *  8 bytes per the RTOS requirements.
+ *  8 bytes boundary per the RTOS requirements.
  */
 static uint64_t mainTaskStack_[MAIN_TASK_STACK_SIZE/8U];
 
-/*******************************/
-/*** Code */
-/******************************/
+///////////////////
+// Code
+///////////////////
 #if defined(Q_UTEST)
 extern void initialise_monitor_handles(void);
 static void initSemihosting(void)
@@ -58,11 +59,19 @@ static void initSemihosting(void)
 }
 #endif //Q_UTEST
 
+/**
+ * @brief main() function
+ * 
+ * @param None
+ * 
+ * @retval Never returns
+ *
+ */
 int main(void)
 {
     cy_rslt_t result;
 
-    /* Initialize the device and board peripherals */
+    /** Initialize the device and board peripherals */
     result = cybsp_init();
     if (result != CY_RSLT_SUCCESS) {
         CY_ASSERT(0);
@@ -124,11 +133,10 @@ int main(void)
 
 
 /**
- * @fn mainTask_
- * @brief Main task/dispatcher
+ * @brief Main task's handler
  * 
- * @param[in] arg the argument passed from the thread create call 
- *            to the entry function
+ * @param[in] arg the argument passed from the thread create call to the entry function
+ * 
  * @retval None
  */
 static void mainTask_(cy_thread_arg_t arg)
@@ -160,14 +168,14 @@ static void mainTask_(cy_thread_arg_t arg)
 }
 
 /**
- * @fn vApplicationIdleHook
- * @brief Callback for Idle task
+ * @brief Callback for the Idle task
  * 
  * @details In case of main build it performs actions on Idle condition.
  *          In case of test/Q_UTEST build it BEHAVES additionally as part 
  *          of Q_UTEST framework by parsing incoming messages on QSPY.
  * 
  * @param None
+ * 
  * @retval None
  */
 void vApplicationIdleHook(void)

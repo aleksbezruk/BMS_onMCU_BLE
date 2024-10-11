@@ -1,5 +1,6 @@
 /**
  * @file qspyHelper.c
+ * 
  * @brief Implements helper functions for QSPY & QUtest framework. 
  *        Also includes API for Application.
  * 
@@ -14,21 +15,19 @@
 #include "FreeRTOS.h"
 #include "task.h"
 
-/*****************************
- * Defines
- *****************************/
+///////////////////
+// Defines
+///////////////////
 #define QS_TICKS_IN_1MS (SystemCoreClock / BSP_TICKS_PER_SEC)
+
+/** Code undet test */
 typedef void (*cut)(void);
 
-/*******************************/
-/*** External data */
-/******************************/
-
-/*******************************/
-/*** Private data */
-/******************************/
-static uint8_t qsTxBuf[2048]; // buffer for QS-TX channel
-static uint8_t qsRxBuf[100];    // buffer for QS-RX channel
+///////////////////
+// Private data
+///////////////////
+static uint8_t qsTxBuf[2048];   /**< buffer for QS-TX channel */
+static uint8_t qsRxBuf[100];     /**<  buffer for QS-RX channel */
 #if defined(Q_UTEST)
 //static uint8_t qsTestFuncArgs[50];  // buffer for functions args received from UT scripts
 void QUTEST_runUTfunc(void(*func)(void));
@@ -40,12 +39,12 @@ void QUTEST_injectError(uint32_t err);
 void QUTEST_init(void);
 #endif //Q_UTEST
 
-static QSTimeCtr QS_tickTime_;      // ms
-static QSTimeCtr QS_tickPeriod_;    // ms
+static QSTimeCtr QS_tickTime_;       /**< ms */
+static QSTimeCtr QS_tickPeriod_;     /**< ms */
 
-/*******************************/
-/*** Private functions */
-/******************************/
+///////////////////
+// Private functions
+///////////////////
 static void QS_initTimer_(void) 
 {
     (void)SysTick_Config(SystemCoreClock / BSP_TICKS_PER_SEC);
@@ -74,6 +73,15 @@ void SysTick_Handler(void)
     portENABLE_INTERRUPTS();
 }
 
+/**
+ * @brief Callback for received data via UART
+ * 
+ * @param[in] data pointer to buffer that stores incoming UART data
+ * 
+ * @param[in] len  amount of received UART data
+ * 
+ * @retval None
+ */
 void QS_rxCallback(uint8_t *data, uint16_t len) 
 {
     uint16_t i;
@@ -83,9 +91,16 @@ void QS_rxCallback(uint8_t *data, uint16_t len)
     }
 }
 
-/*******************************/
-/*** Helper functions */
-/******************************/
+////////////////////////////
+// Helper functions
+////////////////////////////
+/**
+ * @brief Resets MCU
+ * 
+ * @param None
+ * 
+ * @retval None
+ */
 void QS_onReset(void) 
 {
     QS_TEST_PROBE_DEF(&QS_onReset)
@@ -100,12 +115,28 @@ void QS_onReset(void)
 }
 
 #if !defined(Q_UTEST)
+/**
+ * @brief Helper function for QSPY & QUtest franework to get time tick
+ * 
+ * @param None
+ * 
+ * @retval Tick time in ms
+ */
 QSTimeCtr QS_onGetTime(void)
 {
     return QS_tickTime_;
 }
 #endif //Q_UTEST
 
+/**
+ * @brief Sends data collected in QSPY buffer to Host PC
+ * 
+ * @note Blocking call
+ * 
+ * @param None
+ * 
+ * @retval None
+ */
 void QS_onFlush(void) 
 {
     for (;;) {
@@ -121,6 +152,19 @@ void QS_onFlush(void)
     }
 }
 
+/**
+ * @brief Handles a cmd received from Host PC
+ * 
+ * @param[in] cmdId - command ID
+ * 
+ * @param[in] param1 - 1st cmd's parameter
+ * 
+ * @param[in] param2 - 2nd cmd's parameter
+ * 
+ * @param[in] param3 - 3rd cmd's parameter
+ * 
+ * @retval None
+ */
 void QS_onCommand(uint8_t cmdId,
                   uint32_t param1, 
                   uint32_t param2, 
@@ -172,9 +216,16 @@ void QS_onCommand(uint8_t cmdId,
     }
 }
 
-/*******************************/
-/*** Public API */
-/******************************/
+///////////////////
+// Public API 
+///////////////////
+/**
+ * @brief Init QSPY
+ * 
+ * @param[in] arg arguments
+ * 
+ * @retval QSPY_STATUS_SUCCESS - on success, QSPY_STATUS_ERROR - on error
+ */
 uint8_t QS_onStartup(void const *arg) 
 {
     Q_UNUSED_PAR(arg);
@@ -208,6 +259,13 @@ uint8_t QS_onStartup(void const *arg)
     return status;
 }
 
+/**
+ * @brief Sends data to Host with running QSPY. Application calls the function from Idle task
+ * 
+ * @param None
+ * 
+ * @retval None
+ */
 void QS_onIdle(void) 
 {
     QS_rxParse();  // parse all the received bytes
@@ -223,6 +281,13 @@ void QS_onIdle(void)
     }
 }
 
+/**
+ * @brief Add user/app recrods group to dictionary
+ * 
+ * @param[in] rec user record  \ref AppRecords
+ * 
+ * @retval None
+ */
 void QS_addUsrRecToDic(enum_t const rec) 
 {
     switch(rec) {
@@ -246,6 +311,13 @@ void QS_addUsrRecToDic(enum_t const rec)
     }
 }
 
+/**
+ * @brief Init global filters
+ * 
+ * @param None
+ * 
+ * @retval None
+ */
 void QS_initGlbFilters(void) 
 {
     QS_GLB_FILTER(QS_ALL_RECORDS);   // enable all records
