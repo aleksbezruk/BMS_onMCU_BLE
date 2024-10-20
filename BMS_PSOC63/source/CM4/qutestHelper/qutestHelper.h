@@ -5,6 +5,9 @@
  * @version 0.1.0
  */
 
+#ifndef QUTESTHELPER_MODULE_H
+#define QUTESTHELPER_MODULE_H
+
 #include <stdint.h>
 
 #if defined(Q_UTEST)
@@ -19,5 +22,7 @@ extern uint32_t errCode    __attribute__((section(".noinit")));
 #define QUTEST_printError(errCode)
 #define QUTEST_init()
 #endif //Q_UTEST
+
+#endif // QUTESTHELPER_MODULE_H
 
 /* [] END OF FILE */

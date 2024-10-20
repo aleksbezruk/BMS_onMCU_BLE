@@ -6,6 +6,9 @@
  * @version 0.1.0
  */
 
+#ifndef QSPYHELPER_MODULE_H
+#define QSPYHELPER_MODULE_H
+
 #include <stdint.h>
 #include "qpc.h"
 
@@ -53,5 +56,7 @@ QSTimeCtr QS_onGetTime(void);
 void QS_addUsrRecToDic(enum_t const rec);
 void QS_initGlbFilters(void);
 void QS_rxCallback(uint8_t *data, uint16_t len);
+
+#endif // QSPYHELPER_MODULE_H
 
 /******************************** END OF FILE **********************************************************************/

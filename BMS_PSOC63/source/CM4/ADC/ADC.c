@@ -26,6 +26,8 @@
 #include "cycfg.h"
 #include "ADC.h"
 #include "qspyHelper.h"
+#include "MAIN.h"
+#include "bms_events.h"
 
 // RTOS includes
 #include "FreeRTOS.h"
@@ -36,16 +38,16 @@
 // Defines
 ///////////////////////
 #define ADC_NUM_CHNLS   4U
-#define ADC_CONVERT_UV_TO_MV(uv)    (uv / (int32_t) 1000)
+#define ADC_CONVERT_UV_TO_MV(uv)    (int16_t) (uv / 1000)
 /** 
  * ADC error in [%]. 
  * 1. Maybe variable from sample to sample
  * 2. Maybe needed external precise VREF to improve accuracy 
  */
 #define ADC_ERR 4.0f
-#define ADC_MEAS_COMPENSATE(val)    (int32_t)((float) val * (1.0f - ADC_ERR/100.0f))  // val in [mV] 
+#define ADC_MEAS_COMPENSATE(val)    (int16_t)((float) val * (1.0f - ADC_ERR/100.0f))  // val in [mV] 
 
-#define ADC_TASK_STACK_SIZE 400U   /**< bytes, aligned to 8 bytes */
+#define ADC_TASK_STACK_SIZE 560U   /**< bytes, aligned to 8 bytes */
 
 ///////////////////////
 // Private data
@@ -134,7 +136,9 @@ ADC_status_t ADC_init(void)
 static void adcTask_(cy_thread_arg_t arg)
 {
     (void) arg;
-    int32_t uv, mv;
+    int32_t uv; 
+    int16_t mv;
+    Evt_adc_data_t adcEvt;
 
     while(1) {
         (void)cy_rtos_delay_milliseconds(1000U);    // the API always returns SUCCESS becaause of hardcode
@@ -143,41 +147,47 @@ static void adcTask_(cy_thread_arg_t arg)
         uv = cyhal_adc_read_uv(&channel3_);
         mv = ADC_CONVERT_UV_TO_MV(uv);
         mv = ADC_MEAS_COMPENSATE(mv);
+        adcEvt.bank4_mv = mv;
 
         QS_BEGIN_ID(ADC, 0 /*prio/ID for local Filters*/)
             QS_STR("Bat_Cell4 = ");
-            QS_I32(0, mv); 
+            QS_I16(0, mv); 
         QS_END()
 
         /** Measure Bat Cell3 */
         uv = cyhal_adc_read_uv(&channel2_);
         mv = ADC_CONVERT_UV_TO_MV(uv);
         mv = ADC_MEAS_COMPENSATE(mv);
+        adcEvt.bank3_mv = mv;
 
         QS_BEGIN_ID(ADC, 0 /*prio/ID for local Filters*/)
             QS_STR("Bat_Cell3 = ");
-            QS_I32(0, mv); 
+            QS_I16(0, mv); 
         QS_END()
 
         /** Measure Bat Cell2 */
         uv = cyhal_adc_read_uv(&channel1_);
         mv = ADC_CONVERT_UV_TO_MV(uv);
         mv = ADC_MEAS_COMPENSATE(mv);
+        adcEvt.bank2_mv = mv;
 
         QS_BEGIN_ID(ADC, 0 /*prio/ID for local Filters*/)
             QS_STR("Bat_Cell2 = ");
-            QS_I32(0, mv); 
+            QS_I16(0, mv); 
         QS_END()
 
         /** Measure Bat Cell1 */
         uv = cyhal_adc_read_uv(&channel0_);
         mv = ADC_CONVERT_UV_TO_MV(uv);
         mv = ADC_MEAS_COMPENSATE(mv);
+        adcEvt.bank1_mv = mv;
 
         QS_BEGIN_ID(ADC, 0 /*prio/ID for local Filters*/)
             QS_STR("Bat_Cell1 = ");
-            QS_I32(0, mv); 
+            QS_I16(0, mv); 
         QS_END()
+
+        MAIN_post_evt(&adcEvt);
     }
 }
 

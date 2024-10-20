@@ -6,6 +6,9 @@
  * @version 0.1.0
  */
 
+#ifndef BLE_MODULE_H
+#define BLE_MODULE_H
+
 ///////////////////////
 // Defines
 ///////////////////////
@@ -19,5 +22,7 @@ typedef enum {
 // API
 ///////////////////////
 BLE_status_t BLE_init(void);
+
+#endif //BLE_MODULE_H
 
 /* [] END OF FILE */
