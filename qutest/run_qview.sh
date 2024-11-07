@@ -1,1 +1,1 @@
-python3 ./qview/qview.py
+python3 ./qview/qview.py ./qview/BMS.py

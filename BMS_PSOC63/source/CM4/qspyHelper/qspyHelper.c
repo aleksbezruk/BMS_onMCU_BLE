@@ -15,6 +15,8 @@
 #include "FreeRTOS.h"
 #include "task.h"
 
+#include "MAIN.h"
+
 ///////////////////
 // Defines
 ///////////////////
@@ -211,6 +213,12 @@ void QS_onCommand(uint8_t cmdId,
             break;
         }
 #endif //Q_UTEST
+        case QS_CMD_BMS_SW_STATES:
+        {
+            Evt_sys_data_t evt;
+            evt.swStates = param1;
+            MAIN_post_evt((Main_evt_t*) &evt, EVT_SYSTEM);
+        }
         default:
             break;  // just igmore if cmd isn't defined
     }

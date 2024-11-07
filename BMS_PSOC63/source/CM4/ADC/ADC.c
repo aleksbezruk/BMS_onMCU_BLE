@@ -187,7 +187,7 @@ static void adcTask_(cy_thread_arg_t arg)
             QS_I16(0, mv); 
         QS_END()
 
-        MAIN_post_evt(&adcEvt);
+        MAIN_post_evt((Main_evt_t*) &adcEvt, EVT_ADC);
     }
 }
 

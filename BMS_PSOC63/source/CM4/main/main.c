@@ -19,7 +19,7 @@
 #endif // Q_UTEST
 #include "ADC.h"
 #include "BLE.h"
-#include "bms_events.h"
+#include "MAIN.h"
 
 // RTOS includes
 #include "FreeRTOS.h"
@@ -32,11 +32,20 @@
 static void mainTask_(cy_thread_arg_t arg);
 static void parseQueueItem_(Main_queue_data_t* queueItem);
 static void handleAdcEvt_(Evt_adc_data_t* evt);
+static void handleSystemEvt_(Evt_sys_data_t* evt);
 #if defined(Q_UTEST)
 /** internal gcov library function to write data */
 void __gcov_dump(void);
 #endif //Q_UTEST
 void vApplicationIdleHook(void);
+
+static void MAIN_initDischargeSw(void);
+static void MAIN_initChargeSw(void);
+static void MAIN_initBalancerSw(void);
+static void MAIN_setDischargeSw(MAIN_dischargeSw_state_t state);
+static void MAIN_setChargeSw(MAIN_chargeSw_state_t state);
+static void MAIN_enableBalancerSw(uint8_t balBanksEnMask);
+static void MAIN_disableBalancerSw(uint8_t balBanksDisMask);
 
 ///////////////////
 // Definitions
@@ -166,6 +175,18 @@ static void mainTask_(cy_thread_arg_t arg)
         CY_ASSERT(0);
     }
 
+    /** Set default state (OFF) for discharge control switch */
+    MAIN_initDischargeSw();
+    MAIN_setDischargeSw(MAIN_BMS_DISCHARGE_OFF);
+
+    /** Set default state (OFF) for charge control switch */
+    MAIN_initChargeSw();
+    MAIN_setChargeSw(MAIN_BMS_CHARGE_OFF);
+
+    /** Set default state (OFF) for balancing switches */
+    MAIN_initBalancerSw();
+    MAIN_disableBalancerSw(MAIN_BMS_ALL_BANKS);
+
     /** Init timeout timers 
      * @todo timeout timers definition
      */
@@ -235,10 +256,13 @@ static void parseQueueItem_(Main_queue_data_t* queueItem)
     switch (queueItem->evtType)
     {
     case EVT_ADC:
-        handleAdcEvt_(&queueItem->adcData);
+        handleAdcEvt_(&queueItem->evtData.adcData);
         break;
     case EVT_BLE:
         /** @todo Implement handling BLE evts */
+        break;
+    case EVT_SYSTEM:
+        handleSystemEvt_(&queueItem->evtData.sysEvtData);
         break;
     
     default:
@@ -263,6 +287,58 @@ static void handleAdcEvt_(Evt_adc_data_t* evt)
         QS_I16(0, evt->bank3_mv);
         QS_I16(0, evt->bank4_mv);
     QS_END()
+
+    /**
+     * @todo Cells balancing & charge/discharge switches control
+     */
+}
+
+/**
+ * @brief Handles an System event
+ * 
+ * @param[in] evt Pointer to incoming event
+ * 
+ * @retval None
+ */
+static void handleSystemEvt_(Evt_sys_data_t* evt)
+{
+    QS_BEGIN_ID(MAIN, 0 /*prio/ID for local Filters*/)
+        QS_STR("Sys evt, set switches state: ");
+        QS_U8(0, evt->swStates);
+    QS_END()
+
+    if (evt->setDischState == 1U) {
+        MAIN_setDischargeSw(MAIN_BMS_DISCHARGE_ON);
+    } else {
+        MAIN_setDischargeSw(MAIN_BMS_DISCHARGE_OFF);
+    }
+
+    if (evt->setChargeState == 1U) {
+        MAIN_setChargeSw(MAIN_BMS_CHARGE_ON);
+    } else {
+        MAIN_setChargeSw(MAIN_BMS_CHARGE_OFF);
+    }
+
+    if (evt->setBank1Balancer == 1U) {
+        MAIN_enableBalancerSw(MAIN_BMS_BANK1_MASK);
+    } else {
+        MAIN_disableBalancerSw(MAIN_BMS_BANK1_MASK);
+    }
+    if (evt->setBank2Balancer == 1U) {
+        MAIN_enableBalancerSw(MAIN_BMS_BANK2_MASK);
+    } else {
+        MAIN_disableBalancerSw(MAIN_BMS_BANK2_MASK);
+    }
+    if (evt->setBank3Balancer == 1U) {
+        MAIN_enableBalancerSw(MAIN_BMS_BANK3_MASK);
+    } else {
+        MAIN_disableBalancerSw(MAIN_BMS_BANK3_MASK);
+    }
+    if (evt->setBank4Balancer == 1U) {
+        MAIN_enableBalancerSw(MAIN_BMS_BANK4_MASK);
+    } else {
+        MAIN_disableBalancerSw(MAIN_BMS_BANK4_MASK);
+    }
 }
 
 /**
@@ -290,15 +366,19 @@ void vApplicationIdleHook(void)
  * 
  * @param[in] evt Event to post
  * 
+ * @param[in] eventType Event type to post
+ * 
  * @retval None
  * 
  */
-void MAIN_post_evt(Evt_adc_data_t* evt)
+void MAIN_post_evt(Main_evt_t* evt, Evt_types_t eventType)
 {
+    CY_ASSERT((evt != NULL) && (eventType < EVT_TYPE_MAX));
+
     Main_queue_data_t queueItem;
 
-    queueItem.evtType = EVT_ADC;
-    memcpy((uint8_t*) &queueItem.adcData, (uint8_t*) evt, sizeof(Evt_adc_data_t));
+    queueItem.evtType = eventType;
+    memcpy((uint8_t*) &queueItem.evtData, (uint8_t*) evt, sizeof(Main_evt_t));
 
     cy_rslt_t result = cy_rtos_queue_put(&mainTaskQueueHandle,
                                          &queueItem,
@@ -311,15 +391,252 @@ void MAIN_post_evt(Evt_adc_data_t* evt)
 //////////////////////////////////
 /// Switches control functions
 //////////////////////////////////
-/**
- * @todo Implement 
+/** 
+ * @brief Init MCU pin for discharge switch
+ * 
+ * @param None
+ * 
+ * @retval None
+ * 
  */
+static void MAIN_initDischargeSw(void)
+{
+    Cy_GPIO_Pin_FastInit(
+        BMS_DISCHARGE_PORT,
+        BMS_DISCHARGE_PIN,
+        CY_GPIO_DM_STRONG_IN_OFF,
+        BMS_DISCHARGE_OFF, 
+        HSIOM_SEL_GPIO
+    );
+}
+
+/** 
+ * @brief Init MCU pin for charge switch
+ * 
+ * @param None
+ * 
+ * @retval None
+ * 
+ */
+static void MAIN_initChargeSw(void)
+{
+    Cy_GPIO_Pin_FastInit(
+        BMS_CHARGE_PORT,
+        BMS_CHARGE_PIN,
+        CY_GPIO_DM_STRONG_IN_OFF,
+        BMS_CHARGE_OFF, 
+        HSIOM_SEL_GPIO
+    );
+}
+
+/** 
+ * @brief Sets discharge switch state
+ * 
+ * @param[in] state : ON / OFF
+ * 
+ * @retval None
+ * 
+ */
+static void MAIN_setDischargeSw(MAIN_dischargeSw_state_t state)
+{
+    switch(state) {
+        case MAIN_BMS_DISCHARGE_OFF:
+        {
+            Cy_GPIO_Write(
+                BMS_DISCHARGE_PORT,
+                BMS_DISCHARGE_PIN,
+                BMS_DISCHARGE_OFF
+            );
+            break;
+        }
+        case MAIN_BMS_DISCHARGE_ON:
+        {
+            Cy_GPIO_Write(
+                BMS_DISCHARGE_PORT,
+                BMS_DISCHARGE_PIN,
+                BMS_DISCHARGE_ON
+            );
+            break;
+        }
+        default:
+            CY_ASSERT(0);
+            break;
+    }
+}
+
+/** 
+ * @brief Sets charge switch state
+ * 
+ * @param[in] state : ON / OFF
+ * 
+ * @retval None
+ * 
+ */
+static void MAIN_setChargeSw(MAIN_chargeSw_state_t state)
+{
+    switch(state) {
+        case MAIN_BMS_CHARGE_OFF:
+        {
+            Cy_GPIO_Write(
+                BMS_CHARGE_PORT,
+                BMS_CHARGE_PIN,
+                BMS_CHARGE_OFF
+            );
+            break;
+        }
+        case MAIN_BMS_CHARGE_ON:
+        {
+            Cy_GPIO_Write(
+                BMS_CHARGE_PORT,
+                BMS_CHARGE_PIN,
+                BMS_CHARGE_ON
+            );
+            break;
+        }
+        default:
+            CY_ASSERT(0);
+            break;
+    }
+}
 
 //////////////////////////////////
 /// Banks balancing functions
 //////////////////////////////////
+/** 
+ * @brief Init MCU pins for balancer circuits
+ * 
+ * @param None
+ * 
+ * @note 4 banks is used in the BMS
+ * 
+ * @retval None
+ * 
+ */
+static void MAIN_initBalancerSw(void)
+{
+    /** Bank1 pin init */
+    Cy_GPIO_Pin_FastInit(
+        BMS_BAL_BANK1_PORT,
+        BMS_BAL_BANK1_PIN,
+        CY_GPIO_DM_STRONG_IN_OFF,
+        BMS_BAL_BANK1_OFF, 
+        HSIOM_SEL_GPIO
+    );
+
+    /** Bank2 pin init */
+    Cy_GPIO_Pin_FastInit(
+        BMS_BAL_BANK2_PORT,
+        BMS_BAL_BANK2_PIN,
+        CY_GPIO_DM_STRONG_IN_OFF,
+        BMS_BAL_BANK2_OFF, 
+        HSIOM_SEL_GPIO
+    );
+
+    /** Bank3 pin init */
+    Cy_GPIO_Pin_FastInit(
+        BMS_BAL_BANK3_PORT,
+        BMS_BAL_BANK3_PIN,
+        CY_GPIO_DM_STRONG_IN_OFF,
+        BMS_BAL_BANK3_OFF, 
+        HSIOM_SEL_GPIO
+    );
+
+    /** Bank4 pin init */
+    Cy_GPIO_Pin_FastInit(
+        BMS_BAL_BANK4_PORT,
+        BMS_BAL_BANK4_PIN,
+        CY_GPIO_DM_STRONG_IN_OFF,
+        BMS_BAL_BANK4_OFF, 
+        HSIOM_SEL_GPIO
+    );
+}
+
+/** 
+ * @brief Enable balancer banks by mask
+ * 
+ * @param[in] balBanksEnMask  mask that defines Banks to enable
+ * 
+ * @retval None
+ * 
+ */
+static void MAIN_enableBalancerSw(uint8_t balBanksEnMask)
+{
+    CY_ASSERT((balBanksEnMask > 0) && (balBanksEnMask <= MAIN_BMS_ALL_BANKS));
+
+    if (balBanksEnMask & MAIN_BMS_BANK1_MASK) {
+        Cy_GPIO_Write(
+            BMS_BAL_BANK1_PORT,
+            BMS_BAL_BANK1_PIN,
+            BMS_BAL_BANK1_ON
+        );
+    }
+    if (balBanksEnMask & MAIN_BMS_BANK2_MASK) {
+        Cy_GPIO_Write(
+            BMS_BAL_BANK2_PORT,
+            BMS_BAL_BANK2_PIN,
+            BMS_BAL_BANK2_ON
+        );
+    }
+    if (balBanksEnMask & MAIN_BMS_BANK3_MASK) {
+        Cy_GPIO_Write(
+            BMS_BAL_BANK3_PORT,
+            BMS_BAL_BANK3_PIN,
+            BMS_BAL_BANK3_ON
+        );
+    }
+    if (balBanksEnMask & MAIN_BMS_BANK4_MASK) {
+        Cy_GPIO_Write(
+            BMS_BAL_BANK4_PORT,
+            BMS_BAL_BANK4_PIN,
+            BMS_BAL_BANK4_ON
+        );
+    }
+}
+
+/** 
+ * @brief Disnable balancer banks by mask
+ * 
+ * @param[in] balBanksDisMask  mask that defines Banks to disable
+ * 
+ * @retval None
+ * 
+ */
+static void MAIN_disableBalancerSw(uint8_t balBanksDisMask)
+{
+    CY_ASSERT((balBanksDisMask > 0) && (balBanksDisMask <= MAIN_BMS_ALL_BANKS));
+
+    if (balBanksDisMask & MAIN_BMS_BANK1_MASK) {
+        Cy_GPIO_Write(
+            BMS_BAL_BANK1_PORT,
+            BMS_BAL_BANK1_PIN,
+            BMS_BAL_BANK1_OFF
+        );
+    }
+    if (balBanksDisMask & MAIN_BMS_BANK2_MASK) {
+        Cy_GPIO_Write(
+            BMS_BAL_BANK2_PORT,
+            BMS_BAL_BANK2_PIN,
+            BMS_BAL_BANK2_OFF
+        );
+    }
+    if (balBanksDisMask & MAIN_BMS_BANK3_MASK) {
+        Cy_GPIO_Write(
+            BMS_BAL_BANK3_PORT,
+            BMS_BAL_BANK3_PIN,
+            BMS_BAL_BANK3_OFF
+        );
+    }
+    if (balBanksDisMask & MAIN_BMS_BANK4_MASK) {
+        Cy_GPIO_Write(
+            BMS_BAL_BANK4_PORT,
+            BMS_BAL_BANK4_PIN,
+            BMS_BAL_BANK4_OFF
+        );
+    }
+}
+
 /**
- * @todo Implement 
+ * @todo Implement banks balancing algorithm based on banks' voltage
  */
 
 /* [] END OF FILE */
