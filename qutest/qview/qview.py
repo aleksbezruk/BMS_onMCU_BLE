@@ -43,6 +43,8 @@ import os
 import traceback
 import webbrowser
 
+import ctypes
+
 #=============================================================================
 # QView GUI
 # https://www.state-machine.com/qtools/qview.html
