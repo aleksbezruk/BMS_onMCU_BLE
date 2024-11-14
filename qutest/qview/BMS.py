@@ -87,6 +87,7 @@ class BMS:
         self.init_bal_state_and_switch_gui(4)   # balancer 4
         self.init_disch_state_and_switch_gui()
         self.init_charge_state_and_switch_gui()
+        self.init_full_vbat_gui()
  
     # on_reset() callback
     def on_reset(self):
@@ -312,6 +313,10 @@ class BMS:
         self.charge_btn_label = Label(QView.canvas, textvariable=self.charge_sw_state)
         self.charge_btn_label.place(x=120, y=380)
 
+    # Init GUI for full VBAT indication
+    def init_full_vbat_gui(self):
+        self.full_vbat_out_obj = QView.canvas.create_text(100, 440, text="Full VBAT = ? mV", fill="magenta", font=('freemono bold',14))
+
     # intercept the QS_USER_00 application-specific packet(s) from Main task
     # this packet has the following structure:
     # record-ID, seq-num, Timestamp, zero terminated message string, switches state
@@ -361,8 +366,9 @@ class BMS:
 
         elif msg_string == "Banks volt: ":
             # packet structure: record-ID, seq-num, Timestamp, msg string, banks volt with format bytes
-            # unpack: Timestamp->tmp_data[0], msg_string->tmp_data[1], bank1->tmp_data[2], ... bank4->tmp_data[5]
-            tmp_data = qunpack("xxTZBHBHBHBH", packet)
+            # unpack: Timestamp->tmp_data[0], msg_string->tmp_data[1], bank1->tmp_data[3], ... bank4->tmp_data[9]
+            #         fullVbat->tmp_data[11]
+            tmp_data = qunpack("xxTZBHBHBHBHBH", packet)
             timestamp = tmp_data[0]
             #fmt = tmp_data[2]
             #b1 = tmp_data[3]
@@ -374,15 +380,17 @@ class BMS:
             b2 = ctypes.c_short(tmp_data[5]).value
             b3 = ctypes.c_short(tmp_data[7]).value
             b4 = ctypes.c_short(tmp_data[9]).value
+            fullVbat = ctypes.c_short(tmp_data[11]).value
             # print a message to the text view
             timestamp_str = "%010d:"%(timestamp)
-            string =  "banks voltage in mV: b1=%5d, b2=%5d, b3=%5d, b4=%5d"%(b1, b2, b3, b4)
+            string =  "banks voltage in mV: b1=%5d, b2=%5d, b3=%5d, b4=%5d fullBat=%5d"%(b1, b2, b3, b4, fullVbat)
             self.qview_custom_print(timestamp_str, string)
             # update banks volt on Canvas
             QView.canvas.itemconfig(self.b1_volt_out_obj, text="%5d"%(b1) + " mV")
             QView.canvas.itemconfig(self.b2_volt_out_obj, text="%5d"%(b2) + " mV")
             QView.canvas.itemconfig(self.b3_volt_out_obj, text="%5d"%(b3) + " mV")
             QView.canvas.itemconfig(self.b4_volt_out_obj, text="%5d"%(b4) + " mV")
+            QView.canvas.itemconfig(self.full_vbat_out_obj, text="Full VBAT = %5d mV"%(fullVbat))
  
     def qview_custom_print(self, timestamp_str, string):
         QView._text.delete(1.0, QView._text_lines)

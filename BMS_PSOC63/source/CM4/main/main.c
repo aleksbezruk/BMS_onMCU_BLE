@@ -286,6 +286,7 @@ static void handleAdcEvt_(Evt_adc_data_t* evt)
         QS_I16(0, evt->bank2_mv);
         QS_I16(0, evt->bank3_mv);
         QS_I16(0, evt->bank4_mv);
+        QS_I16(0, evt->full_mv);
     QS_END()
 
     /**

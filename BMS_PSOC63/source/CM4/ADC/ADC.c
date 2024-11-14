@@ -44,9 +44,36 @@
  * 1. Maybe variable from sample to sample
  * 2. Maybe needed external precise VREF to improve accuracy 
  */
-#define ADC_ERR 4.0f
-#define ADC_MEAS_COMPENSATE(val)    (int16_t)((float) val * (1.0f - ADC_ERR/100.0f))  // val in [mV] 
+#define ADC_ERR -2.0f
+#define ADC_MEAS_COMPENSATE_ERR(val)    (int16_t)((float) val * (1.0f - ADC_ERR/100.0f))  // val in [mV] 
+/**
+ * Bank1
+ * R1 = 1.2 MOhm, R2 = 1.2 MOhm
+ */
+#define ADC_BANK1_CONV_RATIO    2.018881794f
+/**
+ * Bank2
+ * R1 = 1.2 MOhm, R2 = 390 kOhm
+ */
+#define ADC_BANK2_CONV_RATIO    4.019014763f
+/**
+ * Bank3
+ * R1 = 2.4 MOhm, R2 = 390 kOhm
+ */
+#define ADC_BANK3_CONV_RATIO    7.153843402f
+/**
+ * Bank4
+ * R1 = 2.4 MOhm, R2 = 390 kOhm
+ */
+#define ADC_BANK4_CONV_RATIO    7.153843402f
+/**
+ * mV
+ */
+#define ADC_BANK_VOLT_CALC(v_neg, v_pos)    (int16_t) ( v_pos - v_neg )
+#define ADC_CONV_BY_RATIO(val, ratio)   (int16_t) ( (float) val * ratio )
+#define ADC_NUM_MEAS 10U
 
+#define ADC_TASK_INTERVAL   10000U
 #define ADC_TASK_STACK_SIZE 560U   /**< bytes, aligned to 8 bytes */
 
 ///////////////////////
@@ -76,6 +103,7 @@ static uint64_t adcTaskStack_[ADC_TASK_STACK_SIZE/8U];
 // Functions prototype
 ///////////////////////
 static void adcTask_(cy_thread_arg_t arg);
+static int16_t calcBankAvgVolt_(cyhal_adc_channel_t* chnl, float convRatio);
 
 ///////////////////////
 // Code
@@ -136,59 +164,96 @@ ADC_status_t ADC_init(void)
 static void adcTask_(cy_thread_arg_t arg)
 {
     (void) arg;
-    int32_t uv; 
-    int16_t mv;
     Evt_adc_data_t adcEvt;
+    int16_t temp_mv;
 
     while(1) {
-        (void)cy_rtos_delay_milliseconds(1000U);    // the API always returns SUCCESS becaause of hardcode
-
-        /** Measure Bat Cell4 */
-        uv = cyhal_adc_read_uv(&channel3_);
-        mv = ADC_CONVERT_UV_TO_MV(uv);
-        mv = ADC_MEAS_COMPENSATE(mv);
-        adcEvt.bank4_mv = mv;
-
-        QS_BEGIN_ID(ADC, 0 /*prio/ID for local Filters*/)
-            QS_STR("Bat_Cell4 = ");
-            QS_I16(0, mv); 
-        QS_END()
-
-        /** Measure Bat Cell3 */
-        uv = cyhal_adc_read_uv(&channel2_);
-        mv = ADC_CONVERT_UV_TO_MV(uv);
-        mv = ADC_MEAS_COMPENSATE(mv);
-        adcEvt.bank3_mv = mv;
-
-        QS_BEGIN_ID(ADC, 0 /*prio/ID for local Filters*/)
-            QS_STR("Bat_Cell3 = ");
-            QS_I16(0, mv); 
-        QS_END()
-
-        /** Measure Bat Cell2 */
-        uv = cyhal_adc_read_uv(&channel1_);
-        mv = ADC_CONVERT_UV_TO_MV(uv);
-        mv = ADC_MEAS_COMPENSATE(mv);
-        adcEvt.bank2_mv = mv;
-
-        QS_BEGIN_ID(ADC, 0 /*prio/ID for local Filters*/)
-            QS_STR("Bat_Cell2 = ");
-            QS_I16(0, mv); 
-        QS_END()
+        (void)cy_rtos_delay_milliseconds(ADC_TASK_INTERVAL);    // the API always returns SUCCESS becaause of hardcode
 
         /** Measure Bat Cell1 */
-        uv = cyhal_adc_read_uv(&channel0_);
-        mv = ADC_CONVERT_UV_TO_MV(uv);
-        mv = ADC_MEAS_COMPENSATE(mv);
-        adcEvt.bank1_mv = mv;
+        temp_mv = calcBankAvgVolt_(
+            &channel0_,
+            ADC_BANK1_CONV_RATIO
+        );
+        adcEvt.bank1_mv = temp_mv;
 
         QS_BEGIN_ID(ADC, 0 /*prio/ID for local Filters*/)
             QS_STR("Bat_Cell1 = ");
-            QS_I16(0, mv); 
+            QS_I16(0, adcEvt.bank1_mv); 
+        QS_END()
+
+        /** Measure Bat Cell2 */
+        temp_mv = calcBankAvgVolt_(
+            &channel1_,
+            ADC_BANK2_CONV_RATIO
+        );
+        adcEvt.bank2_mv = ADC_BANK_VOLT_CALC(adcEvt.bank1_mv, temp_mv);
+
+        QS_BEGIN_ID(ADC, 0 /*prio/ID for local Filters*/)
+            QS_STR("Bat_Cell2 = ");
+            QS_I16(0, adcEvt.bank2_mv); 
+        QS_END()
+
+        /** Measure Bat Cell3 */
+        temp_mv = calcBankAvgVolt_(
+            &channel2_,
+            ADC_BANK3_CONV_RATIO
+        );
+        adcEvt.bank3_mv = ADC_BANK_VOLT_CALC((adcEvt.bank1_mv + adcEvt.bank2_mv), temp_mv);
+
+        QS_BEGIN_ID(ADC, 0 /*prio/ID for local Filters*/)
+            QS_STR("Bat_Cell3 = ");
+            QS_I16(0, adcEvt.bank3_mv); 
+        QS_END()
+
+        /** Measure Bat Cell4 */
+        temp_mv = calcBankAvgVolt_(
+            &channel3_,
+            ADC_BANK4_CONV_RATIO
+        );
+        adcEvt.full_mv = temp_mv;
+        adcEvt.bank4_mv = ADC_BANK_VOLT_CALC((adcEvt.bank1_mv + adcEvt.bank2_mv + adcEvt.bank3_mv), temp_mv);
+
+        QS_BEGIN_ID(ADC, 0 /*prio/ID for local Filters*/)
+            QS_STR("Bat_Cell4 = ");
+            QS_I16(0, adcEvt.bank4_mv); 
         QS_END()
 
         MAIN_post_evt((Main_evt_t*) &adcEvt, EVT_ADC);
     }
+}
+
+/**
+ * @brief Calculate average Bank voltage
+ * 
+ * @note Avearging using 10 samples.
+ * 
+ * @param[in] chnl - ADC chnl
+ *
+ * @param[in] convRatio - ADC conertion ratio
+ * @retval Bank voltage in mV
+ * 
+ */
+static int16_t calcBankAvgVolt_(cyhal_adc_channel_t* chnl, float convRatio)
+{
+    int32_t uv;
+    int16_t mv;
+    float adcMeasSum = 0;
+    uint8_t i;
+    int16_t retVal;
+
+    /** ADC measurements */
+    for(i = 0; i < ADC_NUM_MEAS; i++) {
+        uv = cyhal_adc_read_uv(chnl);
+        mv = ADC_CONVERT_UV_TO_MV(uv);
+        mv = ADC_MEAS_COMPENSATE_ERR(mv);
+        mv = ADC_CONV_BY_RATIO(mv, convRatio);
+        adcMeasSum += mv;
+    }
+
+    /** Averaging & return */
+    retVal = adcMeasSum / ADC_NUM_MEAS;
+    return retVal;
 }
 
 /* [] END OF FILE */

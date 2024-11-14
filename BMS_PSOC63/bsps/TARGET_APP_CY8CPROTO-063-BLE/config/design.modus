@@ -537,12 +537,12 @@
                         <Param id="idlePwrMode" value="CY_CFG_PWR_MODE_ACTIVE"/>
                         <Param id="pmicEnable" value="false"/>
                         <Param id="pwrMode" value="LDO_1_1"/>
-                        <Param id="vBackupMv" value="2490"/>
-                        <Param id="vddNsMv" value="2490"/>
-                        <Param id="vddaMv" value="2490"/>
-                        <Param id="vdddMv" value="2490"/>
-                        <Param id="vddio0Mv" value="2490"/>
-                        <Param id="vddio1Mv" value="2490"/>
+                        <Param id="vBackupMv" value="2500"/>
+                        <Param id="vddNsMv" value="2500"/>
+                        <Param id="vddaMv" value="2500"/>
+                        <Param id="vdddMv" value="2500"/>
+                        <Param id="vddio0Mv" value="2500"/>
+                        <Param id="vddio1Mv" value="2500"/>
                     </Parameters>
                 </Personality>
             </BlockConfig>

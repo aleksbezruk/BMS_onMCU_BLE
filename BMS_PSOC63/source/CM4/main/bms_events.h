@@ -25,6 +25,7 @@ typedef struct {
     int16_t bank2_mv;
     int16_t bank3_mv;
     int16_t bank4_mv;
+    int16_t full_mv;
 } Evt_adc_data_t;
 
 /** System event data */
