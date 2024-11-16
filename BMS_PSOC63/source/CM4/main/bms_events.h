@@ -42,6 +42,8 @@ typedef union {
     uint8_t swStates;
 } Evt_sys_data_t;
 
+typedef Evt_sys_data_t Switch_state_t;
+
 /** Main task generic event type */
 typedef union {
     Evt_adc_data_t adcData;

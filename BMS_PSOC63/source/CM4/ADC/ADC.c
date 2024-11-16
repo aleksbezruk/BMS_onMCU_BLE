@@ -44,18 +44,18 @@
  * 1. Maybe variable from sample to sample
  * 2. Maybe needed external precise VREF to improve accuracy 
  */
-#define ADC_ERR -2.0f
+#define ADC_ERR 0
 #define ADC_MEAS_COMPENSATE_ERR(val)    (int16_t)((float) val * (1.0f - ADC_ERR/100.0f))  // val in [mV] 
 /**
  * Bank1
  * R1 = 1.2 MOhm, R2 = 1.2 MOhm
  */
-#define ADC_BANK1_CONV_RATIO    2.018881794f
+#define ADC_BANK1_CONV_RATIO    2.0f
 /**
  * Bank2
  * R1 = 1.2 MOhm, R2 = 390 kOhm
  */
-#define ADC_BANK2_CONV_RATIO    4.019014763f
+#define ADC_BANK2_CONV_RATIO    4.07692308f
 /**
  * Bank3
  * R1 = 2.4 MOhm, R2 = 390 kOhm

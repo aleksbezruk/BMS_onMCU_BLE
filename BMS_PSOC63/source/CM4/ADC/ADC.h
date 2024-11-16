@@ -12,6 +12,9 @@
 ///////////////////////
 // Defines
 ///////////////////////
+#define ADC_BMS_FULL_VBAT_MIN   (int16_t) 11200  // mV
+#define ADC_BMS_FULL_VBAT_MAX   (int16_t) 16800  // mV
+
 /** ADC status */
 typedef enum {
     ADC_STATUS_OK,

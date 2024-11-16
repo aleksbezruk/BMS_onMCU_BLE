@@ -43,6 +43,8 @@ class BMS:
         self.BAL3_SWITCH_MASK = (1 << self.BAL3_SWITCH_BIT) & 0xFF
         self.BAL4_SWITCH_MASK = (1 << self.BAL4_SWITCH_BIT) & 0xFF
 
+        self.BMS_STATES = ["Idle", "Discharging", "Charging", "Error", "Shelf"]
+
         # request target reset on startup...
         reset_target()
     
@@ -88,6 +90,7 @@ class BMS:
         self.init_disch_state_and_switch_gui()
         self.init_charge_state_and_switch_gui()
         self.init_full_vbat_gui()
+        self.init_bms_state_gui()
  
     # on_reset() callback
     def on_reset(self):
@@ -315,7 +318,11 @@ class BMS:
 
     # Init GUI for full VBAT indication
     def init_full_vbat_gui(self):
-        self.full_vbat_out_obj = QView.canvas.create_text(100, 440, text="Full VBAT = ? mV", fill="magenta", font=('freemono bold',14))
+        self.full_vbat_out_obj = QView.canvas.create_text(100, 440, text="Full VBAT = ? mV", fill="red", font=('freemono bold',14))
+
+    # Init GUI for BMS state indication
+    def init_bms_state_gui(self):
+        self.bms_state_obj = QView.canvas.create_text(400, 20, text="BMS state: Idle", fill="red", font=('freemono bold',16))
 
     # intercept the QS_USER_00 application-specific packet(s) from Main task
     # this packet has the following structure:
@@ -390,8 +397,24 @@ class BMS:
             QView.canvas.itemconfig(self.b2_volt_out_obj, text="%5d"%(b2) + " mV")
             QView.canvas.itemconfig(self.b3_volt_out_obj, text="%5d"%(b3) + " mV")
             QView.canvas.itemconfig(self.b4_volt_out_obj, text="%5d"%(b4) + " mV")
-            QView.canvas.itemconfig(self.full_vbat_out_obj, text="Full VBAT = %5d mV"%(fullVbat))
- 
+            if fullVbat < 11200 or fullVbat > 16800:
+                QView.canvas.itemconfig(self.full_vbat_out_obj, text="Full VBAT = %5d mV"%(fullVbat), fill = "red")
+            else:
+                QView.canvas.itemconfig(self.full_vbat_out_obj, text="Full VBAT = %5d mV"%(fullVbat), fill = "green")
+
+        elif msg_string == "BMS state: ":
+            # packet structure: record-ID, seq-num, Timestamp, msg string, BMS state with format byte
+            # unpack: Timestamp->tmp_data[0], msg_string->tmp_data[1], format_byte->tmp_data[2], bms_state->tmp_data[3]
+            tmp_data = qunpack("xxTZBB", packet)
+            timestamp = tmp_data[0]
+            bms_state = tmp_data[3]
+            # print a message to the text view
+            timestamp_str = "%010d:"%(timestamp)
+            bms_state_string = "BMS state: %s"%(self.BMS_STATES[bms_state])
+            self.qview_custom_print(timestamp_str, bms_state_string)
+            # update BMS state on Canvas
+            QView.canvas.itemconfig(self.bms_state_obj, text="BMS state: %s"%(self.BMS_STATES[bms_state]) , fill = "blue")
+
     def qview_custom_print(self, timestamp_str, string):
         QView._text.delete(1.0, QView._text_lines)
         QView._text.insert(END, "\n")

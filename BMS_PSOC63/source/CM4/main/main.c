@@ -33,6 +33,12 @@ static void mainTask_(cy_thread_arg_t arg);
 static void parseQueueItem_(Main_queue_data_t* queueItem);
 static void handleAdcEvt_(Evt_adc_data_t* evt);
 static void handleSystemEvt_(Evt_sys_data_t* evt);
+
+static void MAIN_SM_handleSysEvt(Evt_sys_data_t* evt);
+static void MAIN_SM_charge_setBal(Evt_sys_data_t* evt);
+static void MAIN_SM_print_onStateChange(void);
+static void MAIN_SM_handleAdcEvt(Evt_adc_data_t* evt);
+
 #if defined(Q_UTEST)
 /** internal gcov library function to write data */
 void __gcov_dump(void);
@@ -65,6 +71,9 @@ static uint64_t mainTaskStack_[MAIN_TASK_STACK_SIZE/8U];
 static StaticQueue_t staticQueueHandle;
 static cy_queue_t mainTaskQueueHandle;
 static Main_queue_data_t mainQueueSto[MAIN_QUEUE_SIZE];
+
+static BMS_state_t bmsState_ = BMS_STATE_IDLE;
+static uint8_t swState_;
 
 ///////////////////
 // Code
@@ -255,19 +264,21 @@ static void parseQueueItem_(Main_queue_data_t* queueItem)
 {
     switch (queueItem->evtType)
     {
-    case EVT_ADC:
-        handleAdcEvt_(&queueItem->evtData.adcData);
-        break;
-    case EVT_BLE:
-        /** @todo Implement handling BLE evts */
-        break;
-    case EVT_SYSTEM:
-        handleSystemEvt_(&queueItem->evtData.sysEvtData);
-        break;
-    
-    default:
-        CY_ASSERT(0);
-        break;
+        case EVT_ADC:
+            handleAdcEvt_(&queueItem->evtData.adcData);
+            break;
+
+        case EVT_BLE:
+            /** @todo Implement handling BLE evts */
+            break;
+
+        case EVT_SYSTEM:
+            handleSystemEvt_(&queueItem->evtData.sysEvtData);
+            break;
+        
+        default:
+            CY_ASSERT(0);
+            break;
     }
 }
 
@@ -280,6 +291,11 @@ static void parseQueueItem_(Main_queue_data_t* queueItem)
  */
 static void handleAdcEvt_(Evt_adc_data_t* evt)
 {
+    /**
+     * Cells balancing & charge/discharge switches control
+     */
+    MAIN_SM_handleAdcEvt(evt);
+
     QS_BEGIN_ID(MAIN, 0 /*prio/ID for local Filters*/)
         QS_STR("Banks volt: ");
         QS_I16(0, evt->bank1_mv);
@@ -288,10 +304,6 @@ static void handleAdcEvt_(Evt_adc_data_t* evt)
         QS_I16(0, evt->bank4_mv);
         QS_I16(0, evt->full_mv);
     QS_END()
-
-    /**
-     * @todo Cells balancing & charge/discharge switches control
-     */
 }
 
 /**
@@ -303,43 +315,12 @@ static void handleAdcEvt_(Evt_adc_data_t* evt)
  */
 static void handleSystemEvt_(Evt_sys_data_t* evt)
 {
+    MAIN_SM_handleSysEvt(evt);
+
     QS_BEGIN_ID(MAIN, 0 /*prio/ID for local Filters*/)
         QS_STR("Sys evt, set switches state: ");
-        QS_U8(0, evt->swStates);
+        QS_U8(0, swState_);
     QS_END()
-
-    if (evt->setDischState == 1U) {
-        MAIN_setDischargeSw(MAIN_BMS_DISCHARGE_ON);
-    } else {
-        MAIN_setDischargeSw(MAIN_BMS_DISCHARGE_OFF);
-    }
-
-    if (evt->setChargeState == 1U) {
-        MAIN_setChargeSw(MAIN_BMS_CHARGE_ON);
-    } else {
-        MAIN_setChargeSw(MAIN_BMS_CHARGE_OFF);
-    }
-
-    if (evt->setBank1Balancer == 1U) {
-        MAIN_enableBalancerSw(MAIN_BMS_BANK1_MASK);
-    } else {
-        MAIN_disableBalancerSw(MAIN_BMS_BANK1_MASK);
-    }
-    if (evt->setBank2Balancer == 1U) {
-        MAIN_enableBalancerSw(MAIN_BMS_BANK2_MASK);
-    } else {
-        MAIN_disableBalancerSw(MAIN_BMS_BANK2_MASK);
-    }
-    if (evt->setBank3Balancer == 1U) {
-        MAIN_enableBalancerSw(MAIN_BMS_BANK3_MASK);
-    } else {
-        MAIN_disableBalancerSw(MAIN_BMS_BANK3_MASK);
-    }
-    if (evt->setBank4Balancer == 1U) {
-        MAIN_enableBalancerSw(MAIN_BMS_BANK4_MASK);
-    } else {
-        MAIN_disableBalancerSw(MAIN_BMS_BANK4_MASK);
-    }
 }
 
 /**
@@ -440,6 +421,8 @@ static void MAIN_initChargeSw(void)
  */
 static void MAIN_setDischargeSw(MAIN_dischargeSw_state_t state)
 {
+    Switch_state_t* sw_state = (Switch_state_t *) &swState_;
+
     switch(state) {
         case MAIN_BMS_DISCHARGE_OFF:
         {
@@ -448,6 +431,7 @@ static void MAIN_setDischargeSw(MAIN_dischargeSw_state_t state)
                 BMS_DISCHARGE_PIN,
                 BMS_DISCHARGE_OFF
             );
+            sw_state->setDischState = 0;
             break;
         }
         case MAIN_BMS_DISCHARGE_ON:
@@ -457,6 +441,7 @@ static void MAIN_setDischargeSw(MAIN_dischargeSw_state_t state)
                 BMS_DISCHARGE_PIN,
                 BMS_DISCHARGE_ON
             );
+            sw_state->setDischState = 1;
             break;
         }
         default:
@@ -475,6 +460,8 @@ static void MAIN_setDischargeSw(MAIN_dischargeSw_state_t state)
  */
 static void MAIN_setChargeSw(MAIN_chargeSw_state_t state)
 {
+    Switch_state_t* sw_state = (Switch_state_t *) &swState_;
+
     switch(state) {
         case MAIN_BMS_CHARGE_OFF:
         {
@@ -483,6 +470,7 @@ static void MAIN_setChargeSw(MAIN_chargeSw_state_t state)
                 BMS_CHARGE_PIN,
                 BMS_CHARGE_OFF
             );
+            sw_state->setChargeState = 0;
             break;
         }
         case MAIN_BMS_CHARGE_ON:
@@ -492,6 +480,7 @@ static void MAIN_setChargeSw(MAIN_chargeSw_state_t state)
                 BMS_CHARGE_PIN,
                 BMS_CHARGE_ON
             );
+            sw_state->setChargeState = 1;
             break;
         }
         default:
@@ -564,12 +553,15 @@ static void MAIN_enableBalancerSw(uint8_t balBanksEnMask)
 {
     CY_ASSERT((balBanksEnMask > 0) && (balBanksEnMask <= MAIN_BMS_ALL_BANKS));
 
+    Switch_state_t* sw_state = (Switch_state_t *) &swState_;
+
     if (balBanksEnMask & MAIN_BMS_BANK1_MASK) {
         Cy_GPIO_Write(
             BMS_BAL_BANK1_PORT,
             BMS_BAL_BANK1_PIN,
             BMS_BAL_BANK1_ON
         );
+        sw_state->setBank1Balancer = 1;
     }
     if (balBanksEnMask & MAIN_BMS_BANK2_MASK) {
         Cy_GPIO_Write(
@@ -577,6 +569,7 @@ static void MAIN_enableBalancerSw(uint8_t balBanksEnMask)
             BMS_BAL_BANK2_PIN,
             BMS_BAL_BANK2_ON
         );
+        sw_state->setBank2Balancer = 1;
     }
     if (balBanksEnMask & MAIN_BMS_BANK3_MASK) {
         Cy_GPIO_Write(
@@ -584,6 +577,7 @@ static void MAIN_enableBalancerSw(uint8_t balBanksEnMask)
             BMS_BAL_BANK3_PIN,
             BMS_BAL_BANK3_ON
         );
+        sw_state->setBank3Balancer = 1;
     }
     if (balBanksEnMask & MAIN_BMS_BANK4_MASK) {
         Cy_GPIO_Write(
@@ -591,6 +585,7 @@ static void MAIN_enableBalancerSw(uint8_t balBanksEnMask)
             BMS_BAL_BANK4_PIN,
             BMS_BAL_BANK4_ON
         );
+        sw_state->setBank4Balancer = 1;
     }
 }
 
@@ -606,12 +601,15 @@ static void MAIN_disableBalancerSw(uint8_t balBanksDisMask)
 {
     CY_ASSERT((balBanksDisMask > 0) && (balBanksDisMask <= MAIN_BMS_ALL_BANKS));
 
+    Switch_state_t* sw_state = (Switch_state_t *) &swState_;
+
     if (balBanksDisMask & MAIN_BMS_BANK1_MASK) {
         Cy_GPIO_Write(
             BMS_BAL_BANK1_PORT,
             BMS_BAL_BANK1_PIN,
             BMS_BAL_BANK1_OFF
         );
+        sw_state->setBank1Balancer = 0;
     }
     if (balBanksDisMask & MAIN_BMS_BANK2_MASK) {
         Cy_GPIO_Write(
@@ -619,6 +617,7 @@ static void MAIN_disableBalancerSw(uint8_t balBanksDisMask)
             BMS_BAL_BANK2_PIN,
             BMS_BAL_BANK2_OFF
         );
+        sw_state->setBank2Balancer = 0;
     }
     if (balBanksDisMask & MAIN_BMS_BANK3_MASK) {
         Cy_GPIO_Write(
@@ -626,6 +625,7 @@ static void MAIN_disableBalancerSw(uint8_t balBanksDisMask)
             BMS_BAL_BANK3_PIN,
             BMS_BAL_BANK3_OFF
         );
+        sw_state->setBank3Balancer = 0;
     }
     if (balBanksDisMask & MAIN_BMS_BANK4_MASK) {
         Cy_GPIO_Write(
@@ -633,11 +633,158 @@ static void MAIN_disableBalancerSw(uint8_t balBanksDisMask)
             BMS_BAL_BANK4_PIN,
             BMS_BAL_BANK4_OFF
         );
+        sw_state->setBank4Balancer = 0;
     }
 }
 
 /**
  * @todo Implement banks balancing algorithm based on banks' voltage
  */
+
+//////////////////////////////////
+/// State machine functions
+//////////////////////////////////
+static void MAIN_SM_handleSysEvt(Evt_sys_data_t* evt)
+{
+    switch (bmsState_)
+    {
+        case BMS_STATE_IDLE:
+        {
+            if (evt->setDischState == 1U) {
+                MAIN_setDischargeSw(MAIN_BMS_DISCHARGE_ON);
+                bmsState_ = BMS_STATE_DISCHARGE;
+                MAIN_SM_print_onStateChange();
+            } else if (evt->setChargeState == 1U) {
+                MAIN_setChargeSw(MAIN_BMS_CHARGE_ON);
+                bmsState_ = BMS_STATE_CHARGE;
+                MAIN_SM_print_onStateChange();
+            }
+            break;
+        }
+
+        case BMS_STATE_DISCHARGE:
+        {
+            if (evt->setDischState == 0U) {
+                MAIN_setDischargeSw(MAIN_BMS_DISCHARGE_OFF);
+                bmsState_ = BMS_STATE_IDLE;
+                MAIN_SM_print_onStateChange();
+            }
+            break;
+        }
+
+        case BMS_STATE_CHARGE:
+        {
+            if (evt->setChargeState == 0U) {
+                MAIN_setChargeSw(MAIN_BMS_CHARGE_OFF);
+                bmsState_ = BMS_STATE_IDLE;
+                MAIN_SM_print_onStateChange();
+            } else {
+                MAIN_SM_charge_setBal(evt);
+            }
+            break;
+        }
+
+        case BMS_STATE_ERROR:
+        {
+            /** @todo Implement */
+            CY_ASSERT(0);
+            break;
+        }
+
+        case BMS_STATE_SHELF:
+        {
+             /** @todo Implement */
+             CY_ASSERT(0);
+            break;
+        }
+
+        default:
+            CY_ASSERT(0);
+    }
+}
+
+static void MAIN_SM_charge_setBal(Evt_sys_data_t* evt)
+{
+    if (evt->setBank1Balancer == 1U) {
+        MAIN_enableBalancerSw(MAIN_BMS_BANK1_MASK);
+    } else {
+        MAIN_disableBalancerSw(MAIN_BMS_BANK1_MASK);
+    }
+    if (evt->setBank2Balancer == 1U) {
+        MAIN_enableBalancerSw(MAIN_BMS_BANK2_MASK);
+    } else {
+        MAIN_disableBalancerSw(MAIN_BMS_BANK2_MASK);
+    }
+    if (evt->setBank3Balancer == 1U) {
+        MAIN_enableBalancerSw(MAIN_BMS_BANK3_MASK);
+    } else {
+        MAIN_disableBalancerSw(MAIN_BMS_BANK3_MASK);
+    }
+    if (evt->setBank4Balancer == 1U) {
+        MAIN_enableBalancerSw(MAIN_BMS_BANK4_MASK);
+    } else {
+        MAIN_disableBalancerSw(MAIN_BMS_BANK4_MASK);
+    }
+}
+
+static void MAIN_SM_handleAdcEvt(Evt_adc_data_t* evt)
+{
+    switch (bmsState_)
+    {
+        case BMS_STATE_IDLE:
+        {
+            /** @todo Check full VBAT: 
+             * 1. if VBAT < min: save log to flash, transit to error state
+             * 2. if VBAT > max: save log to flash 
+             */
+            break;
+        }
+
+        case BMS_STATE_DISCHARGE:
+        {
+            if (evt->full_mv < ADC_BMS_FULL_VBAT_MIN) {
+                Evt_sys_data_t evt = {0};
+                evt.setDischState = 0;
+                MAIN_post_evt((Main_evt_t*) &evt, EVT_SYSTEM);
+            }
+            break;
+        }
+
+        case BMS_STATE_CHARGE:
+        {
+            if (evt->full_mv > ADC_BMS_FULL_VBAT_MAX) {
+                Evt_sys_data_t evt = {0};
+                evt.setChargeState = 0;
+                MAIN_post_evt((Main_evt_t*) &evt, EVT_SYSTEM);
+            }
+            break;
+        }
+
+        case BMS_STATE_ERROR:
+        {
+            /** @todo Implement */
+            CY_ASSERT(0);
+            break;
+        }
+
+        case BMS_STATE_SHELF:
+        {
+             /** @todo Implement */
+             CY_ASSERT(0);
+            break;
+        }
+
+        default:
+            CY_ASSERT(0);
+    }
+}
+
+static void MAIN_SM_print_onStateChange(void)
+{
+    QS_BEGIN_ID(MAIN, 0 /*prio/ID for local Filters*/)
+        QS_STR("BMS state: ");
+        QS_U8(0, bmsState_);
+    QS_END()
+}
 
 /* [] END OF FILE */
