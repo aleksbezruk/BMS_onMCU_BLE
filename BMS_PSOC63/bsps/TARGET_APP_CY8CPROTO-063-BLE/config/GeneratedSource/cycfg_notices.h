@@ -51,3 +51,4 @@ extern "C" {
 #endif /* defined(__cplusplus) */
 
 #endif /* CYCFG_NOTICES_H */
+// #warning "(CYBLE-416045-02/CYBLE-416045-02-device: 12-bit SAR ADC) Noise and offset can cause unsigned results to underflow (wrap-around to +ve full scale) when Vneg is set to Vssa or External."

@@ -243,7 +243,7 @@
                 <Personality template="mxs40sar" version="6.0">
                     <Block location="pass[0].sar[0]" locked="true"/>
                     <Parameters>
-                        <Param id="avg_cnt" value="CY_SAR_AVG_CNT_64"/>
+                        <Param id="avg_cnt" value="CY_SAR_AVG_CNT_128"/>
                         <Param id="avg_mode" value="CY_SAR_AVG_MODE_SEQUENTIAL_FIXED"/>
                         <Param id="ch0_avg" value="true"/>
                         <Param id="ch0_input" value="CY_SAR_CHAN_SINGLE_ENDED"/>
@@ -347,7 +347,7 @@
                         <Param id="sample_rate" value="200000"/>
                         <Param id="scanCnt" value="false"/>
                         <Param id="scanCntIntr" value="false"/>
-                        <Param id="se_format" value="CY_SAR_SINGLE_ENDED_SIGNED"/>
+                        <Param id="se_format" value="CY_SAR_SINGLE_ENDED_UNSIGNED"/>
                         <Param id="soc_en" value="false"/>
                         <Param id="trOut" value="false"/>
                         <Param id="trTimer" value="false"/>
