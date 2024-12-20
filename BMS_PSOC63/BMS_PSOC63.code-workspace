@@ -60,7 +60,9 @@
             "cyabs_rtos_impl.h": "c",
             "wiced_bt_types.h": "c",
             "cycfg_bt_settings.h": "c",
-            "cycfg_gap.h": "c"
+            "cycfg_gap.h": "c",
+            "cstdlib": "c",
+            "main.h": "c"
         },
         "clangd.arguments": [
             "--query-driver=${config:modustoolbox.toolsPath}/gcc/bin/arm-none-eabi-gcc",

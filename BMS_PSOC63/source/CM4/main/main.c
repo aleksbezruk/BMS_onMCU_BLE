@@ -268,10 +268,6 @@ static void parseQueueItem_(Main_queue_data_t* queueItem)
             handleAdcEvt_(&queueItem->evtData.adcData);
             break;
 
-        case EVT_BLE:
-            /** @todo Implement handling BLE evts */
-            break;
-
         case EVT_SYSTEM:
             handleSystemEvt_(&queueItem->evtData.sysEvtData);
             break;
@@ -344,7 +340,7 @@ void vApplicationIdleHook(void)
 /// Queue functions/APIs
 /////////////////////////
 /** 
- * @brief Posts an event into Main tasks event queue
+ * @brief Posts an event into Main task event queue
  * 
  * @param[in] evt Event to post
  * 

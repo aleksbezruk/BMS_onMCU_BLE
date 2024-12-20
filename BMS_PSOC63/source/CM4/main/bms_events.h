@@ -14,11 +14,15 @@
 /** BMS events types */
 typedef enum {
     EVT_ADC,
-    EVT_BLE,
     EVT_SYSTEM,
+    EVT_BLE_ADV_ON,
+    EVT_BLE_ADV_OFF,
     EVT_TYPE_MAX
 } Evt_types_t;
 
+///////////////////
+// ADC events
+///////////////////
 /** ADC measurement data event */
 typedef struct {
     int16_t bank1_mv;
@@ -28,6 +32,9 @@ typedef struct {
     int16_t full_mv;
 } Evt_adc_data_t;
 
+///////////////////
+// System events
+///////////////////
 /** System event data */
 typedef union {
     struct {
@@ -44,18 +51,41 @@ typedef union {
 
 typedef Evt_sys_data_t Switch_state_t;
 
+///////////////////
+// BLE events
+///////////////////
+/** BLE advertsing paramaters event */
+typedef struct {
+    uint16_t periodicAdvIntMin;
+    uint16_t periodicAdvIntMax;
+    uint16_t periodicAdvProp;
+} Evt_ble_adv_data_t;
+
+//////////////////////////////////////////////
+// Tasks' queues & generic event structure
+//////////////////////////////////////////////
 /** Main task generic event type */
 typedef union {
     Evt_adc_data_t adcData;
     Evt_sys_data_t sysEvtData;
 } Main_evt_t;
 
+/** BLE task generic event type */
+typedef union {
+    Evt_ble_adv_data_t advData;
+} Ble_evt_t;
 
 /** Main task queue's item data structure */
 typedef struct {
     Evt_types_t evtType;
     Main_evt_t evtData;
 } Main_queue_data_t;
+
+/** BLE task queue's item data structure */
+typedef struct {
+    Evt_types_t evtType;
+    Ble_evt_t evtData;
+} Ble_queue_data_t;
 
 #endif // EVENTS_MODULE_H
 

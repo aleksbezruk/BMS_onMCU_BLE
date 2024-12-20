@@ -16,6 +16,7 @@
 #include "task.h"
 
 #include "MAIN.h"
+#include "BLE.h"
 
 ///////////////////
 // Defines
@@ -218,6 +219,22 @@ void QS_onCommand(uint8_t cmdId,
             Evt_sys_data_t evt;
             evt.swStates = param1;
             MAIN_post_evt((Main_evt_t*) &evt, EVT_SYSTEM);
+            break;
+        }
+        case QS_CMD_BLE_START_ADV:
+        {
+            Ble_evt_t evt;
+            evt.advData.periodicAdvIntMin = param1;
+            evt.advData.periodicAdvIntMax = param2;
+            evt.advData.periodicAdvProp = param3;
+            BLE_post_evt(&evt, EVT_BLE_ADV_ON);
+            break;
+        }
+        case QS_CMD_BLE_STOP_ADV:
+        {
+            Ble_evt_t evt;
+            BLE_post_evt(&evt, EVT_BLE_ADV_OFF);
+            break;
         }
         default:
             break;  // just igmore if cmd isn't defined

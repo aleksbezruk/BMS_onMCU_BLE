@@ -85,18 +85,31 @@
  *                          - bless_interrupt_IRQHandler ;
  *                          - Looks like the implementation of the IRQ handler is hidden inside CMOp prebuild image . <br>
  *                   5.6 Application callbacks <br> 
- *                      TODO: inplement APP callbacks
+ *                      TODO: inplement APP callbacks <br> 
  *
+ *               ### 6. BLE security <br>
+ *                      6.1 For the first revisions the security feature is disabled <br>
+ *                      6.2 "Enable RPA timeout" -> false
+ * 
  * @version 0.1.0
  */
 
 #include "BLE.h"
 #include "cybsp.h"
-#include "wiced_bt_stack.h"
-#include "wiced_bt_dev.h"
 #include "qspyHelper.h"
 #include "cycfg_bt_settings.h"
 #include "cycfg_gap.h"
+
+// RTOS includes
+#include "FreeRTOS.h"
+#include "task.h"
+#include "cyabs_rtos.h"
+
+///////////////////////
+// Defines
+///////////////////////
+#define BLE_TASK_STACK_SIZE 560U   /**< bytes, aligned to 8 bytes */
+#define BLE_QUEUE_SIZE 3U
 
 ///////////////////////
 // Functions prototype
@@ -107,10 +120,25 @@ static wiced_result_t app_bt_management_callback_(
 );
 static void print_bd_address(uint8_t* bda);
 static void le_app_init(void);
+static void bleTask_(cy_thread_arg_t arg);
+static void parseQueueItem_(Ble_queue_data_t* queueItem);
+static wiced_bt_gatt_status_t le_app_connect_handler(wiced_bt_gatt_connection_status_t *p_conn_status);
+static wiced_bt_gatt_status_t le_app_gatt_event_callback(wiced_bt_gatt_evt_t event,
+                                                         wiced_bt_gatt_event_data_t *p_event_data);
+static void print_connection_id(uint16_t id);
 
 ///////////////////////
 // Private data
 ///////////////////////
+static cy_thread_t bleTaskHandle_;
+static StaticQueue_t staticQueueHandle;
+static cy_queue_t bleTaskQueueHandle;
+static Ble_queue_data_t bleQueueSto[BLE_QUEUE_SIZE];
+/** 
+ *  In stack words because stack pointer should be aligned to 
+ *  8 bytes boundaru per the RTOS requirements.
+ */
+static uint64_t bleTaskStack_[BLE_TASK_STACK_SIZE/8U];
 
 ///////////////////////
 // Code
@@ -128,6 +156,7 @@ BLE_status_t BLE_init(void)
 {
     BLE_status_t status = BLE_STATUS_OK;
     wiced_result_t wiced_result;
+    cy_rslt_t result;
 
     /** Configure platform specific settings for the BT device */
     cybt_platform_config_init(&cybsp_bt_platform_cfg);
@@ -149,6 +178,125 @@ BLE_status_t BLE_init(void)
         QS_END()
         QS_FLUSH();
         status = BLE_STATUS_FAIL;
+    }
+
+    /** Create RTOS task */
+    if (status == BLE_STATUS_OK) {
+        result = cy_rtos_thread_create(
+            &bleTaskHandle_,
+            bleTask_,
+            "bleTask",
+            bleTaskStack_,             // should be aligned to 8 bytes
+            BLE_TASK_STACK_SIZE,       // in bytes
+            CY_RTOS_PRIORITY_NORMAL,   // prio
+            NULL                       // no args
+        );
+        if (result != CY_RSLT_SUCCESS) {
+            status = BLE_STATUS_FAIL;
+        }
+    }
+
+    return status;
+}
+
+/**
+ * @brief Start BLE advertisement
+ * 
+ * @param[in] periodic_adv_int_min - minimal advertising interval 
+ *            Range N: 0x0006 to 0xFFFF, Time = N * 1.25 ms
+ * 
+ * @param[in] periodic_adv_int_max - miximum advertising interval 
+ *            Range N: 0x0006 to 0xFFFF, Time = N * 1.25 ms
+ * 
+ * @param[in] periodic_adv_properties - Periodic adv property 
+ *            indicates which field should be include in periodic adv
+ *            See \ref WICED_BT_BLE_PERIODIC_ADV_PROPERTY_INCLUDE_TX_POWER
+ * 
+ * @note     btm_ble_adv_scan_functions        Advertisement & Scan
+ * @ingroup  btm_ble_api_functions
+ * 
+ * @retval See \ref wiced_bt_dev_status_t
+ * 
+ */
+wiced_bt_dev_status_t BLE_startAdvertisement(
+    uint16_t periodic_adv_int_min, 
+    uint16_t periodic_adv_int_max, 
+    wiced_bt_ble_periodic_adv_prop_t periodic_adv_properties
+)
+{
+    wiced_bt_dev_status_t status = WICED_BT_SUCCESS;
+
+    /** The AOI isn't supported, because BLE stack returns 'WICED_BT_UNSUPPORTED' */
+    // status = wiced_bt_ble_set_periodic_adv_params(
+    //     0xFF, //adv_handle -> Not used
+    //     periodic_adv_int_min,
+    //     periodic_adv_int_max,
+    //     periodic_adv_properties // wiced_bt_ble_periodic_adv_prop_e
+    // );
+
+    if (WICED_BT_SUCCESS == status) {
+        // QS_BEGIN_ID(BLE_TRACE, 0 /*prio/ID for local Filters*/)
+        //     QS_STR("Set advParam successfully");
+        // QS_END()
+
+        /** Set Advertisement Data */
+        wiced_bt_ble_set_raw_advertisement_data(CY_BT_ADV_PACKET_DATA_SIZE, cy_bt_adv_packet_data);
+        /** 
+         * Start Undirected LE Advertisements on device startup.
+         * The corresponding parameters are contained in 'app_bt_cfg.c' 
+         */
+        status = wiced_bt_start_advertisements(
+            BTM_BLE_ADVERT_UNDIRECTED_HIGH, 
+            BLE_ADDR_PUBLIC, 
+            NULL
+        );
+        if (WICED_BT_SUCCESS != status) {
+            QS_BEGIN_ID(BLE_TRACE, 0 /*prio/ID for local Filters*/)
+                QS_STR("Start Adv failed:");
+                QS_U8(0, status);
+            QS_END()
+        } else {
+            QS_BEGIN_ID(BLE_TRACE, 0 /*prio/ID for local Filters*/)
+                QS_STR("Start Adv successfully");
+            QS_END()
+        }
+    } else {
+        QS_BEGIN_ID(BLE_TRACE, 0 /*prio/ID for local Filters*/)
+            QS_STR("Set advParam failed:");
+            QS_U8(0, status);
+        QS_END()
+    }
+
+    return status;
+}
+
+/**
+ * @brief Stop BLE advertisement
+ * 
+ * @param None
+ * 
+ * @retval See \ref wiced_bt_dev_status_t
+ * 
+ */
+wiced_bt_dev_status_t BLE_stopAdvertisement(void)
+{
+    wiced_bt_dev_status_t status;
+
+    status = wiced_bt_start_advertisements(
+        BTM_BLE_ADVERT_OFF, 
+        BLE_ADDR_PUBLIC, 
+        NULL
+    );
+
+    if (WICED_BT_SUCCESS == status) {
+        QS_BEGIN_ID(BLE_TRACE, 0 /*prio/ID for local Filters*/)
+            QS_STR("Stop Adv successfully");
+        QS_END()
+    } else {
+        QS_BEGIN_ID(BLE_TRACE, 0 /*prio/ID for local Filters*/)
+            QS_STR("Stop Adv failed:");
+            QS_U8(0, status);
+        QS_END()
     }
 
     return status;
@@ -239,6 +387,93 @@ wiced_result_t app_bt_management_callback_(
     return wiced_result;
 }
 
+/**************************************************************************************************
+* Function Name: le_app_gatt_event_callback
+***************************************************************************************************
+* Summary:
+*   This function handles GATT events from the BT stack.
+*
+* Parameters:
+*   wiced_bt_gatt_evt_t event                   : LE GATT event code of one byte length
+*   wiced_bt_gatt_event_data_t *p_event_data    : Pointer to LE GATT event structures
+*
+* Return:
+*  wiced_bt_gatt_status_t: See possible status codes in wiced_bt_gatt_status_e in wiced_bt_gatt.h
+*
+**************************************************************************************************/
+static wiced_bt_gatt_status_t le_app_gatt_event_callback(wiced_bt_gatt_evt_t event,
+                                                         wiced_bt_gatt_event_data_t *p_event_data)
+{
+    wiced_bt_gatt_status_t gatt_status = WICED_BT_GATT_SUCCESS;
+    // wiced_bt_gatt_attribute_request_t *p_attr_req = &p_event_data->attribute_request;
+
+    // uint16_t error_handle = 0;
+    /* Call the appropriate callback function based on the GATT event type, and pass the relevant event
+     * parameters to the callback function */
+    switch ( event )
+    {
+        case GATT_CONNECTION_STATUS_EVT:
+            gatt_status = le_app_connect_handler( &p_event_data->connection_status );
+            break;
+
+        /** @todo Popu;ate the callback with implementation for GATT events */
+
+        default:
+            break;
+    }
+
+    return gatt_status;
+}
+
+/**************************************************************************************************
+* Function Name: le_app_connect_handler
+***************************************************************************************************
+* Summary:
+*   This callback function handles connection status changes.
+*
+* Parameters:
+*   wiced_bt_gatt_connection_status_t *p_conn_status  : Pointer to data that has connection details
+*
+* Return:
+*  wiced_bt_gatt_status_t: See possible status codes in wiced_bt_gatt_status_e in wiced_bt_gatt.h
+*
+**************************************************************************************************/
+static wiced_bt_gatt_status_t le_app_connect_handler(wiced_bt_gatt_connection_status_t *p_conn_status)
+{
+    wiced_bt_gatt_status_t gatt_status = WICED_BT_GATT_SUCCESS ;
+
+    if ( NULL != p_conn_status )
+    {
+        if ( p_conn_status->connected )
+        {
+            /* Device has connected */
+            QS_BEGIN_ID(BLE_TRACE, 0 /*prio/ID for local Filters*/)
+                QS_STR("Client connected");
+            QS_END()
+            print_bd_address(p_conn_status->bd_addr);
+            print_connection_id(p_conn_status->conn_id);
+        }
+        else
+        {
+            /* Device has disconnected */
+            QS_BEGIN_ID(BLE_TRACE, 0 /*prio/ID for local Filters*/)
+                QS_STR("Client disconnected");
+            QS_END()
+            QS_BEGIN_ID(BLE_TRACE, 0 /*prio/ID for local Filters*/)
+                QS_STR("Reason:");
+                QS_U8(0, p_conn_status->reason);
+            QS_END()
+
+            /* Restart the advertisements */
+            wiced_bt_start_advertisements(BTM_BLE_ADVERT_UNDIRECTED_HIGH, 0, NULL);
+        }
+    } else {
+        gatt_status = WICED_BT_GATT_ERROR;
+    }
+
+    return gatt_status;
+}
+
 /**
  * @brief This function handles application level initialization tasks and is called from the BT
  *        management callback once the LE stack enabled event (BTM_ENABLED_EVT) is triggered
@@ -251,6 +486,7 @@ wiced_result_t app_bt_management_callback_(
 static void le_app_init(void)
 {
     wiced_result_t wiced_result;
+    wiced_bt_gatt_status_t gatt_status = WICED_BT_GATT_SUCCESS;
 
     /** 
      * Paring & bonding (link encryption) isn't supported for now 
@@ -261,6 +497,13 @@ static void le_app_init(void)
 
     /** Set Advertisement Data */
     wiced_bt_ble_set_raw_advertisement_data(CY_BT_ADV_PACKET_DATA_SIZE, cy_bt_adv_packet_data);
+
+    /* Register with BT stack to receive GATT callback */
+    gatt_status = wiced_bt_gatt_register(le_app_gatt_event_callback);
+    QS_BEGIN_ID(BLE_TRACE, 0 /*prio/ID for local Filters*/)
+        QS_STR("GATT event Handler registration status:");
+        QS_U16(0, gatt_status);
+    QS_END()
 
     /** 
      * Start Undirected LE Advertisements on device startup.
@@ -285,11 +528,127 @@ static void le_app_init(void)
     }
 }
 
+/**
+ * @brief BLE task's handler
+ * 
+ * @param[in] arg the argument passed from the thread create call to the entry function
+ * 
+ * @retval None
+ */
+static void bleTask_(cy_thread_arg_t arg)
+{
+    (void) arg;
+    cy_rslt_t result;
+    Ble_queue_data_t queueItem;
+
+    /** Create an event Queue */
+    bleTaskQueueHandle = xQueueCreateStatic(BLE_QUEUE_SIZE,
+                                     sizeof(Ble_queue_data_t),
+                                     (uint8_t *) bleQueueSto,
+                                     &staticQueueHandle);
+    if (bleTaskQueueHandle == NULL) {
+        CY_ASSERT(0);
+    }
+
+    /** Events processing loop */
+    while(1) {
+        /** Wait for event */
+        result = cy_rtos_queue_get(&bleTaskQueueHandle,
+                                   &queueItem,
+                                   CY_RTOS_NEVER_TIMEOUT);
+        if (result != CY_RSLT_SUCCESS) {
+            CY_ASSERT(0);
+        }
+
+        /** Handle an evt */
+        parseQueueItem_(&queueItem);
+
+        QS_BEGIN_ID(BLE_TRACE, 0 /*prio/ID for local Filters*/)
+            QS_STR("BLE task handle evt:");
+            QS_U8(0, queueItem.evtType);
+        QS_END()
+    }
+}
+
+/////////////////////////
+/// Queue functions/APIs
+/////////////////////////
+/**
+ * @brief Posts an event into BLE task event queue
+ *
+ * @param[in] evt Event to post
+ *
+ * @param[in] eventType Event type to post
+ *
+ * @retval None
+ *
+ */
+void BLE_post_evt(Ble_evt_t* evt, Evt_types_t eventType)
+{
+    CY_ASSERT((evt != NULL) && (eventType < EVT_TYPE_MAX));
+
+    Ble_queue_data_t queueItem;
+
+    queueItem.evtType = eventType;
+    memcpy((uint8_t*) &queueItem.evtData, (uint8_t*) evt, sizeof(Ble_evt_t));
+
+    cy_rslt_t result = cy_rtos_queue_put(&bleTaskQueueHandle,
+                                         &queueItem,
+                                         CY_RTOS_NEVER_TIMEOUT);
+    if (result != CY_RSLT_SUCCESS) {
+        CY_ASSERT(0);
+    }
+}
+
+/**
+ * @brief Parses a queue item.
+ *
+ * @param[in] queueItem Queue item to parse
+ *
+ * @retval None
+ */
+static void parseQueueItem_(Ble_queue_data_t* queueItem)
+{
+    switch (queueItem->evtType)
+    {
+        case EVT_BLE_ADV_ON:
+        {
+            BLE_startAdvertisement(
+                queueItem->evtData.advData.periodicAdvIntMin,
+                queueItem->evtData.advData.periodicAdvIntMax,
+                queueItem->evtData.advData.periodicAdvProp
+            );
+            break;
+        }
+
+        case EVT_BLE_ADV_OFF:
+        {
+            BLE_stopAdvertisement();
+            break;
+        }
+
+        default:
+            CY_ASSERT(0);   // unexpected evt
+            break;
+    }
+}
+
+/////////////////////////
+/// Misc spare functions
+/////////////////////////
 static void print_bd_address(uint8_t* bda)
 {
     QS_BEGIN_ID(BLE_TRACE, 0 /*prio/ID for local Filters*/)
         QS_STR("Local Bluetooth Address: ");
         QS_MEM(bda, BD_ADDR_LEN);
+    QS_END()
+}
+
+static void print_connection_id(uint16_t id)
+{
+    QS_BEGIN_ID(BLE_TRACE, 0 /*prio/ID for local Filters*/)
+        QS_STR("Connection Id: ");
+        QS_U16(0, id);
     QS_END()
 }
 
