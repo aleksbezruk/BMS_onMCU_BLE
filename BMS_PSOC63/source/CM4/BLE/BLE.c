@@ -698,10 +698,13 @@ static void parseQueueItem_(Ble_queue_data_t* queueItem)
 
         case EVT_BLE_ADV_BAT:
         {
-            adv_battery_service_data[2] = queueItem->evtData.batLvl.batLvlPercent;
-            wiced_bt_ble_advert_elem_t *pData = &cy_bt_adv_packet_data[3];
-            pData->p_data = (uint8_t*) adv_battery_service_data;
-            wiced_bt_ble_set_raw_advertisement_data(CY_BT_ADV_PACKET_DATA_SIZE, cy_bt_adv_packet_data);
+            /** Is bat level changed ? */
+            if (queueItem->evtData.batLvl.batLvlPercent != adv_battery_service_data[2] ) {
+                adv_battery_service_data[2] = queueItem->evtData.batLvl.batLvlPercent;
+                wiced_bt_ble_advert_elem_t *pData = &cy_bt_adv_packet_data[3];
+                pData->p_data = (uint8_t*) adv_battery_service_data;
+                wiced_bt_ble_set_raw_advertisement_data(CY_BT_ADV_PACKET_DATA_SIZE, cy_bt_adv_packet_data);
+            }
             break;
         }
 
