@@ -345,6 +345,24 @@ wiced_result_t app_bt_management_callback_(
 
             break;
         }
+
+        case BTM_DISABLED_EVT:
+        {
+            QS_BEGIN_ID(BLE_TRACE, 0 /*prio/ID for local Filters*/)
+                QS_STR("BLE stack disabled."); 
+            QS_END()
+            break;
+        }
+
+        case BTM_RE_START_EVT:
+        {
+            QS_BEGIN_ID(BLE_TRACE, 0 /*prio/ID for local Filters*/)
+                QS_STR("BLE stack restarted: ");
+                QS_U32(0, p_event_data->enabled.status); 
+            QS_END()
+            break;
+        }
+
         case BTM_BLE_ADVERT_STATE_CHANGED_EVT:
         {
             /* Advertisement State Changed */
@@ -362,10 +380,11 @@ wiced_result_t app_bt_management_callback_(
             }
             break;
         }
+
         case BTM_BLE_CONNECTION_PARAM_UPDATE:
         {
             QS_BEGIN_ID(BLE_TRACE, 0 /*prio/ID for local Filters*/)
-                QS_STR("Conn params upd sts: "); 
+                QS_STR("Conn params upd sts "); 
                 QS_U8(0, p_event_data->ble_connection_param_update.status);
                 QS_STR("ConnInt: ");
                 QS_U16(0, p_event_data->ble_connection_param_update.conn_interval);
@@ -376,6 +395,54 @@ wiced_result_t app_bt_management_callback_(
             QS_END()
             break;
         }
+
+        case BTM_BLE_PHY_UPDATE_EVT:
+        {
+            QS_BEGIN_ID(BLE_TRACE, 0 /*prio/ID for local Filters*/)
+                QS_STR("BLE Physical link update: "); 
+                QS_U8(0, p_event_data->ble_phy_update_event.status);
+                QS_STR("tx_phy: ");
+                QS_U16(0, p_event_data->ble_phy_update_event.tx_phy);
+                QS_STR("rx_phy: ");
+                QS_U16(0, p_event_data->ble_phy_update_event.rx_phy);
+            QS_END()
+            break;
+        }
+
+        case BTM_PAIRED_DEVICE_LINK_KEYS_REQUEST_EVT:
+        {
+            wiced_result = WICED_BT_ERROR; // not supported for now
+            break;
+        }
+
+        case BTM_LOCAL_IDENTITY_KEYS_REQUEST_EVT:
+        {
+            wiced_result = WICED_BT_ERROR; // not supported for now
+            break;
+        }
+
+        case BTM_BLE_DATA_LENGTH_UPDATE_EVENT:
+        {
+            QS_BEGIN_ID(BLE_TRACE, 0 /*prio/ID for local Filters*/)
+                QS_STR("LE data length update event rcvd.");
+                QS_STR("TX octets:");
+                QS_U16(0, p_event_data->ble_data_length_update_event.max_tx_octets);
+                QS_STR("RX octets:");
+                QS_U16(0, p_event_data->ble_data_length_update_event.max_rx_octets);
+            QS_END()
+            break;
+        }
+
+        case BTM_BLE_DEVICE_ADDRESS_UPDATE_EVENT:
+        {
+            QS_BEGIN_ID(BLE_TRACE, 0 /*prio/ID for local Filters*/)
+                QS_STR("update random device address: ");
+                QS_U8(0, p_event_data->ble_addr_update_event.status);
+            QS_END()
+            print_bd_address(p_event_data->ble_addr_update_event.bdaddr);
+            break;
+        }
+
         default:
         {
             QS_BEGIN_ID(BLE_TRACE, 0 /*prio/ID for local Filters*/)
