@@ -574,6 +574,13 @@ static void le_app_init(void)
         QS_U16(0, gatt_status);
     QS_END()
 
+    /* Initialize GATT Database */
+    gatt_status = wiced_bt_gatt_db_init(gatt_database, gatt_database_len, NULL);
+    QS_BEGIN_ID(BLE_TRACE, 0 /*prio/ID for local Filters*/)
+        QS_STR("GATT database initialization status:");
+        QS_U16(0, gatt_status);
+    QS_END()
+
     /** 
      * Start Undirected LE Advertisements on device startup.
      * The corresponding parameters are contained in 'app_bt_cfg.c' 
