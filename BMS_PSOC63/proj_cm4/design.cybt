@@ -72,7 +72,7 @@
                                         <Field>
                                             <FieldProperties>
                                                 <Property id="Name" value="Category"/>
-                                                <Property id="EnumValue" value="768"/>
+                                                <Property id="EnumValue" value="3264"/>
                                                 <Property id="Format" value="f_16bit"/>
                                             </FieldProperties>
                                         </Field>
@@ -247,10 +247,9 @@
             <Property id="DeviceAddress" value="00A050-000000"/>
             <Property id="MacGeneratedAddress" value="false"/>
             <Property id="DeviceName" value="BMS_PSOC63"/>
-            <Property id="Appearance" value="768"/>
+            <Property id="Appearance" value="3264"/>
             <Property id="HostTxPowerLevel" value="Pos_0"/>
-            <Property id="EnableRpaTimeout" value="true"/>
-            <Property id="RpaTimeout" value="900"/>
+            <Property id="EnableRpaTimeout" value="false"/>
             <Property id="FilterAcceptListSize" value="0"/>
         </General>
         <PeripheralConfigurations>
@@ -280,6 +279,11 @@
                     <Property id="DiscoveryMode" value="General"/>
                     <Property id="AdLocalName" value="true"/>
                     <Property id="LocalNameType" value="Complete"/>
+                    <Property id="AdServiceUuid" value="true"/>
+                    <Property id="ServiceUuid" value="{ffced456-061a-4a0b-aba0-12c6e58c12ee}"/>
+                    <Property id="AdServiceData" value="true"/>
+                    <Property id="ServiceData" value="{ffced456-061a-4a0b-aba0-12c6e58c12ee}"/>
+                    <Property id="ServiceDataValue" value="100"/>
                 </AdvertisementPacket>
                 <ScanResponsePacket>
                     <Property id="AdTxPowerLevel" value="true"/>

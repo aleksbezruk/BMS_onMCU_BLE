@@ -89,7 +89,7 @@ const uint16_t gatt_database_len = sizeof(gatt_database);
 ******************************************************************************/
  
 uint8_t app_gap_device_name[] = {'B', 'M', 'S', '_', 'P', 'S', 'O', 'C', '6', '3', '\0',};
-uint8_t app_gap_appearance[] = {0x00, 0x03,};
+uint8_t app_gap_appearance[] = {0xC0, 0x0C,};
 uint8_t app_bas_battery_level[] = {0x00,};
 uint8_t app_bas_battery_level_char_presentation_format[] = {0x00, 0x00, 0x00, 0x00, 0x01, 0x00,
     0x00,};

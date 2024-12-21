@@ -53,6 +53,11 @@ static void MAIN_setChargeSw(MAIN_chargeSw_state_t state);
 static void MAIN_enableBalancerSw(uint8_t balBanksEnMask);
 static void MAIN_disableBalancerSw(uint8_t balBanksDisMask);
 
+static void update_advertisememt_vbat_(int16_t vbatLvl);
+
+static void led_blink_alive_(void);
+static void blinkTimerCallback_(cy_timer_callback_arg_t arg);
+
 ///////////////////
 // Definitions
 ///////////////////
@@ -74,6 +79,9 @@ static Main_queue_data_t mainQueueSto[MAIN_QUEUE_SIZE];
 
 static BMS_state_t bmsState_ = BMS_STATE_IDLE;
 static uint8_t swState_;
+
+static cy_timer_t blinkTimer;
+static volatile uint8_t ledBlinkCntr_;
 
 ///////////////////
 // Code
@@ -196,6 +204,14 @@ static void mainTask_(cy_thread_arg_t arg)
     MAIN_initBalancerSw();
     MAIN_disableBalancerSw(MAIN_BMS_ALL_BANKS);
 
+    /** Init LED blink timer */
+    result = cy_rtos_timer_init(
+        &blinkTimer,
+        CY_TIMER_TYPE_ONCE,
+        blinkTimerCallback_,
+        0U // arg
+    );
+
     /** Init timeout timers 
      * @todo timeout timers definition
      */
@@ -241,8 +257,8 @@ static void mainTask_(cy_thread_arg_t arg)
          */
         parseQueueItem_(&queueItem);
 
-        /** Toggle LED for debug purposes */
-        BSP_led_green_toggle();
+        /** Blink LED for alive indication */
+        led_blink_alive_();
 
         /** Print debug message that indicates Running Main Task */
 #if !defined(Q_UTEST)
@@ -266,10 +282,6 @@ static void parseQueueItem_(Main_queue_data_t* queueItem)
     {
         case EVT_ADC:
             handleAdcEvt_(&queueItem->evtData.adcData);
-            break;
-
-        case EVT_BLE:
-            /** @todo Implement handling BLE evts */
             break;
 
         case EVT_SYSTEM:
@@ -344,7 +356,7 @@ void vApplicationIdleHook(void)
 /// Queue functions/APIs
 /////////////////////////
 /** 
- * @brief Posts an event into Main tasks event queue
+ * @brief Posts an event into Main task event queue
  * 
  * @param[in] evt Event to post
  * 
@@ -729,14 +741,17 @@ static void MAIN_SM_charge_setBal(Evt_sys_data_t* evt)
 
 static void MAIN_SM_handleAdcEvt(Evt_adc_data_t* evt)
 {
+    /** Handling specific to BMS state */
     switch (bmsState_)
     {
         case BMS_STATE_IDLE:
         {
             /** @todo Check full VBAT: 
              * 1. if VBAT < min: save log to flash, transit to error state
-             * 2. if VBAT > max: save log to flash 
+             * 2. if VBAT > max: save log to flash
+             * 3. Set VBAT level for BLE Adv
              */
+            update_advertisememt_vbat_(evt->full_mv);
             break;
         }
 
@@ -747,6 +762,7 @@ static void MAIN_SM_handleAdcEvt(Evt_adc_data_t* evt)
                 evt.setDischState = 0;
                 MAIN_post_evt((Main_evt_t*) &evt, EVT_SYSTEM);
             }
+            update_advertisememt_vbat_(evt->full_mv);
             break;
         }
 
@@ -757,6 +773,7 @@ static void MAIN_SM_handleAdcEvt(Evt_adc_data_t* evt)
                 evt.setChargeState = 0;
                 MAIN_post_evt((Main_evt_t*) &evt, EVT_SYSTEM);
             }
+            update_advertisememt_vbat_(evt->full_mv);
             break;
         }
 
@@ -785,6 +802,54 @@ static void MAIN_SM_print_onStateChange(void)
         QS_STR("BMS state: ");
         QS_U8(0, bmsState_);
     QS_END()
+}
+
+//////////////////////////////////
+/// BLE commands
+//////////////////////////////////
+static void update_advertisememt_vbat_(int16_t vbatLvl)
+{
+    Ble_evt_t evt;
+    evt.batLvl.batLvlPercent = ADC_BMS_CALC_PERCENT(vbatLvl);
+    BLE_post_evt(&evt, EVT_BLE_ADV_BAT);
+}
+
+//////////////////////////////////
+/// Spare, debug functions
+//////////////////////////////////
+/**
+ * @attention Should be non-blocking call
+ *            to avoid starvation of other threads especiaaly BLE stack
+ */
+static void led_blink_alive_(void)
+{
+    ledBlinkCntr_ = 0;
+    // start timer
+    cy_rslt_t result = cy_rtos_timer_start(&blinkTimer, 100U); // 100 ms
+    if (result != CY_RSLT_SUCCESS) {
+        CY_ASSERT(0);
+    }
+}
+
+/**
+ * @note 3 "on-off" blinks
+ */
+static void blinkTimerCallback_(cy_timer_callback_arg_t arg)
+{
+    if (ledBlinkCntr_%2 == 0) {
+        BSP_led_green_on();
+    } else {
+        BSP_led_green_off();
+    }
+
+    ledBlinkCntr_++;
+    if (ledBlinkCntr_ < 6U) {
+        // re-start timer to continue blink
+        cy_rslt_t result = cy_rtos_timer_start(&blinkTimer, 100U); // 100 ms
+        if (result != CY_RSLT_SUCCESS) {
+            CY_ASSERT(0);
+        }
+    }
 }
 
 /* [] END OF FILE */

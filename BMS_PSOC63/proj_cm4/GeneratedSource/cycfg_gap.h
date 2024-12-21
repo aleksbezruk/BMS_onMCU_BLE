@@ -35,13 +35,13 @@
 #define CY_BT_SILICON_DEVICE_ADDRESS_EN                       0
 
 /* Appearance */
-#define CY_BT_APPEARANCE                                      768
+#define CY_BT_APPEARANCE                                      3264
 
 /* TX Power Level */
 #define CY_BT_TX_POWER                                        0
 
 /* Interval of random address refreshing */
-#define CY_BT_RPA_TIMEOUT                                     900
+#define CY_BT_RPA_TIMEOUT                                     0
 
 /* Maximum attribute length */
 #define CY_BT_MAX_ATTR_LEN                                    512
@@ -124,7 +124,7 @@
 
 
 /* Advertisement and scan response packets defines */
-#define CY_BT_ADV_PACKET_ELEM_COUNT                           2
+#define CY_BT_ADV_PACKET_ELEM_COUNT                           4
 /* CY_BT_ADV_PACKET_DATA_SIZE is obsolete. Use CY_BT_ADV_PACKET_ELEM_COUNT instead */
 #define CY_BT_ADV_PACKET_DATA_SIZE                            CY_BT_ADV_PACKET_ELEM_COUNT
 #define CY_BT_SCAN_RESP_PACKET_ELEM_COUNT                     1
