@@ -311,6 +311,30 @@ void BSP_led_green_toggle(void)
 }
 
 /**
+ * @brief  Green LED on
+ *
+ * @param  None
+ *
+ * @retval None
+ */
+void BSP_led_green_on(void)
+{
+    cyhal_gpio_write(P7_1, false);
+}
+
+/**
+ * @brief  Green LED off
+ *
+ * @param  None
+ *
+ * @retval None
+ */
+void BSP_led_green_off(void)
+{
+    cyhal_gpio_write(P7_1, true);
+}
+
+/**
  * @brief  Initialize UART
  * 
  * @details Configrure & enable UART; Setup RX interrupt

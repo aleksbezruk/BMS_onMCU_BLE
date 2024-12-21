@@ -92,6 +92,8 @@ void BSP_led_red_toggle(void);
 void BSP_led_red_On(void);
 void BSP_led_red_Off(void);
 void BSP_led_green_toggle(void);
+void BSP_led_green_on(void);
+void BSP_led_green_off(void);
 bsp_status_init_t BSP_initUart(bspUartRxCallback callback);
 bool BSP_isUartTxReady(void);
 bool BSP_isUartTxEmpty(void);
