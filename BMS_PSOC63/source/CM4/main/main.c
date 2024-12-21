@@ -53,6 +53,8 @@ static void MAIN_setChargeSw(MAIN_chargeSw_state_t state);
 static void MAIN_enableBalancerSw(uint8_t balBanksEnMask);
 static void MAIN_disableBalancerSw(uint8_t balBanksDisMask);
 
+static void update_advertisememt_vbat_(int16_t vbatLvl);
+
 ///////////////////
 // Definitions
 ///////////////////
@@ -725,14 +727,17 @@ static void MAIN_SM_charge_setBal(Evt_sys_data_t* evt)
 
 static void MAIN_SM_handleAdcEvt(Evt_adc_data_t* evt)
 {
+    /** Handling specific to BMS state */
     switch (bmsState_)
     {
         case BMS_STATE_IDLE:
         {
             /** @todo Check full VBAT: 
              * 1. if VBAT < min: save log to flash, transit to error state
-             * 2. if VBAT > max: save log to flash 
+             * 2. if VBAT > max: save log to flash
+             * 3. Set VBAT level for BLE Adv
              */
+            update_advertisememt_vbat_(evt->full_mv);
             break;
         }
 
@@ -743,6 +748,7 @@ static void MAIN_SM_handleAdcEvt(Evt_adc_data_t* evt)
                 evt.setDischState = 0;
                 MAIN_post_evt((Main_evt_t*) &evt, EVT_SYSTEM);
             }
+            update_advertisememt_vbat_(evt->full_mv);
             break;
         }
 
@@ -753,6 +759,7 @@ static void MAIN_SM_handleAdcEvt(Evt_adc_data_t* evt)
                 evt.setChargeState = 0;
                 MAIN_post_evt((Main_evt_t*) &evt, EVT_SYSTEM);
             }
+            update_advertisememt_vbat_(evt->full_mv);
             break;
         }
 
@@ -781,6 +788,16 @@ static void MAIN_SM_print_onStateChange(void)
         QS_STR("BMS state: ");
         QS_U8(0, bmsState_);
     QS_END()
+}
+
+//////////////////////////////////
+/// BLE commands
+//////////////////////////////////
+static void update_advertisememt_vbat_(int16_t vbatLvl)
+{
+    Ble_evt_t evt;
+    evt.batLvl.batLvlPercent = ADC_BMS_CALC_PERCENT(vbatLvl);
+    BLE_post_evt(&evt, EVT_BLE_ADV_BAT);
 }
 
 /* [] END OF FILE */

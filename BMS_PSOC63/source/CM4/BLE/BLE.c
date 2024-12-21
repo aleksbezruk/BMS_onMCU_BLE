@@ -140,6 +140,8 @@ static Ble_queue_data_t bleQueueSto[BLE_QUEUE_SIZE];
  */
 static uint64_t bleTaskStack_[BLE_TASK_STACK_SIZE/8U];
 
+static uint8_t adv_battery_service_data[3] = { 0x0F, 0x18, 0x64 };
+
 ///////////////////////
 // Code
 ///////////////////////
@@ -624,6 +626,15 @@ static void parseQueueItem_(Ble_queue_data_t* queueItem)
         case EVT_BLE_ADV_OFF:
         {
             BLE_stopAdvertisement();
+            break;
+        }
+
+        case EVT_BLE_ADV_BAT:
+        {
+            adv_battery_service_data[2] = queueItem->evtData.batLvl.batLvlPercent;
+            wiced_bt_ble_advert_elem_t *pData = &cy_bt_adv_packet_data[3];
+            pData->p_data = (uint8_t*) adv_battery_service_data;
+            wiced_bt_ble_set_raw_advertisement_data(CY_BT_ADV_PACKET_DATA_SIZE, cy_bt_adv_packet_data);
             break;
         }
 
