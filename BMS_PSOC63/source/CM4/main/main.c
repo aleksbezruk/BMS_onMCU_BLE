@@ -131,6 +131,7 @@ int main(void)
     QS_addUsrRecToDic(MAIN);
     QS_addUsrRecToDic(ADC);
     QS_addUsrRecToDic(BLE_TRACE);
+    QS_addUsrRecToDic(BLE_BAS);
 #if defined(Q_UTEST)
     QS_addUsrRecToDic(UTEST);
     QS_addUsrRecToDic(BSP);

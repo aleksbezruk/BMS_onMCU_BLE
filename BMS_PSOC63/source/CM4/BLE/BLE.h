@@ -25,6 +25,16 @@ typedef enum {
     BLE_STATUS_FAIL
 } BLE_status_t;
 
+/** This enumeration combines the advertising, connection states from two different
+ * callbacks to maintain the status in a single state variable.
+ */
+typedef enum
+{
+    BLE_ADV_OFF_CONN_OFF,
+    BLE_ADV_ON_CONN_OFF,
+    BLE_ADV_OFF_CONN_ON
+} BLE_adv_conn_mode_t;
+
 ///////////////////////
 // API
 ///////////////////////

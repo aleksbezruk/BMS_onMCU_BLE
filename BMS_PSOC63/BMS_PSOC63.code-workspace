@@ -62,7 +62,11 @@
             "cycfg_bt_settings.h": "c",
             "cycfg_gap.h": "c",
             "cstdlib": "c",
-            "main.h": "c"
+            "main.h": "c",
+            "ble.h": "c",
+            "cycfg_gatt_db.h": "c",
+            "wiced_bt_uuid.h": "c",
+            "cybsp.h": "c"
         },
         "clangd.arguments": [
             "--query-driver=${config:modustoolbox.toolsPath}/gcc/bin/arm-none-eabi-gcc",

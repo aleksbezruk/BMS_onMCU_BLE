@@ -28,7 +28,8 @@ enum AppRecords {
     UTEST,
     BSP,
     ADC,
-    BLE_TRACE
+    BLE_TRACE,
+    BLE_BAS
 };
 
 /** QSPY/Qview cmds */

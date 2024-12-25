@@ -105,6 +105,9 @@
 #include "task.h"
 #include "cyabs_rtos.h"
 
+// Services
+#include "BatteryService.h"
+
 ///////////////////////
 // Defines
 ///////////////////////
@@ -140,7 +143,8 @@ static wiced_bt_gatt_status_t le_app_write_handler( uint16_t conn_id,
                                                     wiced_bt_gatt_write_req_t *p_write_req,
                                                     uint16_t len_req,
                                                     uint16_t *p_error_handle);
-static wiced_bt_gatt_status_t le_app_set_value( uint16_t attr_handle,
+static wiced_bt_gatt_status_t le_app_set_value( uint16_t conn_id,
+                                                uint16_t attr_handle,
                                                 uint8_t *p_val,
                                                 uint16_t len);
 
@@ -158,6 +162,9 @@ static Ble_queue_data_t bleQueueSto[BLE_QUEUE_SIZE];
 static uint64_t bleTaskStack_[BLE_TASK_STACK_SIZE/8U];
 
 static uint8_t adv_battery_service_data[3] = { 0x0F, 0x18, 0x64 };
+
+static volatile uint16_t conn_id;
+static volatile BLE_adv_conn_mode_t ble_adv_conn_state = BLE_ADV_OFF_CONN_OFF;
 
 ///////////////////////
 // Code
@@ -389,11 +396,18 @@ wiced_result_t app_bt_management_callback_(
                 QS_BEGIN_ID(BLE_TRACE, 0 /*prio/ID for local Filters*/)
                     QS_STR("Advertisement stopped"); 
                 QS_END()
+                /* Check connection status after advertisement stops */
+                if(0 == conn_id) {
+                    ble_adv_conn_state = BLE_ADV_OFF_CONN_OFF;
+                } else {
+                    ble_adv_conn_state = BLE_ADV_OFF_CONN_ON;
+                }
             }
             else {
                 QS_BEGIN_ID(BLE_TRACE, 0 /*prio/ID for local Filters*/)
                     QS_STR("Advertisement started"); 
                 QS_END()
+                ble_adv_conn_state = BLE_ADV_ON_CONN_OFF;
             }
             break;
         }
@@ -500,20 +514,23 @@ static wiced_bt_gatt_status_t le_app_connect_handler(wiced_bt_gatt_connection_st
             QS_END()
             print_bd_address(p_conn_status->bd_addr);
             print_connection_id(p_conn_status->conn_id);
-        }
-        else
-        {
+
+            /* Store the connection ID */
+            conn_id = p_conn_status->conn_id;
+            ble_adv_conn_state = BLE_ADV_OFF_CONN_ON;
+        } else {
             /* Device has disconnected */
             QS_BEGIN_ID(BLE_TRACE, 0 /*prio/ID for local Filters*/)
-                QS_STR("Client disconnected");
-            QS_END()
-            QS_BEGIN_ID(BLE_TRACE, 0 /*prio/ID for local Filters*/)
-                QS_STR("Reason:");
+                QS_STR("Client disconnected, Reason:");
                 QS_U8(0, p_conn_status->reason);
             QS_END()
 
+            /* Set the connection id to zero to indicate disconnected state */
+            conn_id = 0;
+
             /* Restart the advertisements */
             wiced_bt_start_advertisements(BTM_BLE_ADVERT_UNDIRECTED_HIGH, 0, NULL);
+            ble_adv_conn_state = BLE_ADV_ON_CONN_OFF;
         }
     } else {
         gatt_status = WICED_BT_GATT_ERROR;
@@ -690,6 +707,19 @@ static void parseQueueItem_(Ble_queue_data_t* queueItem)
                 wiced_bt_ble_advert_elem_t *pData = &cy_bt_adv_packet_data[3];
                 pData->p_data = (uint8_t*) adv_battery_service_data;
                 wiced_bt_ble_set_raw_advertisement_data(CY_BT_ADV_PACKET_DATA_SIZE, cy_bt_adv_packet_data);
+
+                /** Update Battery level in GATT DB for BAS */
+                BLE_post_evt(&queueItem->evtData, EVT_BLE_BAS_UPDATE);
+            }
+            break;
+        }
+
+        case EVT_BLE_BAS_UPDATE:
+        {
+            BAS_updateBatLevel(queueItem->evtData.batLvl.batLvlPercent);
+            /** Is client connected ? */
+            if (ble_adv_conn_state == BLE_ADV_OFF_CONN_ON) {
+                BAS_sendNotification(queueItem->evtData.batLvl.batLvlPercent, conn_id);
             }
             break;
         }
@@ -928,6 +958,7 @@ static wiced_bt_gatt_status_t le_app_write_handler( uint16_t conn_id,
 
     /* Attempt to perform the Write Request */
     gatt_status = le_app_set_value(
+        conn_id,
         p_write_req->handle,
         p_write_req->p_val,
         p_write_req->val_len
@@ -954,6 +985,7 @@ static wiced_bt_gatt_status_t le_app_write_handler( uint16_t conn_id,
 *   whose starting address is passed as one of the function parameters
 *
 * Parameters:
+* @param conn_id      Connection ID
 * @param attr_handle  GATT attribute handle
 * @param p_val        Pointer to LE GATT write request value
 * @param len          length of GATT write request
@@ -963,10 +995,12 @@ static wiced_bt_gatt_status_t le_app_write_handler( uint16_t conn_id,
 *   wiced_bt_gatt_status_t: See possible status codes in wiced_bt_gatt_status_e in wiced_bt_gatt.h
 *
 **************************************************************************************************/
-static wiced_bt_gatt_status_t le_app_set_value( uint16_t attr_handle,
+static wiced_bt_gatt_status_t le_app_set_value( uint16_t conn_id,
+                                                uint16_t attr_handle,
                                                 uint8_t *p_val,
                                                 uint16_t len)
 {
+    (void) conn_id;
     wiced_bool_t isHandleInTable = WICED_FALSE;
     wiced_bool_t validLen = WICED_FALSE;
     wiced_bt_gatt_status_t gatt_status = WICED_BT_GATT_INVALID_HANDLE;
@@ -986,23 +1020,17 @@ static wiced_bt_gatt_status_t le_app_set_value( uint16_t attr_handle,
                 memcpy(app_gatt_db_ext_attr_tbl[i].p_data, p_val, len);
                 gatt_status = WICED_BT_GATT_SUCCESS;
 
-                /** @todo Add code for any action required when this attribute is written.
-                 * In this case, we update the IAS led based on the IAS alert
-                 * level characteristic value.
+                /** 
+                 * Add code for any action required when this attribute is written.
                  */
-
                 switch ( attr_handle )
                 {
-                    // case HDLC_IAS_ALERT_LEVEL_VALUE:
-                    //     printf("Alert Level = %d\n", app_ias_alert_level[0]);
-                    //     ias_led_update();
-                    //     break;
+                    case HDLD_BAS_BATTERY_LEVEL_CLIENT_CHAR_CONFIG:
+                    {
+                        BAS_handleCccdWritten(p_val);
+                        break;
+                    }
 
-                    // /* The application is not going to change its GATT DB,
-                    //  * So this case is not handled */
-                    // case HDLD_GATT_SERVICE_CHANGED_CLIENT_CHAR_CONFIG:
-                    //     gatt_status = WICED_BT_GATT_SUCCESS;
-                    //     break;
                     default:
                     {
                         QS_BEGIN_ID(BLE_TRACE, 0 /*prio/ID for local Filters*/)

@@ -18,6 +18,7 @@ typedef enum {
     EVT_BLE_ADV_ON,
     EVT_BLE_ADV_OFF,
     EVT_BLE_ADV_BAT,
+    EVT_BLE_BAS_UPDATE,
     EVT_TYPE_MAX
 } Evt_types_t;
 
