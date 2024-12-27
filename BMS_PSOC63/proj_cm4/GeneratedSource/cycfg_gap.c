@@ -31,7 +31,7 @@ wiced_bt_device_address_t cy_bt_device_address = {0x00, 0xA0, 0x50, 0x00, 0x00, 
 
 const uint8_t cy_bt_adv_packet_elem_0[1] = { 0x06 };
 const uint8_t cy_bt_adv_packet_elem_1[10] = { 0x42, 0x4D, 0x53, 0x5F, 0x50, 0x53, 0x4F, 0x43, 0x36, 0x33 };
-const uint8_t cy_bt_adv_packet_elem_2[2] = { 0x0F, 0x18 };
+const uint8_t cy_bt_adv_packet_elem_2[4] = { 0x0F, 0x18, 0x15, 0x18 };
 const uint8_t cy_bt_adv_packet_elem_3[3] = { 0x0F, 0x18, 0x64 };
 wiced_bt_ble_advert_elem_t cy_bt_adv_packet_data[] = 
 {
@@ -50,7 +50,7 @@ wiced_bt_ble_advert_elem_t cy_bt_adv_packet_data[] =
     /* Complete list of 16-bit UUIDs available */
     {
         .advert_type = BTM_BLE_ADVERT_TYPE_16SRV_COMPLETE, 
-        .len = 2, 
+        .len = 4, 
         .p_data = (uint8_t*)cy_bt_adv_packet_elem_2, 
     },
     /* 16-bit Service Data */

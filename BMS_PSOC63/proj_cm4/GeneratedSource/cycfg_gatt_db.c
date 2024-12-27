@@ -79,6 +79,88 @@ const uint8_t gatt_database[] =
                     HDLD_BAS_BATTERY_LEVEL_CLIENT_CHAR_CONFIG,
                     __UUID_DESCRIPTOR_CLIENT_CHARACTERISTIC_CONFIGURATION,
                     GATTDB_PERM_READABLE | GATTDB_PERM_WRITE_REQ),
+
+    /* Primary Service: Automation IO */
+    PRIMARY_SERVICE_UUID16 (
+            HDLS_AUTOMATION_IO,
+            __UUID_SERVICE_AUTOMATION_IO),
+        /* Characteristic: Digital IO */
+        CHARACTERISTIC_UUID128_WRITABLE (
+                HDLC_AUTOMATION_IO_DIGITAL_IO,
+                HDLC_AUTOMATION_IO_DIGITAL_IO_VALUE,
+                __UUID_CHARACTERISTIC_AUTOMATION_IO_DIGITAL_IO,
+                GATTDB_CHAR_PROP_READ | GATTDB_CHAR_PROP_WRITE | GATTDB_CHAR_PROP_NOTIFY,
+                GATTDB_PERM_READABLE | GATTDB_PERM_WRITE_REQ),
+            /* Descriptor: Client Characteristic Configuration */
+            CHAR_DESCRIPTOR_UUID16_WRITABLE (
+                    HDLD_AUTOMATION_IO_DIGITAL_IO_CLIENT_CHAR_CONFIG,
+                    __UUID_DESCRIPTOR_CLIENT_CHARACTERISTIC_CONFIGURATION,
+                    GATTDB_PERM_READABLE | GATTDB_PERM_WRITE_REQ),
+            /* Descriptor: Number of Digitals */
+            CHAR_DESCRIPTOR_UUID16 (
+                    HDLD_AUTOMATION_IO_DIGITAL_IO_NUMBER_OF_DIGITALS,
+                    __UUID_DESCRIPTOR_AUTOMATION_IO_DIGITAL_IO_NUMBER_OF_DIGITALS,
+                    GATTDB_PERM_READABLE),
+        /* Characteristic: Analog full VBAT */
+        CHARACTERISTIC_UUID128 (
+                HDLC_AUTOMATION_IO_ANALOG_FULL_VBAT,
+                HDLC_AUTOMATION_IO_ANALOG_FULL_VBAT_VALUE,
+                __UUID_CHARACTERISTIC_AUTOMATION_IO_ANALOG_FULL_VBAT,
+                GATTDB_CHAR_PROP_READ,
+                GATTDB_PERM_READABLE),
+            /* Descriptor: Characteristic Presentation Format */
+            CHAR_DESCRIPTOR_UUID16 (
+                    HDLD_AUTOMATION_IO_ANALOG_FULL_VBAT_CHAR_PRESENTATION_FORMAT,
+                    __UUID_DESCRIPTOR_CHARACTERISTIC_PRESENTATION_FORMAT,
+                    GATTDB_PERM_READABLE),
+        /* Characteristic: Analog Vbank1 */
+        CHARACTERISTIC_UUID128 (
+                HDLC_AUTOMATION_IO_ANALOG_VBANK1,
+                HDLC_AUTOMATION_IO_ANALOG_VBANK1_VALUE,
+                __UUID_CHARACTERISTIC_AUTOMATION_IO_ANALOG_VBANK1,
+                GATTDB_CHAR_PROP_READ,
+                GATTDB_PERM_READABLE),
+            /* Descriptor: Characteristic Presentation Format */
+            CHAR_DESCRIPTOR_UUID16 (
+                    HDLD_AUTOMATION_IO_ANALOG_VBANK1_CHAR_PRESENTATION_FORMAT,
+                    __UUID_DESCRIPTOR_CHARACTERISTIC_PRESENTATION_FORMAT,
+                    GATTDB_PERM_READABLE),
+        /* Characteristic: Analog Vbank2 */
+        CHARACTERISTIC_UUID128 (
+                HDLC_AUTOMATION_IO_ANALOG_VBANK2,
+                HDLC_AUTOMATION_IO_ANALOG_VBANK2_VALUE,
+                __UUID_CHARACTERISTIC_AUTOMATION_IO_ANALOG_VBANK2,
+                GATTDB_CHAR_PROP_READ,
+                GATTDB_PERM_READABLE),
+            /* Descriptor: Characteristic Presentation Format */
+            CHAR_DESCRIPTOR_UUID16 (
+                    HDLD_AUTOMATION_IO_ANALOG_VBANK2_CHAR_PRESENTATION_FORMAT,
+                    __UUID_DESCRIPTOR_CHARACTERISTIC_PRESENTATION_FORMAT,
+                    GATTDB_PERM_READABLE),
+        /* Characteristic: Analog Vbank3 */
+        CHARACTERISTIC_UUID128 (
+                HDLC_AUTOMATION_IO_ANALOG_VBANK3,
+                HDLC_AUTOMATION_IO_ANALOG_VBANK3_VALUE,
+                __UUID_CHARACTERISTIC_AUTOMATION_IO_ANALOG_VBANK3,
+                GATTDB_CHAR_PROP_READ,
+                GATTDB_PERM_READABLE),
+            /* Descriptor: Characteristic Presentation Format */
+            CHAR_DESCRIPTOR_UUID16 (
+                    HDLD_AUTOMATION_IO_ANALOG_VBANK3_CHAR_PRESENTATION_FORMAT,
+                    __UUID_DESCRIPTOR_CHARACTERISTIC_PRESENTATION_FORMAT,
+                    GATTDB_PERM_READABLE),
+        /* Characteristic: Analog Vbank4 */
+        CHARACTERISTIC_UUID128 (
+                HDLC_AUTOMATION_IO_ANALOG_VBANK4,
+                HDLC_AUTOMATION_IO_ANALOG_VBANK4_VALUE,
+                __UUID_CHARACTERISTIC_AUTOMATION_IO_ANALOG_VBANK4,
+                GATTDB_CHAR_PROP_READ,
+                GATTDB_PERM_READABLE),
+            /* Descriptor: Characteristic Presentation Format */
+            CHAR_DESCRIPTOR_UUID16 (
+                    HDLD_AUTOMATION_IO_ANALOG_VBANK4_CHAR_PRESENTATION_FORMAT,
+                    __UUID_DESCRIPTOR_CHARACTERISTIC_PRESENTATION_FORMAT,
+                    GATTDB_PERM_READABLE),
 };
 
 /* Length of the GATT database */
@@ -94,6 +176,24 @@ uint8_t app_bas_battery_level[] = {0x00,};
 uint8_t app_bas_battery_level_char_presentation_format[] = {0x00, 0x00, 0x00, 0x00, 0x01, 0x00,
     0x00,};
 uint8_t app_bas_battery_level_client_char_config[] = {0x00, 0x00,};
+uint8_t app_automation_io_digital_io[] = {0x00, 0x00, 0x00, 0x00,};
+uint8_t app_automation_io_digital_io_client_char_config[] = {0x00, 0x00,};
+uint8_t app_automation_io_digital_io_number_of_digitals[] = {0x06, 0x00,};
+uint8_t app_automation_io_analog_full_vbat[] = {0x00, 0x00,};
+uint8_t app_automation_io_analog_full_vbat_char_presentation_format[] = {0x06, 0x00, 0x28, 0x27,
+    0x01, 0x01, 0x00,};
+uint8_t app_automation_io_analog_vbank1[] = {0x00, 0x00,};
+uint8_t app_automation_io_analog_vbank1_char_presentation_format[] = {0x06, 0x00, 0x28, 0x27,
+    0x01, 0x02, 0x00,};
+uint8_t app_automation_io_analog_vbank2[] = {0x00, 0x00,};
+uint8_t app_automation_io_analog_vbank2_char_presentation_format[] = {0x06, 0x00, 0x28, 0x27,
+    0x01, 0x03, 0x00,};
+uint8_t app_automation_io_analog_vbank3[] = {0x00, 0x00,};
+uint8_t app_automation_io_analog_vbank3_char_presentation_format[] = {0x06, 0x00, 0x28, 0x27,
+    0x01, 0x04, 0x00,};
+uint8_t app_automation_io_analog_vbank4[] = {0x00, 0x00,};
+uint8_t app_automation_io_analog_vbank4_char_presentation_format[] = {0x06, 0x00, 0x28, 0x27,
+    0x01, 0x05, 0x00,};
  
 /******************************************************************************
 * GATT Lookup Table
@@ -102,34 +202,112 @@ uint8_t app_bas_battery_level_client_char_config[] = {0x00, 0x00,};
 gatt_db_lookup_table_t app_gatt_db_ext_attr_tbl[] =
 {
     {
-        HDLC_GAP_DEVICE_NAME_VALUE,                      /* attribute handle */
-        MAX_LEN_GAP_DEVICE_NAME,                         /* maxlen */
-        10,                                              /* curlen */
-        app_gap_device_name,                             /* attribute data */
+        HDLC_GAP_DEVICE_NAME_VALUE,                                   /* attribute handle */
+        MAX_LEN_GAP_DEVICE_NAME,                                      /* maxlen */
+        10,                                                           /* curlen */
+        app_gap_device_name,                                          /* attribute data */
     },
     {
-        HDLC_GAP_APPEARANCE_VALUE,                       /* attribute handle */
-        MAX_LEN_GAP_APPEARANCE,                          /* maxlen */
-        2,                                               /* curlen */
-        app_gap_appearance,                              /* attribute data */
+        HDLC_GAP_APPEARANCE_VALUE,                                    /* attribute handle */
+        MAX_LEN_GAP_APPEARANCE,                                       /* maxlen */
+        2,                                                            /* curlen */
+        app_gap_appearance,                                           /* attribute data */
     },
     {
-        HDLC_BAS_BATTERY_LEVEL_VALUE,                    /* attribute handle */
-        MAX_LEN_BAS_BATTERY_LEVEL,                       /* maxlen */
-        1,                                               /* curlen */
-        app_bas_battery_level,                           /* attribute data */
+        HDLC_BAS_BATTERY_LEVEL_VALUE,                                 /* attribute handle */
+        MAX_LEN_BAS_BATTERY_LEVEL,                                    /* maxlen */
+        1,                                                            /* curlen */
+        app_bas_battery_level,                                        /* attribute data */
     },
     {
-        HDLD_BAS_BATTERY_LEVEL_CHAR_PRESENTATION_FORMAT, /* attribute handle */
-        MAX_LEN_BAS_BATTERY_LEVEL_CHAR_PRESENTATION_FORMAT,/* maxlen */
-        7,                                               /* curlen */
-        app_bas_battery_level_char_presentation_format,  /* attribute data */
+        HDLD_BAS_BATTERY_LEVEL_CHAR_PRESENTATION_FORMAT,              /* attribute handle */
+        MAX_LEN_BAS_BATTERY_LEVEL_CHAR_PRESENTATION_FORMAT,           /* maxlen */
+        7,                                                            /* curlen */
+        app_bas_battery_level_char_presentation_format,               /* attribute data */
     },
     {
-        HDLD_BAS_BATTERY_LEVEL_CLIENT_CHAR_CONFIG,       /* attribute handle */
-        MAX_LEN_BAS_BATTERY_LEVEL_CLIENT_CHAR_CONFIG,    /* maxlen */
-        2,                                               /* curlen */
-        app_bas_battery_level_client_char_config,        /* attribute data */
+        HDLD_BAS_BATTERY_LEVEL_CLIENT_CHAR_CONFIG,                    /* attribute handle */
+        MAX_LEN_BAS_BATTERY_LEVEL_CLIENT_CHAR_CONFIG,                 /* maxlen */
+        2,                                                            /* curlen */
+        app_bas_battery_level_client_char_config,                     /* attribute data */
+    },
+    {
+        HDLC_AUTOMATION_IO_DIGITAL_IO_VALUE,                          /* attribute handle */
+        MAX_LEN_AUTOMATION_IO_DIGITAL_IO,                             /* maxlen */
+        4,                                                            /* curlen */
+        app_automation_io_digital_io,                                 /* attribute data */
+    },
+    {
+        HDLD_AUTOMATION_IO_DIGITAL_IO_CLIENT_CHAR_CONFIG,             /* attribute handle */
+        MAX_LEN_AUTOMATION_IO_DIGITAL_IO_CLIENT_CHAR_CONFIG,          /* maxlen */
+        2,                                                            /* curlen */
+        app_automation_io_digital_io_client_char_config,              /* attribute data */
+    },
+    {
+        HDLD_AUTOMATION_IO_DIGITAL_IO_NUMBER_OF_DIGITALS,             /* attribute handle */
+        MAX_LEN_AUTOMATION_IO_DIGITAL_IO_NUMBER_OF_DIGITALS,          /* maxlen */
+        2,                                                            /* curlen */
+        app_automation_io_digital_io_number_of_digitals,              /* attribute data */
+    },
+    {
+        HDLC_AUTOMATION_IO_ANALOG_FULL_VBAT_VALUE,                    /* attribute handle */
+        MAX_LEN_AUTOMATION_IO_ANALOG_FULL_VBAT,                       /* maxlen */
+        2,                                                            /* curlen */
+        app_automation_io_analog_full_vbat,                           /* attribute data */
+    },
+    {
+        HDLD_AUTOMATION_IO_ANALOG_FULL_VBAT_CHAR_PRESENTATION_FORMAT, /* attribute handle */
+        MAX_LEN_AUTOMATION_IO_ANALOG_FULL_VBAT_CHAR_PRESENTATION_FORMAT,/* maxlen */
+        7,                                                            /* curlen */
+        app_automation_io_analog_full_vbat_char_presentation_format,  /* attribute data */
+    },
+    {
+        HDLC_AUTOMATION_IO_ANALOG_VBANK1_VALUE,                       /* attribute handle */
+        MAX_LEN_AUTOMATION_IO_ANALOG_VBANK1,                          /* maxlen */
+        2,                                                            /* curlen */
+        app_automation_io_analog_vbank1,                              /* attribute data */
+    },
+    {
+        HDLD_AUTOMATION_IO_ANALOG_VBANK1_CHAR_PRESENTATION_FORMAT,    /* attribute handle */
+        MAX_LEN_AUTOMATION_IO_ANALOG_VBANK1_CHAR_PRESENTATION_FORMAT, /* maxlen */
+        7,                                                            /* curlen */
+        app_automation_io_analog_vbank1_char_presentation_format,     /* attribute data */
+    },
+    {
+        HDLC_AUTOMATION_IO_ANALOG_VBANK2_VALUE,                       /* attribute handle */
+        MAX_LEN_AUTOMATION_IO_ANALOG_VBANK2,                          /* maxlen */
+        2,                                                            /* curlen */
+        app_automation_io_analog_vbank2,                              /* attribute data */
+    },
+    {
+        HDLD_AUTOMATION_IO_ANALOG_VBANK2_CHAR_PRESENTATION_FORMAT,    /* attribute handle */
+        MAX_LEN_AUTOMATION_IO_ANALOG_VBANK2_CHAR_PRESENTATION_FORMAT, /* maxlen */
+        7,                                                            /* curlen */
+        app_automation_io_analog_vbank2_char_presentation_format,     /* attribute data */
+    },
+    {
+        HDLC_AUTOMATION_IO_ANALOG_VBANK3_VALUE,                       /* attribute handle */
+        MAX_LEN_AUTOMATION_IO_ANALOG_VBANK3,                          /* maxlen */
+        2,                                                            /* curlen */
+        app_automation_io_analog_vbank3,                              /* attribute data */
+    },
+    {
+        HDLD_AUTOMATION_IO_ANALOG_VBANK3_CHAR_PRESENTATION_FORMAT,    /* attribute handle */
+        MAX_LEN_AUTOMATION_IO_ANALOG_VBANK3_CHAR_PRESENTATION_FORMAT, /* maxlen */
+        7,                                                            /* curlen */
+        app_automation_io_analog_vbank3_char_presentation_format,     /* attribute data */
+    },
+    {
+        HDLC_AUTOMATION_IO_ANALOG_VBANK4_VALUE,                       /* attribute handle */
+        MAX_LEN_AUTOMATION_IO_ANALOG_VBANK4,                          /* maxlen */
+        2,                                                            /* curlen */
+        app_automation_io_analog_vbank4,                              /* attribute data */
+    },
+    {
+        HDLD_AUTOMATION_IO_ANALOG_VBANK4_CHAR_PRESENTATION_FORMAT,    /* attribute handle */
+        MAX_LEN_AUTOMATION_IO_ANALOG_VBANK4_CHAR_PRESENTATION_FORMAT, /* maxlen */
+        7,                                                            /* curlen */
+        app_automation_io_analog_vbank4_char_presentation_format,     /* attribute data */
     },
 };
 
@@ -145,3 +323,24 @@ const uint16_t app_bas_battery_level_char_presentation_format_len =
     (sizeof(app_bas_battery_level_char_presentation_format));
 const uint16_t app_bas_battery_level_client_char_config_len =
     (sizeof(app_bas_battery_level_client_char_config));
+const uint16_t app_automation_io_digital_io_len = (sizeof(app_automation_io_digital_io));
+const uint16_t app_automation_io_digital_io_client_char_config_len =
+    (sizeof(app_automation_io_digital_io_client_char_config));
+const uint16_t app_automation_io_digital_io_number_of_digitals_len =
+    (sizeof(app_automation_io_digital_io_number_of_digitals));
+const uint16_t app_automation_io_analog_full_vbat_len =
+    (sizeof(app_automation_io_analog_full_vbat));
+const uint16_t app_automation_io_analog_full_vbat_char_presentation_format_len =
+    (sizeof(app_automation_io_analog_full_vbat_char_presentation_format));
+const uint16_t app_automation_io_analog_vbank1_len = (sizeof(app_automation_io_analog_vbank1));
+const uint16_t app_automation_io_analog_vbank1_char_presentation_format_len =
+    (sizeof(app_automation_io_analog_vbank1_char_presentation_format));
+const uint16_t app_automation_io_analog_vbank2_len = (sizeof(app_automation_io_analog_vbank2));
+const uint16_t app_automation_io_analog_vbank2_char_presentation_format_len =
+    (sizeof(app_automation_io_analog_vbank2_char_presentation_format));
+const uint16_t app_automation_io_analog_vbank3_len = (sizeof(app_automation_io_analog_vbank3));
+const uint16_t app_automation_io_analog_vbank3_char_presentation_format_len =
+    (sizeof(app_automation_io_analog_vbank3_char_presentation_format));
+const uint16_t app_automation_io_analog_vbank4_len = (sizeof(app_automation_io_analog_vbank4));
+const uint16_t app_automation_io_analog_vbank4_char_presentation_format_len =
+    (sizeof(app_automation_io_analog_vbank4_char_presentation_format));

@@ -30,41 +30,97 @@
 
 #include "stdint.h"
 
-#define __UUID_SERVICE_GENERIC_ACCESS                      0x1800
-#define __UUID_CHARACTERISTIC_DEVICE_NAME                  0x2A00
-#define __UUID_CHARACTERISTIC_APPEARANCE                   0x2A01
-#define __UUID_SERVICE_GENERIC_ATTRIBUTE                   0x1801
-#define __UUID_SERVICE_BATTERY                             0x180F
-#define __UUID_CHARACTERISTIC_BATTERY_LEVEL                0x2A19
-#define __UUID_DESCRIPTOR_CHARACTERISTIC_PRESENTATION_FORMAT    0x2904
-#define __UUID_DESCRIPTOR_CLIENT_CHARACTERISTIC_CONFIGURATION    0x2902
+#define __UUID_SERVICE_GENERIC_ACCESS                                   0x1800
+#define __UUID_CHARACTERISTIC_DEVICE_NAME                               0x2A00
+#define __UUID_CHARACTERISTIC_APPEARANCE                                0x2A01
+#define __UUID_SERVICE_GENERIC_ATTRIBUTE                                0x1801
+#define __UUID_SERVICE_BATTERY                                          0x180F
+#define __UUID_CHARACTERISTIC_BATTERY_LEVEL                             0x2A19
+#define __UUID_DESCRIPTOR_CHARACTERISTIC_PRESENTATION_FORMAT            0x2904
+#define __UUID_DESCRIPTOR_CLIENT_CHARACTERISTIC_CONFIGURATION           0x2902
+#define __UUID_SERVICE_AUTOMATION_IO                                    0x1815
+#define __UUID_CHARACTERISTIC_AUTOMATION_IO_DIGITAL_IO                  0xEA, 0xFE, 0x2E, 0xD0, 0x9E, 0x3A, 0x26, 0x9D, 0x36, 0x44, 0x1D, 0x21, 0xE2, 0x9A, 0xAF, 0x37
+#define __UUID_DESCRIPTOR_AUTOMATION_IO_DIGITAL_IO_NUMBER_OF_DIGITALS    0x2909
+#define __UUID_CHARACTERISTIC_AUTOMATION_IO_ANALOG_FULL_VBAT            0xBA, 0x2B, 0x12, 0x99, 0x70, 0x41, 0x3E, 0x96, 0x26, 0x49, 0x44, 0x52, 0xDB, 0xD8, 0x0A, 0x17
+#define __UUID_CHARACTERISTIC_AUTOMATION_IO_ANALOG_VBANK1               0xBA, 0x2B, 0x12, 0x99, 0x70, 0x41, 0x3E, 0x96, 0x26, 0x49, 0x44, 0x52, 0xDB, 0xD8, 0x0A, 0x17
+#define __UUID_CHARACTERISTIC_AUTOMATION_IO_ANALOG_VBANK2               0xBA, 0x2B, 0x12, 0x99, 0x70, 0x41, 0x3E, 0x96, 0x26, 0x49, 0x44, 0x52, 0xDB, 0xD8, 0x0A, 0x17
+#define __UUID_CHARACTERISTIC_AUTOMATION_IO_ANALOG_VBANK3               0xBA, 0x2B, 0x12, 0x99, 0x70, 0x41, 0x3E, 0x96, 0x26, 0x49, 0x44, 0x52, 0xDB, 0xD8, 0x0A, 0x17
+#define __UUID_CHARACTERISTIC_AUTOMATION_IO_ANALOG_VBANK4               0xBA, 0x2B, 0x12, 0x99, 0x70, 0x41, 0x3E, 0x96, 0x26, 0x49, 0x44, 0x52, 0xDB, 0xD8, 0x0A, 0x17
 
 /* Service Generic Access */
-#define HDLS_GAP                                           0x0001
+#define HDLS_GAP                                                        0x0001
 /* Characteristic Device Name */
-#define HDLC_GAP_DEVICE_NAME                               0x0002
-#define HDLC_GAP_DEVICE_NAME_VALUE                         0x0003
-#define MAX_LEN_GAP_DEVICE_NAME                            0x000A
+#define HDLC_GAP_DEVICE_NAME                                            0x0002
+#define HDLC_GAP_DEVICE_NAME_VALUE                                      0x0003
+#define MAX_LEN_GAP_DEVICE_NAME                                         0x000A
 /* Characteristic Appearance */
-#define HDLC_GAP_APPEARANCE                                0x0004
-#define HDLC_GAP_APPEARANCE_VALUE                          0x0005
-#define MAX_LEN_GAP_APPEARANCE                             0x0002
+#define HDLC_GAP_APPEARANCE                                             0x0004
+#define HDLC_GAP_APPEARANCE_VALUE                                       0x0005
+#define MAX_LEN_GAP_APPEARANCE                                          0x0002
 
 /* Service Generic Attribute */
-#define HDLS_GATT                                          0x0006
+#define HDLS_GATT                                                       0x0006
 
 /* Service Battery */
-#define HDLS_BAS                                           0x0007
+#define HDLS_BAS                                                        0x0007
 /* Characteristic Battery Level */
-#define HDLC_BAS_BATTERY_LEVEL                             0x0008
-#define HDLC_BAS_BATTERY_LEVEL_VALUE                       0x0009
-#define MAX_LEN_BAS_BATTERY_LEVEL                          0x0001
+#define HDLC_BAS_BATTERY_LEVEL                                          0x0008
+#define HDLC_BAS_BATTERY_LEVEL_VALUE                                    0x0009
+#define MAX_LEN_BAS_BATTERY_LEVEL                                       0x0001
 /* Descriptor Characteristic Presentation Format */
-#define HDLD_BAS_BATTERY_LEVEL_CHAR_PRESENTATION_FORMAT    0x000A
-#define MAX_LEN_BAS_BATTERY_LEVEL_CHAR_PRESENTATION_FORMAT    0x0007
+#define HDLD_BAS_BATTERY_LEVEL_CHAR_PRESENTATION_FORMAT                 0x000A
+#define MAX_LEN_BAS_BATTERY_LEVEL_CHAR_PRESENTATION_FORMAT              0x0007
 /* Descriptor Client Characteristic Configuration */
-#define HDLD_BAS_BATTERY_LEVEL_CLIENT_CHAR_CONFIG          0x000B
-#define MAX_LEN_BAS_BATTERY_LEVEL_CLIENT_CHAR_CONFIG       0x0002
+#define HDLD_BAS_BATTERY_LEVEL_CLIENT_CHAR_CONFIG                       0x000B
+#define MAX_LEN_BAS_BATTERY_LEVEL_CLIENT_CHAR_CONFIG                    0x0002
+
+/* Service Automation IO */
+#define HDLS_AUTOMATION_IO                                              0x000C
+/* Characteristic Digital IO */
+#define HDLC_AUTOMATION_IO_DIGITAL_IO                                   0x000D
+#define HDLC_AUTOMATION_IO_DIGITAL_IO_VALUE                             0x000E
+#define MAX_LEN_AUTOMATION_IO_DIGITAL_IO                                0x0004
+/* Descriptor Client Characteristic Configuration */
+#define HDLD_AUTOMATION_IO_DIGITAL_IO_CLIENT_CHAR_CONFIG                0x000F
+#define MAX_LEN_AUTOMATION_IO_DIGITAL_IO_CLIENT_CHAR_CONFIG             0x0002
+/* Descriptor Number of Digitals */
+#define HDLD_AUTOMATION_IO_DIGITAL_IO_NUMBER_OF_DIGITALS                0x0010
+#define MAX_LEN_AUTOMATION_IO_DIGITAL_IO_NUMBER_OF_DIGITALS             0x0002
+/* Characteristic Analog full VBAT */
+#define HDLC_AUTOMATION_IO_ANALOG_FULL_VBAT                             0x0011
+#define HDLC_AUTOMATION_IO_ANALOG_FULL_VBAT_VALUE                       0x0012
+#define MAX_LEN_AUTOMATION_IO_ANALOG_FULL_VBAT                          0x0002
+/* Descriptor Characteristic Presentation Format */
+#define HDLD_AUTOMATION_IO_ANALOG_FULL_VBAT_CHAR_PRESENTATION_FORMAT    0x0013
+#define MAX_LEN_AUTOMATION_IO_ANALOG_FULL_VBAT_CHAR_PRESENTATION_FORMAT    0x0007
+/* Characteristic Analog Vbank1 */
+#define HDLC_AUTOMATION_IO_ANALOG_VBANK1                                0x0014
+#define HDLC_AUTOMATION_IO_ANALOG_VBANK1_VALUE                          0x0015
+#define MAX_LEN_AUTOMATION_IO_ANALOG_VBANK1                             0x0002
+/* Descriptor Characteristic Presentation Format */
+#define HDLD_AUTOMATION_IO_ANALOG_VBANK1_CHAR_PRESENTATION_FORMAT       0x0016
+#define MAX_LEN_AUTOMATION_IO_ANALOG_VBANK1_CHAR_PRESENTATION_FORMAT    0x0007
+/* Characteristic Analog Vbank2 */
+#define HDLC_AUTOMATION_IO_ANALOG_VBANK2                                0x0017
+#define HDLC_AUTOMATION_IO_ANALOG_VBANK2_VALUE                          0x0018
+#define MAX_LEN_AUTOMATION_IO_ANALOG_VBANK2                             0x0002
+/* Descriptor Characteristic Presentation Format */
+#define HDLD_AUTOMATION_IO_ANALOG_VBANK2_CHAR_PRESENTATION_FORMAT       0x0019
+#define MAX_LEN_AUTOMATION_IO_ANALOG_VBANK2_CHAR_PRESENTATION_FORMAT    0x0007
+/* Characteristic Analog Vbank3 */
+#define HDLC_AUTOMATION_IO_ANALOG_VBANK3                                0x001A
+#define HDLC_AUTOMATION_IO_ANALOG_VBANK3_VALUE                          0x001B
+#define MAX_LEN_AUTOMATION_IO_ANALOG_VBANK3                             0x0002
+/* Descriptor Characteristic Presentation Format */
+#define HDLD_AUTOMATION_IO_ANALOG_VBANK3_CHAR_PRESENTATION_FORMAT       0x001C
+#define MAX_LEN_AUTOMATION_IO_ANALOG_VBANK3_CHAR_PRESENTATION_FORMAT    0x0007
+/* Characteristic Analog Vbank4 */
+#define HDLC_AUTOMATION_IO_ANALOG_VBANK4                                0x001D
+#define HDLC_AUTOMATION_IO_ANALOG_VBANK4_VALUE                          0x001E
+#define MAX_LEN_AUTOMATION_IO_ANALOG_VBANK4                             0x0002
+/* Descriptor Characteristic Presentation Format */
+#define HDLD_AUTOMATION_IO_ANALOG_VBANK4_CHAR_PRESENTATION_FORMAT       0x001F
+#define MAX_LEN_AUTOMATION_IO_ANALOG_VBANK4_CHAR_PRESENTATION_FORMAT    0x0007
 
 
 /* External Lookup Table Entry */
@@ -91,5 +147,31 @@ extern uint8_t app_bas_battery_level_char_presentation_format[];
 extern const uint16_t app_bas_battery_level_char_presentation_format_len;
 extern uint8_t app_bas_battery_level_client_char_config[];
 extern const uint16_t app_bas_battery_level_client_char_config_len;
+extern uint8_t app_automation_io_digital_io[];
+extern const uint16_t app_automation_io_digital_io_len;
+extern uint8_t app_automation_io_digital_io_client_char_config[];
+extern const uint16_t app_automation_io_digital_io_client_char_config_len;
+extern uint8_t app_automation_io_digital_io_number_of_digitals[];
+extern const uint16_t app_automation_io_digital_io_number_of_digitals_len;
+extern uint8_t app_automation_io_analog_full_vbat[];
+extern const uint16_t app_automation_io_analog_full_vbat_len;
+extern uint8_t app_automation_io_analog_full_vbat_char_presentation_format[];
+extern const uint16_t app_automation_io_analog_full_vbat_char_presentation_format_len;
+extern uint8_t app_automation_io_analog_vbank1[];
+extern const uint16_t app_automation_io_analog_vbank1_len;
+extern uint8_t app_automation_io_analog_vbank1_char_presentation_format[];
+extern const uint16_t app_automation_io_analog_vbank1_char_presentation_format_len;
+extern uint8_t app_automation_io_analog_vbank2[];
+extern const uint16_t app_automation_io_analog_vbank2_len;
+extern uint8_t app_automation_io_analog_vbank2_char_presentation_format[];
+extern const uint16_t app_automation_io_analog_vbank2_char_presentation_format_len;
+extern uint8_t app_automation_io_analog_vbank3[];
+extern const uint16_t app_automation_io_analog_vbank3_len;
+extern uint8_t app_automation_io_analog_vbank3_char_presentation_format[];
+extern const uint16_t app_automation_io_analog_vbank3_char_presentation_format_len;
+extern uint8_t app_automation_io_analog_vbank4[];
+extern const uint16_t app_automation_io_analog_vbank4_len;
+extern uint8_t app_automation_io_analog_vbank4_char_presentation_format[];
+extern const uint16_t app_automation_io_analog_vbank4_char_presentation_format_len;
 
 #endif /* CYCFG_GATT_DB_H */
