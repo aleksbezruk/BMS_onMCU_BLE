@@ -17,8 +17,7 @@ typedef enum {
     EVT_SYSTEM,
     EVT_BLE_ADV_ON,
     EVT_BLE_ADV_OFF,
-    EVT_BLE_ADV_BAT,
-    EVT_BLE_BAS_UPDATE,
+    EVT_BLE_VBAT,
     EVT_TYPE_MAX
 } Evt_types_t;
 
@@ -61,12 +60,13 @@ typedef struct {
     uint16_t periodicAdvIntMin;
     uint16_t periodicAdvIntMax;
     uint16_t periodicAdvProp;
-} Evt_ble_adv_data_t;
+} Evt_ble_adv_param_t;
 
-/** BLE battery level advertisement event */
+/** BLE battery measurement data event */
 typedef struct {
     uint8_t batLvlPercent;
-} Evt_ble_adv_vbat_t;
+    Evt_adc_data_t adcData;
+} Evt_ble_vbat_t;
 
 //////////////////////////////////////////////
 // Tasks' queues & generic event structure
@@ -79,8 +79,9 @@ typedef union {
 
 /** BLE task generic event type */
 typedef union {
-    Evt_ble_adv_data_t advData;
-    Evt_ble_adv_vbat_t batLvl;
+    Evt_ble_adv_param_t advParam;
+    Evt_ble_vbat_t vbat;
+    Evt_sys_data_t sysData;
 } Ble_evt_t;
 
 /** Main task queue's item data structure */

@@ -1,7 +1,7 @@
 /**
  * @file  main.c
  *
- * @brief Implementa main() function entry and main Task's business logic.
+ * @brief Implementation main() function entry and main Task's business logic.
  *
  * @version 0.1.0
  */
@@ -53,7 +53,7 @@ static void MAIN_setChargeSw(MAIN_chargeSw_state_t state);
 static void MAIN_enableBalancerSw(uint8_t balBanksEnMask);
 static void MAIN_disableBalancerSw(uint8_t balBanksDisMask);
 
-static void update_advertisememt_vbat_(int16_t vbatLvl);
+static void ble_update_vbat_(Evt_adc_data_t* adcEvt);
 
 static void led_blink_alive_(void);
 static void blinkTimerCallback_(cy_timer_callback_arg_t arg);
@@ -132,6 +132,7 @@ int main(void)
     QS_addUsrRecToDic(ADC);
     QS_addUsrRecToDic(BLE_TRACE);
     QS_addUsrRecToDic(BLE_BAS);
+    QS_addUsrRecToDic(BLE_AIOS);
 #if defined(Q_UTEST)
     QS_addUsrRecToDic(UTEST);
     QS_addUsrRecToDic(BSP);
@@ -328,12 +329,18 @@ static void handleAdcEvt_(Evt_adc_data_t* evt)
  */
 static void handleSystemEvt_(Evt_sys_data_t* evt)
 {
+    /** Process an event in Main task state machine */
     MAIN_SM_handleSysEvt(evt);
 
     QS_BEGIN_ID(MAIN, 0 /*prio/ID for local Filters*/)
         QS_STR("Sys evt, set switches state: ");
         QS_U8(0, swState_);
     QS_END()
+
+    /** Notify BLE task about switches' state */
+    Ble_evt_t btEvt;
+    btEvt.sysData.swStates = swState_;
+    BLE_post_evt(&btEvt, EVT_SYSTEM);
 }
 
 /**
@@ -750,9 +757,9 @@ static void MAIN_SM_handleAdcEvt(Evt_adc_data_t* evt)
             /** @todo Check full VBAT: 
              * 1. if VBAT < min: save log to flash, transit to error state
              * 2. if VBAT > max: save log to flash
-             * 3. Set VBAT level for BLE Adv
+             * 4. Send VBAT to BLE task
              */
-            update_advertisememt_vbat_(evt->full_mv);
+            ble_update_vbat_(evt);
             break;
         }
 
@@ -763,7 +770,7 @@ static void MAIN_SM_handleAdcEvt(Evt_adc_data_t* evt)
                 evt.setDischState = 0;
                 MAIN_post_evt((Main_evt_t*) &evt, EVT_SYSTEM);
             }
-            update_advertisememt_vbat_(evt->full_mv);
+            ble_update_vbat_(evt);
             break;
         }
 
@@ -774,7 +781,7 @@ static void MAIN_SM_handleAdcEvt(Evt_adc_data_t* evt)
                 evt.setChargeState = 0;
                 MAIN_post_evt((Main_evt_t*) &evt, EVT_SYSTEM);
             }
-            update_advertisememt_vbat_(evt->full_mv);
+            ble_update_vbat_(evt);
             break;
         }
 
@@ -808,11 +815,18 @@ static void MAIN_SM_print_onStateChange(void)
 //////////////////////////////////
 /// BLE commands
 //////////////////////////////////
-static void update_advertisememt_vbat_(int16_t vbatLvl)
+static void ble_update_vbat_(Evt_adc_data_t* adcEvt)
 {
-    Ble_evt_t evt;
-    evt.batLvl.batLvlPercent = ADC_BMS_CALC_PERCENT(vbatLvl);
-    BLE_post_evt(&evt, EVT_BLE_ADV_BAT);
+    Ble_evt_t btEvt;
+
+    btEvt.vbat.batLvlPercent = ADC_BMS_CALC_PERCENT(adcEvt->full_mv);
+    btEvt.vbat.adcData.bank1_mv = adcEvt->bank1_mv;
+    btEvt.vbat.adcData.bank2_mv = adcEvt->bank2_mv;
+    btEvt.vbat.adcData.bank3_mv = adcEvt->bank3_mv;
+    btEvt.vbat.adcData.bank4_mv = adcEvt->bank4_mv;
+    btEvt.vbat.adcData.full_mv = adcEvt->full_mv;
+
+    BLE_post_evt(&btEvt, EVT_BLE_VBAT);
 }
 
 //////////////////////////////////

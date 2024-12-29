@@ -224,9 +224,9 @@ void QS_onCommand(uint8_t cmdId,
         case QS_CMD_BLE_START_ADV:
         {
             Ble_evt_t evt;
-            evt.advData.periodicAdvIntMin = param1;
-            evt.advData.periodicAdvIntMax = param2;
-            evt.advData.periodicAdvProp = param3;
+            evt.advParam.periodicAdvIntMin = param1;
+            evt.advParam.periodicAdvIntMax = param2;
+            evt.advParam.periodicAdvProp = param3;
             BLE_post_evt(&evt, EVT_BLE_ADV_ON);
             break;
         }
@@ -333,6 +333,9 @@ void QS_addUsrRecToDic(enum_t const rec)
             break;
         case BLE_BAS:
             QS_USR_DICTIONARY(BLE_BAS);
+            break;
+        case BLE_AIOS:
+            QS_USR_DICTIONARY(BLE_AIOS);
             break;
         default:
             break;

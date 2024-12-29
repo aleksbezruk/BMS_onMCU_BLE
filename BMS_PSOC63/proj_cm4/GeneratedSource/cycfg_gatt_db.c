@@ -180,19 +180,19 @@ uint8_t app_automation_io_digital_io[] = {0x00, 0x00, 0x00, 0x00,};
 uint8_t app_automation_io_digital_io_client_char_config[] = {0x00, 0x00,};
 uint8_t app_automation_io_digital_io_number_of_digitals[] = {0x06, 0x00,};
 uint8_t app_automation_io_analog_full_vbat[] = {0x00, 0x00,};
-uint8_t app_automation_io_analog_full_vbat_char_presentation_format[] = {0x06, 0x00, 0x28, 0x27,
+uint8_t app_automation_io_analog_full_vbat_char_presentation_format[] = {0x0E, 0x00, 0x28, 0x27,
     0x01, 0x01, 0x00,};
 uint8_t app_automation_io_analog_vbank1[] = {0x00, 0x00,};
-uint8_t app_automation_io_analog_vbank1_char_presentation_format[] = {0x06, 0x00, 0x28, 0x27,
+uint8_t app_automation_io_analog_vbank1_char_presentation_format[] = {0x0E, 0x00, 0x28, 0x27,
     0x01, 0x02, 0x00,};
 uint8_t app_automation_io_analog_vbank2[] = {0x00, 0x00,};
-uint8_t app_automation_io_analog_vbank2_char_presentation_format[] = {0x06, 0x00, 0x28, 0x27,
+uint8_t app_automation_io_analog_vbank2_char_presentation_format[] = {0x0E, 0x00, 0x28, 0x27,
     0x01, 0x03, 0x00,};
 uint8_t app_automation_io_analog_vbank3[] = {0x00, 0x00,};
-uint8_t app_automation_io_analog_vbank3_char_presentation_format[] = {0x06, 0x00, 0x28, 0x27,
+uint8_t app_automation_io_analog_vbank3_char_presentation_format[] = {0x0E, 0x00, 0x28, 0x27,
     0x01, 0x04, 0x00,};
 uint8_t app_automation_io_analog_vbank4[] = {0x00, 0x00,};
-uint8_t app_automation_io_analog_vbank4_char_presentation_format[] = {0x06, 0x00, 0x28, 0x27,
+uint8_t app_automation_io_analog_vbank4_char_presentation_format[] = {0x0E, 0x00, 0x28, 0x27,
     0x01, 0x05, 0x00,};
  
 /******************************************************************************

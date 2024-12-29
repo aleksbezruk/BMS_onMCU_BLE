@@ -107,6 +107,7 @@
 
 // Services
 #include "BatteryService.h"
+#include "AIOService.h"
 
 ///////////////////////
 // Defines
@@ -686,9 +687,9 @@ static void parseQueueItem_(Ble_queue_data_t* queueItem)
         case EVT_BLE_ADV_ON:
         {
             BLE_startAdvertisement(
-                queueItem->evtData.advData.periodicAdvIntMin,
-                queueItem->evtData.advData.periodicAdvIntMax,
-                queueItem->evtData.advData.periodicAdvProp
+                queueItem->evtData.advParam.periodicAdvIntMin,
+                queueItem->evtData.advParam.periodicAdvIntMax,
+                queueItem->evtData.advParam.periodicAdvProp
             );
             break;
         }
@@ -699,27 +700,35 @@ static void parseQueueItem_(Ble_queue_data_t* queueItem)
             break;
         }
 
-        case EVT_BLE_ADV_BAT:
+        case EVT_BLE_VBAT:
         {
             /** Is bat level changed ? */
-            if (queueItem->evtData.batLvl.batLvlPercent != adv_battery_service_data[2] ) {
-                adv_battery_service_data[2] = queueItem->evtData.batLvl.batLvlPercent;
+            if (queueItem->evtData.vbat.batLvlPercent != adv_battery_service_data[2] ) {
+                adv_battery_service_data[2] = queueItem->evtData.vbat.batLvlPercent;
                 wiced_bt_ble_advert_elem_t *pData = &cy_bt_adv_packet_data[3];
                 pData->p_data = (uint8_t*) adv_battery_service_data;
                 wiced_bt_ble_set_raw_advertisement_data(CY_BT_ADV_PACKET_DATA_SIZE, cy_bt_adv_packet_data);
 
                 /** Update Battery level in GATT DB for BAS */
-                BLE_post_evt(&queueItem->evtData, EVT_BLE_BAS_UPDATE);
+                BAS_updateBatLevel(queueItem->evtData.vbat.batLvlPercent);
+                /** Is client connected ? */
+                if (ble_adv_conn_state == BLE_ADV_OFF_CONN_ON) {
+                    BAS_sendNotification(queueItem->evtData.vbat.batLvlPercent, conn_id);
+                }
             }
+
+            /** Send VBAT to AIOS */
+            AIOS_updateVbat(&queueItem->evtData.vbat);
             break;
         }
 
-        case EVT_BLE_BAS_UPDATE:
+        case EVT_SYSTEM:
         {
-            BAS_updateBatLevel(queueItem->evtData.batLvl.batLvlPercent);
+            /** Send switches' state to AIOS */
+            AIOS_updateSwitchState(queueItem->evtData.sysData.swStates);
             /** Is client connected ? */
             if (ble_adv_conn_state == BLE_ADV_OFF_CONN_ON) {
-                BAS_sendNotification(queueItem->evtData.batLvl.batLvlPercent, conn_id);
+                AIOS_sendNotification(queueItem->evtData.sysData.swStates, conn_id);
             }
             break;
         }
@@ -1028,6 +1037,18 @@ static wiced_bt_gatt_status_t le_app_set_value( uint16_t conn_id,
                     case HDLD_BAS_BATTERY_LEVEL_CLIENT_CHAR_CONFIG:
                     {
                         BAS_handleCccdWritten(p_val);
+                        break;
+                    }
+
+                    case HDLD_AUTOMATION_IO_DIGITAL_IO_CLIENT_CHAR_CONFIG:
+                    {
+                        AIOS_handleCccdWritten(p_val);
+                        break;
+                    }
+
+                    case HDLC_AUTOMATION_IO_DIGITAL_IO_VALUE:
+                    {
+                        AIOS_handleSetSwicthWritten(p_val);
                         break;
                     }
 
