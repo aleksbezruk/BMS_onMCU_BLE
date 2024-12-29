@@ -852,6 +852,12 @@ static wiced_bt_gatt_status_t le_app_server_handler (wiced_bt_gatt_attribute_req
                 p_attr_req->data.remote_mtu,
                 CY_BT_MTU_SIZE
             );
+            QS_BEGIN_ID(BLE_TRACE, 0 /*prio/ID for local Filters*/)
+                QS_STR("MTU request:");
+                QS_U16(0, p_attr_req->data.remote_mtu);
+                QS_STR("MTU response:");
+                QS_U16(0, CY_BT_MTU_SIZE);
+            QS_END()
             break;
         }
 
