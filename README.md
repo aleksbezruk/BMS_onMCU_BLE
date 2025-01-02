@@ -28,8 +28,11 @@ https://www.state-machine.com/qtools/qview.html
 
 
 ### V. Integration testing framework
-TBD. In general, It's preferrable to use framework based on scripting language like Python <br>
-I prefer Pyhon based framework.
+In general, It's preferrable to use framework based on scripting language like Python <br>
+pytest framework is used: <br>
+> pip install -U pytest <br>
+> pip install pytest-dependency <br>
+For BLE test the SimpleBLE library is used.
 
 ### VI. Code coverage
 1. __*gcov*__ code instrumentation feature of GCC compiler is used in order to collect a coverage data. <br>
@@ -84,3 +87,8 @@ In the project Target testing is used. To write coverage data to PC from targer,
 > ${TARGET}.cm4 configure -rtos auto -rtos-wipe-on-reset-halt 1 <br>
 > Note: I believe the performance issue is due to Host-PC performance issue. <br>
 >       So upgrading my Host-PC or moving to new machine will fix the issue.
+
+### X. BLE Client
+Plan - to develop Desktop and Mobile apps. <br> 
+Qt C++ framework & QtBluetooth/SimpleBLE_lib is prefered way to develop cross platform app: <br>
+Windows, Linux, MacOS, Android, iOS <br> 
