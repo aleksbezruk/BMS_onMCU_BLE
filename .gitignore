@@ -4,6 +4,7 @@
 *.html
 *.css
 *.png
+*.pyc
 
 # ignore folders
 doxygen/
