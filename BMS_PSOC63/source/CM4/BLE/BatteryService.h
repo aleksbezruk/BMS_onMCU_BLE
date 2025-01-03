@@ -17,6 +17,8 @@
 
 #include "bms_events.h"
 
+#include <stdbool.h>
+
 ///////////////////////
 // Defines
 ///////////////////////
@@ -27,6 +29,7 @@
 void BAS_updateBatLevel(uint8_t batLvl);
 void BAS_handleCccdWritten(uint8_t* p_val);
 void BAS_sendNotification(uint8_t batLvl, uint16_t conn_id);
+bool BAS_isNotifPending(void);
 
 #endif //BLE_BAS_MODULE_H
 

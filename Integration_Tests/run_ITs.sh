@@ -20,4 +20,14 @@ else
   exit $RETURN
 fi
 
+pytest -s ./test_BLE_BAS.py
+RETURN=$?
+if [ $RETURN -eq 0 ];
+then
+  echo "The test_BLE_BAS.py was executed successfuly"
+else
+  echo "The test_BLE_BAS.py was NOT executed successfuly and returned the code $RETURN"
+  exit $RETURN
+fi
+
 exit 0

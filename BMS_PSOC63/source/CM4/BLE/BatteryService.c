@@ -18,6 +18,7 @@
 ///////////////////////
 static volatile uint8_t batLevel_;
 static volatile bool clientSubscribed;
+static volatile bool forceNotification;
 
 ///////////////////////
 // Public APIs
@@ -59,7 +60,10 @@ void BAS_updateBatLevel(uint8_t batLvl)
  */
 void BAS_sendNotification(uint8_t batLvl, uint16_t conn_id)
 {
-    if (clientSubscribed /*&& (batLevel_ != batLvl)*/) {
+    if (clientSubscribed) {
+        if (forceNotification) {
+            forceNotification = false;
+        }
         /** Send notification to Client */
         wiced_bt_gatt_status_t status = wiced_bt_gatt_server_send_notification(
             conn_id, 
@@ -95,11 +99,13 @@ void BAS_handleCccdWritten(uint8_t* p_val)
             QS_STR("Client subscribed to notif");
         QS_END()
         clientSubscribed = true;
+        forceNotification = true;
     } else if (cccd == 0x0000U) {
         QS_BEGIN_ID(BLE_BAS, 0 /*prio/ID for local Filters*/)
             QS_STR("Client unsubscribed from notif");
         QS_END()
         clientSubscribed = false;
+        forceNotification = false;
     } else {
         // Just ignore
         QS_BEGIN_ID(BLE_BAS, 0 /*prio/ID for local Filters*/)
@@ -107,6 +113,11 @@ void BAS_handleCccdWritten(uint8_t* p_val)
             QS_U16(0, cccd);
         QS_END()
     }
+}
+
+bool BAS_isNotifPending(void)
+{
+    return ((forceNotification == true)? true: false);
 }
 
 /* [] END OF FILE */

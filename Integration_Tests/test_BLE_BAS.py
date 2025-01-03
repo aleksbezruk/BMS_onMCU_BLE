@@ -1,8 +1,10 @@
 import simplepyble
 import pytest
+import time
 
 pytest.ADAPTER = {}
 pytest.BMS = {}
+pytest.service_characteristic_pair = []
 
 @pytest.mark.dependency(name="test_open_adapter")
 def test_open_adapter():
@@ -38,28 +40,42 @@ def test_connect_bms():
     pytest.BMS.connect()
     assert pytest.BMS.is_connected() == True, "BLE connect with BMS isn't established"
 
-@pytest.mark.dependency(depends=["test_connect_bms"], name="test_discover_bms")
-def test_discover_bms():
-    print("-------- test_discover_bms ------------")
+@pytest.mark.dependency(depends=["test_connect_bms"], name="test_discover_bas")
+def test_discover_bas():
+    print("-------- test_discover_bas ------------")
     services = pytest.BMS.services()
     is_BAS_char_discovered = False
-    is_AIOS_server_discovered = False
     for service in services:
         print(f"Service: {service.uuid()}")
-        if service.uuid() == "00001815-0000-1000-8000-00805f9b34fb":
-            is_AIOS_server_discovered = True
         for characteristic in service.characteristics():
             print(f"    Characteristic: {characteristic.uuid()}")
             if characteristic.uuid() == "00002a19-0000-1000-8000-00805f9b34fb":
                 is_BAS_char_discovered = True
-
+                pytest.service_characteristic_pair.append((service.uuid(), characteristic.uuid()))
             capabilities = " ".join(characteristic.capabilities())
             print(f"    Capabilities: {capabilities}")
-
     assert is_BAS_char_discovered == True, "BAS Battery Level Characteristic isn't discovered"
-    assert is_AIOS_server_discovered == True, "Automation IO Service isn't discovered"
 
-@pytest.mark.dependency(depends=["test_discover_bms"], name="test_disconnect_bms")
+@pytest.mark.dependency(depends=["test_discover_bas"], name="test_read_bas")
+def test_read_bas():
+    print("-------- test_read_bas ------------")
+    service_uuid, characteristic_uuid = pytest.service_characteristic_pair[0]
+    basData = pytest.BMS.read(service_uuid, characteristic_uuid)
+    batLevel = basData[0]
+    print("Battery Level = %d" %(batLevel))
+    assert (batLevel > 0 and batLevel <= 100) == True, "Battery percent level is out of range"
+
+@pytest.mark.dependency(depends=["test_read_bas"], name="test_notify_bas")
+def test_notify_bas():
+    print("-------- test_notify_bas ------------")
+    service_uuid, characteristic_uuid = pytest.service_characteristic_pair[0]
+    batLevel = []
+    pytest.BMS.notify(service_uuid, characteristic_uuid, lambda data: batLevel.append(data[0]))
+    time.sleep(30)  # catch measurement
+    print("Bat level notif = %d" %(batLevel[0]))
+    assert (batLevel[0] > 0 and batLevel[0] <= 100) == True, "Battery notodocation percent level is out of range"
+
+@pytest.mark.dependency(depends=["test_notify_bas"], name="test_disconnect_bms")
 def test_disconnect_bms():
     print("-------- test_disconnect_bms ------------")
     pytest.BMS.disconnect()

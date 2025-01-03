@@ -703,7 +703,8 @@ static void parseQueueItem_(Ble_queue_data_t* queueItem)
         case EVT_BLE_VBAT:
         {
             /** Is bat level changed ? */
-            if (queueItem->evtData.vbat.batLvlPercent != adv_battery_service_data[2] ) {
+            if ((queueItem->evtData.vbat.batLvlPercent != adv_battery_service_data[2]) ||
+                 BAS_isNotifPending()) {
                 adv_battery_service_data[2] = queueItem->evtData.vbat.batLvlPercent;
                 wiced_bt_ble_advert_elem_t *pData = &cy_bt_adv_packet_data[3];
                 pData->p_data = (uint8_t*) adv_battery_service_data;
