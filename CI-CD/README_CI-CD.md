@@ -22,13 +22,13 @@ https://www.jenkins.io/doc/book/installing/linux/#prerequisites <br>
 4. Check Jenkins Controller status: <br>
 > sudo systemctl status jenkins  -> (should be active/running)
 5. Install Jenkins on Agent (RPI4B): <br>
-5.1 On conttroller side -> ssh-keygen -f '/home/oleksandr/.ssh/known_hosts' -R 'RPI4B.local' <br>
-5.2 Login Agent: ssh oleksandr@RPI4B.local <br>
-5.3 Install Java : <br>
+- 5.1 On conttroller side -> ssh-keygen -f '/home/oleksandr/.ssh/known_hosts' -R 'RPI4B.local' <br>
+- 5.2 Login Agent: ssh oleksandr@RPI4B.local <br>
+- 5.3 Install Java : <br>
 > sudo apt update <br>
 > sudo apt install fontconfig openjdk-17-jre <br>
-> java -version
-5.4 Install Jenkins: <br>
+> java -version <br>
+- 5.4 Install Jenkins: <br>
 >curl -fsSL https://pkg.jenkins.io/debian-stable/jenkins.io-2023.key | sudo tee \ <br>
 >  /usr/share/keyrings/jenkins-keyring.asc > /dev/null   <br>
 >  <br>
@@ -55,11 +55,11 @@ https://www.jenkins.io/doc/book/installing/linux/#prerequisites <br>
 >mkdir -p /home/Jenkins/jenkins-agent <br>
 >  <br>
 6. Generate SSH keys on Agent side <br>
-6.1 Add a .ssh folder in the Jenkins Slave Server <br>
->   mkdir ~/.ssh && cd ~/.ssh <br>
-6.2 ssh-keygen -t rsa -C "Access key for Jenkins slaves" <br>
-6.3 cat id_rsa.pub >> ~/.ssh/authorized_keys <br>
-6.4 cat id_rsa <br>
+- 6.1 Add a .ssh folder in the Jenkins Slave Server <br>
+>mkdir ~/.ssh && cd ~/.ssh <br>
+- 6.2 ssh-keygen -t rsa -C "Access key for Jenkins slaves" <br>
+- 6.3 cat id_rsa.pub >> ~/.ssh/authorized_keys <br>
+- 6.4 cat id_rsa <br>
 7. Add the SSH Private Key to Jenkins Credentials on Controller/Master side <br>
 8. Connect to the Agent <br>
 > Note: if error like "Not sufficient permission occurs on Agent side", then: <br>
@@ -70,8 +70,8 @@ https://www.jenkins.io/doc/book/installing/linux/#prerequisites <br>
 > sudo chown jenkins: /home/Jenkins/jenkins-agent <br>
 > sudo chmod u+w /home/Jenkins/jenkins-agent <br>
 9. Add pipeline on Controller side in order to run Simple job like print "echo" on Agent side: <br>
-9.1 Click to crete freestyle project. <br>
-9.2 Setup the project settings: <br>
+- 9.1 Click to crete freestyle project. <br>
+- 9.2 Setup the project settings: <br>
 > In Configuration => Build Steps => Execute Shell => Add a command : <br>
 > echo "The pipeline is from the Master Jenkins Node" <br>
 > echo "This is a sample pipeline here that we need to follow in Agent" <br>
@@ -79,4 +79,4 @@ https://www.jenkins.io/doc/book/installing/linux/#prerequisites <br>
 > [MUST] Check for the option: Restrict where this project can be run. <br>
 > In the Label Expression add the label that was added while creating the NODE. <br>
 > Hit Apply and Save => Click on Build Now. <br>
-9.3 Run pipeline and check status. <br>
+- 9.3 Run pipeline and check status. <br>
