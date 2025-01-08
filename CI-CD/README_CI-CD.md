@@ -80,3 +80,19 @@ https://www.jenkins.io/doc/book/installing/linux/#prerequisites <br>
 > In the Label Expression add the label that was added while creating the NODE. <br>
 > Hit Apply and Save => Click on Build Now. <br>
 - 9.3 Run pipeline and check status. <br>
+
+### IV. Install software, toolchains on RPI4B Agent
+1. Install VNC Server on your Raspberry Pi device & VNC viewer/Client on Host PC side <br>
+> This will allow us to start GUI for RPI4B (Virtual Desktop without connected monitor to RPI4B) <br>
+
+### V. Binding GitHub repo(s) to Jenkins Server
+TBD . 
+
+### VI. "Source pull" Job 
+TBD . 
+
+### VII. Build Job 
+TBD . 
+
+### VIII. Integration tests Job 
+TBD . 
