@@ -1,0 +1,3 @@
+SAS_REV=caddb:391299
+cympnvalidator_REV=1442
+device-db_REV=3493435624252150d4e22fe53a5d03d2def6a954
