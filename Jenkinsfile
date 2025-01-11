@@ -1,6 +1,5 @@
 pipeline {
-    //agent {label "jenkins-agent"}
-    agent {label "Built-In Node"}
+    agent {label "jenkins-controller"}
     options {
         buildDiscarder logRotator(artifactDaysToKeepStr: '', artifactNumToKeepStr: '5', daysToKeepStr: '', numToKeepStr: '5')
         disableConcurrentBuilds()
