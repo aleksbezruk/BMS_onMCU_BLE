@@ -9,7 +9,7 @@ pipeline {
             agent {label "jenkins-agent"}
             options {
                 // Timeout counter starts BEFORE agent is allocated
-                timeout(time: 10, unit: 'SECONDS')
+                timeout(time: 100, unit: 'SECONDS')
             }
             steps {
                 echo "hello, BMS CI/CD Job"
