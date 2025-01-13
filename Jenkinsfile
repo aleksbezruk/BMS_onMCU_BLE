@@ -12,7 +12,7 @@ pipeline {
                 timeout(time: 100, unit: 'SECONDS')
             }
             steps {
-                ./CI-CD/build/rebuild_debug.sh
+                sh "CI-CD/build/rebuild_debug.sh"
             }
         }
         stage('Copy Debug build firmware image to remote Agent') {
