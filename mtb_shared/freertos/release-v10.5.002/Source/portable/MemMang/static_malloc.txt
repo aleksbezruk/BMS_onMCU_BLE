@@ -1,6 +1,0 @@
-The static memory allocation. Gives the application writer the ability to 
-provide the memory themselves, allowing the RTOS objects to be created without 
-any memory being allocated dynamically.
-
-For detail guidance and example see:
-https://www.freertos.org/Static_Vs_Dynamic_Memory_Allocation.html

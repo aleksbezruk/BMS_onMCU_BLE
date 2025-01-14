@@ -11,3 +11,4 @@
 # ignore folders
 doxygen/
 docs/
+mtb_shared/

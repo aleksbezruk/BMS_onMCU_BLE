@@ -2,7 +2,8 @@
 cd ../../BMS_PSOC63
 pwd
 
-/opt/Tools/ModusToolbox/tools_3.2/lcs-manager-cli/lcs-manager-cli --update-existing
+#/opt/Tools/ModusToolbox/tools_3.2/lcs-manager-cli/lcs-manager-cli --update-existing
+make getlibs
 make -j4 build --output-sync BUILD_CONFIG=Debug
 RETURN=$?
 if [ $RETURN -eq 0 ];

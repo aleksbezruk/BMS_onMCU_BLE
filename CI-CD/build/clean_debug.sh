@@ -2,6 +2,7 @@
 cd ../../BMS_PSOC63
 pwd
 
+make getlibs
 make clean BUILD_CONFIG=Debug
 RETURN=$?
 if [ $RETURN -eq 0 ];
