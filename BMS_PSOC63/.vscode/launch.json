@@ -209,7 +209,7 @@
             "overrideLaunchCommands": [
                 "set remotetimeout 25",
                 "monitor psoc6 sflash_restrictions 1",
-                "monitor program {build/app_combined.hex}",
+                "monitor program {build/bms_mcu.hex}",
                 "monitor reset_config srst_only",
                 "monitor reset run",
                 "monitor psoc6.dap dpreg 0x04 0x00"
@@ -219,7 +219,7 @@
             ],
 
             "numberOfProcessors": 2,
-            "preLaunchTask": "Build Debug",    // Set this to run a task from tasks.json
+            //"preLaunchTask": "Build Debug",    // Set this to run a task from tasks.json
                                                         // before device programming
             "showDevDebugOutput": "none",
             "presentation": {

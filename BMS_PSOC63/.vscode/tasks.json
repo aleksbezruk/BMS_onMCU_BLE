@@ -10,14 +10,14 @@
             "args": [
                 "--norc",
                 "-c",
-                "make -j4 build --output-sync BUILD_CONFIG=Debug"
+                "make -j8 build --output-sync BUILD_CONFIG=Debug",
             ],
             "windows": {
                 "command": "${config:modustoolbox.toolsPath}/modus-shell/bin/bash.exe",
                 "args": [
                     "--norc",
                     "-c",
-                    "export PATH=/bin:/usr/bin:$PATH ; ${config:modustoolbox.toolsPath}/modus-shell/bin/make.exe -j4 build --output-sync"
+                    "export PATH=/bin:/usr/bin:$PATH ; ${config:modustoolbox.toolsPath}/modus-shell/bin/make.exe -j8 build --output-sync"
                 ]
             },
             "problemMatcher": "$gcc",
@@ -27,11 +27,25 @@
             }
         },
         {
+            "label": "Build Debug postbuild",
+            "type": "process",
+            "command": "../CI-CD/build/debug_config_postbuild.sh",
+            "windows": {
+                "command": "../CI-CD/build//debug_config_postbuild.sh"
+            },
+            "problemMatcher": "$gcc",
+            "group": {
+                "kind": "build",
+                "isDefault": true
+            }
+        }, 
+        {
             "label": "Rebuild Debug",
             "dependsOrder": "sequence",
             "dependsOn": [
                 "Clean Debug",
-                "Build Debug"
+                "Build Debug",
+                "Build Debug postbuild"
             ],
             "group": {
                 "kind": "build",

@@ -34,7 +34,23 @@ else
   exit $RETURN
 fi
 
-cd ../../
+printf "${GREEN}===============================================\n"
+printf "${GREEN}Debug config postbuild job in progress ... \n"
+printf "${GREEN}===============================================\n"
+cd ../../BMS_PSOC63
+../CI-CD/build//debug_config_postbuild.sh
+RETURN=$?
+if [ $RETURN -eq 0 ];
+then
+  printf "${GREEN}===============================================\n"
+  printf "${GREEN}Debug config postbuild job success\n"
+  printf "${GREEN}===============================================\n"
+else
+  printf "${RED}Debug config postbuild job FAILED and returned the code $RETURN\n"
+  exit $RETURN
+fi
+
+cd ../
 printf "${GREEN}Rebuild Debug completed\n"
 
 # End of FILE #
