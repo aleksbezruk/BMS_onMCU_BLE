@@ -108,7 +108,6 @@ roman==3.3
 scikit-build==0.18.1
 SecretStorage==3.3.3
 setuptools==68.1.2
-simplepyble @ file:///home/oleksandr/programming/BLE/SimpleBLE
 six==1.16.0
 soupsieve==2.5
 systemd-python==235
