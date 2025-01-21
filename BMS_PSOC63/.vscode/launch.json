@@ -209,7 +209,7 @@
             "overrideLaunchCommands": [
                 "set remotetimeout 25",
                 "monitor psoc6 sflash_restrictions 1",
-                "monitor program {build/bms_mcu.hex}",
+                "monitor program {build/bms_mcu_0-2-0_acd8f663_1-20-2025.hex}",
                 "monitor reset_config srst_only",
                 "monitor reset run",
                 "monitor psoc6.dap dpreg 0x04 0x00"

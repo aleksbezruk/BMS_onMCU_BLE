@@ -86,13 +86,14 @@ https://www.jenkins.io/doc/book/installing/linux/#prerequisites <br>
 > This will allow us to start GUI for RPI4B (Virtual Desktop without connected monitor to RPI4B) <br>
 
 ### V. Binding GitHub repo(s) to Jenkins Server
-TBD . 
++1. Find instructions here: https://www.jenkins.io/doc/book/using/best-practices/ <br>
+> Section "GitHub multibranch Pipelines"
 
 ### VI. "Source pull" Job 
-TBD . 
+The Job is already built-in in Jenkins server out of the box.
 
 ### VII. Build Job 
-TBD . 
+1. pip3 install -r ../requirements.txt --break-system-packages
 
 ### VIII. Integration tests Job 
 TBD . 
