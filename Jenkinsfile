@@ -18,8 +18,8 @@ pipeline {
         stage('Copy Debug build firmware image to remote Agent') {
             agent {label "jenkins-controller"}
             steps {
-                // TODO: implement, just stub for now
                 echo "Copy Debug build firmware image to remote Agent is in progress..."
+                sh "CI-CD/build/copy_hex_to_jenkins_agent.sh"
             }
         }
         stage('Ping Jenjins Agent') {
