@@ -93,7 +93,13 @@ https://www.jenkins.io/doc/book/installing/linux/#prerequisites <br>
 The Job is already built-in in Jenkins server out of the box.
 
 ### VII. Build Job 
-1. pip3 install -r ../requirements.txt --break-system-packages
+1. Python dependencies: <br>
+> pip3 install -r ../requirements.txt --break-system-packages
+2. In order to run 'CI-CD/build/debug_config_postbuild.sh' over SSH do: <br>
+> - generate Public keys if no such - $ ssh-keygen -t ed25519 ;   <br>
+> - copy generated keys to jenkins diraectory '/var/lib/jenkins/.ssh' ; <br>
+> - change keys owner to 'jenkins' user - $ sudo chown -R jenkins: .ssh , $ sudo chmod -R u+w .ssh
+> - copy public key to RPI4B - $ ssh-copy-id -i .ssh/id_ed25519.pub jenkins@RPI4B.local .
 
 ### VIII. Integration tests Job 
 TBD . 
