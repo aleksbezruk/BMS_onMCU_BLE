@@ -22,15 +22,10 @@ pipeline {
                 sh "CI-CD/build/copy_hex_to_jenkins_agent.sh"
             }
         }
-        stage('Ping Jenjins Agent') {
+        stage('Ping Jenjins Agent and Flash BMS firmware hex file') {
             agent {label "jenkins-agent"}
             steps {
                 echo "Jenkins agent is ready for BMS CI/CD Job"
-            }
-        }
-        stage('Flash BMS firmware hex file') {
-            agent {label "jenkins-agent"}
-            steps {
                 sh "/CI-CD/build/flash_hex.sh"
             }
         }
