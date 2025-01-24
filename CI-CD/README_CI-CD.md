@@ -102,4 +102,17 @@ The Job is already built-in in Jenkins server out of the box.
 > - copy public key to RPI4B - $ ssh-copy-id -i .ssh/id_ed25519.pub jenkins@RPI4B.local .
 
 ### VIII. Integration tests Job 
-TBD . 
+1. Compiling Openocd on RPI4B: <br>
+> Start by doing a fresh '$ sudo apt-get update' this will make sure you have the latest packages and repository set up ; <br>
+> $ sudo apt-get install git autoconf libtool make pkg-config libusb-1.0-0 libusb-1.0-0-dev ; <br>
+> git clone http://openocd.zylin.com/openocd ; <br>
+> $ cd openocd ; <br>
+> $ ./bootstrap ; <br>
+> $ ./configure --enable-sysfsgpio --enable-bcm2835gpio ; <br>
+> $ make ; <br>
+> $ sudo make install ; <br>
+2. Alternative solution is PyOCD : <br>
+> $ python3 -m pip install pyocd --break-system-packages ; <br>
+> PATH=$PATH:$HOME/.local/bin ; <br>
+> check -> $ pyocd list --targets ; <br>
+> pyocd load --target cy8c6xx7_nosmif --uid 04b4:f155 ./bms_build_dir/bms_mcu_0-2-0_d0713fc5_1-22-2025.hex

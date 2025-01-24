@@ -26,7 +26,7 @@ def test_find_bms():
     peripherals = pytest.ADAPTER.scan_get_results()
     is_bms_found = False
     for peripheral in peripherals:
-        if peripheral.identifier() == "BMS_PSOC63":
+        if peripheral.identifier() == "BMS_MCU":
             is_bms_found = True
             pytest.BMS = peripheral
     assert is_bms_found == True, "No BMS found"

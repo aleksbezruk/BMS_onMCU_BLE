@@ -7,7 +7,7 @@
 * Bluetooth Configurator 2.90.0.2529
 *
 *******************************************************************************
-* Copyright 2024 Cypress Semiconductor Corporation (an Infineon company) or
+* Copyright 2025 Cypress Semiconductor Corporation (an Infineon company) or
 * an affiliate of Cypress Semiconductor Corporation.
 * SPDX-License-Identifier: Apache-2.0
 *
@@ -170,7 +170,7 @@ const uint16_t gatt_database_len = sizeof(gatt_database);
 * GATT Initial Value Arrays
 ******************************************************************************/
  
-uint8_t app_gap_device_name[] = {'B', 'M', 'S', '_', 'P', 'S', 'O', 'C', '6', '3', '\0',};
+uint8_t app_gap_device_name[] = {'B', 'M', 'S', '_', 'M', 'C', 'U', '\0',};
 uint8_t app_gap_appearance[] = {0xC0, 0x0C,};
 uint8_t app_bas_battery_level[] = {0x00,};
 uint8_t app_bas_battery_level_char_presentation_format[] = {0x00, 0x00, 0x00, 0x00, 0x01, 0x00,
@@ -204,7 +204,7 @@ gatt_db_lookup_table_t app_gatt_db_ext_attr_tbl[] =
     {
         HDLC_GAP_DEVICE_NAME_VALUE,                                   /* attribute handle */
         MAX_LEN_GAP_DEVICE_NAME,                                      /* maxlen */
-        10,                                                           /* curlen */
+        7,                                                            /* curlen */
         app_gap_device_name,                                          /* attribute data */
     },
     {
@@ -316,7 +316,7 @@ const uint16_t app_gatt_db_ext_attr_tbl_size =
     (sizeof(app_gatt_db_ext_attr_tbl) / sizeof(gatt_db_lookup_table_t));
 
 /* Number of GATT initial value arrays entries */
-const uint16_t app_gap_device_name_len = 10;
+const uint16_t app_gap_device_name_len = 7;
 const uint16_t app_gap_appearance_len = (sizeof(app_gap_appearance));
 const uint16_t app_bas_battery_level_len = (sizeof(app_bas_battery_level));
 const uint16_t app_bas_battery_level_char_presentation_format_len =

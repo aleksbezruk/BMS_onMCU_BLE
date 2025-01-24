@@ -28,5 +28,11 @@ pipeline {
                 echo "Jenkins agent is ready for BMS CI/CD Job"
             }
         }
+        stage('Flash BMS firmware hex file') {
+            agent {label "jenkins-agent"}
+            steps {
+                sh "/CI-CD/build/flash_hex.sh"
+            }
+        }
     }
 }
