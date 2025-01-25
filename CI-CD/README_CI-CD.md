@@ -138,7 +138,7 @@ The Job is already built-in in Jenkins server out of the box.
 > - $ cd bluez-5.79 ; <br>
 > - $ ./configure ; <br>
 > - If there issues on previuous stepm run: <br>
-> - $ PATH=$PATH:$HOME/.local/bin ; <br>
+> - add -> PATH=$PATH:$HOME/.local/bin -> to $HOME/.bashrc file ; <br>
 > - $ sudo apt-get install libglib2.0-dev ; <br>
 > - $ sudo apt-get install libgtk2.0-dev ; <br>
 > - $ sudo apt install libdbus-1-dev ; <br>
