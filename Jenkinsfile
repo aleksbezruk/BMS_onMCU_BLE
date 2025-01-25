@@ -33,7 +33,9 @@ pipeline {
             agent {label "jenkins-agent"}
             steps {
                 sh "pytest --version"
-                sh "./Integration_Tests/run_ITs.sh"
+                sh "cd ./Integration_Tests/"
+                sh "./run_ITs.sh"
+                sh "cd ../" // return back to working directory after tests
             }
         }
     }
