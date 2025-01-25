@@ -52,7 +52,7 @@
 /* Characteristic Device Name */
 #define HDLC_GAP_DEVICE_NAME                                            0x0002
 #define HDLC_GAP_DEVICE_NAME_VALUE                                      0x0003
-#define MAX_LEN_GAP_DEVICE_NAME                                         0x0009
+#define MAX_LEN_GAP_DEVICE_NAME                                         0x0007
 /* Characteristic Appearance */
 #define HDLC_GAP_APPEARANCE                                             0x0004
 #define HDLC_GAP_APPEARANCE_VALUE                                       0x0005
