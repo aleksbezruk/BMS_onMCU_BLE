@@ -114,5 +114,41 @@ The Job is already built-in in Jenkins server out of the box.
 2. Alternative solution is PyOCD : <br>
 > $ python3 -m pip install pyocd --break-system-packages ; <br>
 > PATH=$PATH:$HOME/.local/bin ; <br>
+3. Flashing FW image: <br>
 > check -> $ pyocd list --targets ; <br>
-> pyocd load --target cy8c6xx7_nosmif --uid 04b4:f155 ./bms_build_dir/bms_mcu_0-2-0_d0713fc5_1-22-2025.hex
+> debug probes list (includes UIDs): $ pyocd list ; <br>
+> example for Flash erase: $ pyocd erase --chip --target cy8c6xx7_nosmif --uid <debug probe UID> <br>
+> example for Hex load: $pyocd load --target cy8c6xx7_nosmif --uid <debug probe UID> <path to hex> <br>
+4. Run intagration tests: <br>
+> install python >=3.10 if not installed yet ; <br>
+> install 'pytest': <br>
+> - $ PATH=$PATH:$HOME/.local/bin ; <br> 
+> - $ pip3 install -U pytest --break-system-packages ; <br>
+> - $ pip install pytest-dependency --break-system-packages ; <br>
+> bring-up BLE stack on RPI4B side: <br>
+> - check BlueZ version: $ bluetoothctl --version <br> ;
+> - $ bluetoothctl -> open BLE manager & use cmds loke 'help', 'list'->list of BLE controllers ; <br>
+> - $ bluetoothctl power on -> power on controller ; <br>
+> - $ bluetoothctl scan on -> scan devices => Find advertising BMS device ; <br>
+> - $ rfkill block bluetooth; $ rfkill unblock bluetooth; $ rfkill toggle bluetooth ; <br>
+> - $ sudo apt install blueman -> install BLE manager for Linux OS ; <br>
+> - upgrade bluetoothctl: ; <br>
+> - $ wget http://www.kernel.org/pub/linux/bluetooth/bluez-5.79.tar.xz ; <br>
+> - $ tar xf bluez-5.79.tar.xz ; <br>
+> - $ cd bluez-5.79 ; <br>
+> - $ ./configure ; <br>
+> - If there issues on previuous stepm run: <br>
+> - $ PATH=$PATH:$HOME/.local/bin ; <br>
+> - $ sudo apt-get install libglib2.0-dev ; <br>
+> - $ sudo apt-get install libgtk2.0-dev ; <br>
+> - $ sudo apt install libdbus-1-dev ; <br>
+> - $ sudo apt install libical-dev ; <br>
+> - $ sudo apt-get install libreadline-dev ; <br>
+> - $ make ; <br>
+> - $ sudo make install ; <br>
+> install 'SimplePyBLE' : <br>
+> - check installed libarary version -> $ pip freeze | grep simplepyble
+> - $ pip3 install simplepyble --break-system-packages ; <br>
+> - there is also a way to build simplepyble from Source code: https://github.com/simpleble/simpleble ; <br>
+> run ITs' shell script Jenkins job: <br>
+> - $ sh "Integration_Tests/run_ITs.sh"

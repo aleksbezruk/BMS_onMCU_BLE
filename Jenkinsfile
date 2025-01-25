@@ -29,5 +29,11 @@ pipeline {
                 sh "./CI-CD/build/flash_hex.sh"
             }
         }
+        stage('Run BMS Integration tests') {
+            agent {label "jenkins-agent"}
+            steps {
+                sh "Integration_Tests/run_ITs.sh"
+            }
+        }
     }
 }

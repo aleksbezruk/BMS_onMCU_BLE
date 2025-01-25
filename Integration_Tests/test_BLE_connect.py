@@ -21,8 +21,8 @@ def test_find_bms():
     pytest.ADAPTER.set_callback_on_scan_start(lambda: print("Scan started."))
     pytest.ADAPTER.set_callback_on_scan_stop(lambda: print("Scan complete."))
     pytest.ADAPTER.set_callback_on_scan_found(lambda peripheral: print(f"Found {peripheral.identifier()} [{peripheral.address()}]"))
-    # Scan for 5 seconds
-    pytest.ADAPTER.scan_for(5000)
+    # Scan for 10 seconds
+    pytest.ADAPTER.scan_for(10000)
     peripherals = pytest.ADAPTER.scan_get_results()
     is_bms_found = False
     for peripheral in peripherals:
