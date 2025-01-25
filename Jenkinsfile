@@ -32,10 +32,7 @@ pipeline {
         stage('Run BMS Integration tests') {
             agent {label "jenkins-agent"}
             steps {
-                sh "pytest --version"
-                sh "cd ./Integration_Tests/"
-                sh "./run_ITs.sh"
-                sh "cd ../" // return back to working directory after tests
+                sh "./Integration_Tests/run_ITs.sh"
             }
         }
     }

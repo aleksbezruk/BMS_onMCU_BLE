@@ -3,6 +3,9 @@
 GREEN='\033[0;32m'
 RED='\033[0;31m'
 
+cd ./Integration_Tests
+
+pytest --version
 pytest -s ./test_BLE_scan.py
 RETURN=$?
 if [ $RETURN -eq 0 ];
@@ -57,4 +60,6 @@ printf "${GREEN}All tests PASSED\n"
 printf "${GREEN}===================================\n"
 printf "${GREEN}===================================\n"
 
+# return back to working directory after tests
+cd ../
 exit 0
