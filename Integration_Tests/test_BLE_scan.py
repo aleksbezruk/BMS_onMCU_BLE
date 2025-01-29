@@ -1,5 +1,6 @@
 import simplepyble
 import pytest
+import time
 
 pytest.ADAPTER = {}
 pytest.BMS = {}
@@ -21,6 +22,8 @@ def test_find_bms():
     pytest.ADAPTER.set_callback_on_scan_start(lambda: print("Scan started."))
     pytest.ADAPTER.set_callback_on_scan_stop(lambda: print("Scan complete."))
     pytest.ADAPTER.set_callback_on_scan_found(lambda peripheral: print(f"Found {peripheral.identifier()} [{peripheral.address()}]"))
+    time.sleep(40)
+
     # Scan for 15 seconds
     pytest.ADAPTER.scan_for(15000)
     peripherals = pytest.ADAPTER.scan_get_results()

@@ -151,4 +151,5 @@ The Job is already built-in in Jenkins server out of the box.
 > - $ pip3 install simplepyble --break-system-packages ; <br>
 > - there is also a way to build simplepyble from Source code: https://github.com/simpleble/simpleble ; <br>
 > run ITs' shell script Jenkins job: <br>
-> - $ sh "Integration_Tests/run_ITs.sh"
+> - $ sh "Integration_Tests/run_ITs.sh" ; <br>
+> - to close used UDP port -> $ fuser -k -n udp 7701 .

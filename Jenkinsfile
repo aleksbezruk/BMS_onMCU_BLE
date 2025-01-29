@@ -32,7 +32,7 @@ pipeline {
         stage('Run BMS Integration tests') {
             agent {label "jenkins-agent"}
             steps {
-                sh "./Integration_Tests/run_ITs.sh"
+                sh "./Integration_Tests/run_ITs.sh & ../../qtools/bin/qspy -u 7701 -c /dev/ttyACM0 -b 115200"
             }
         }
     }
