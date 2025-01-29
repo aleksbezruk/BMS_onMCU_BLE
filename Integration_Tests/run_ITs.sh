@@ -78,6 +78,7 @@ printf "${GREEN}===================================\n"
 # Stop QSPY logging
 pkill qspy
 fuser -k -n udp 7701  # close UDP port
+sleep 5
 
 # return back to working directory after tests
 cd ../
