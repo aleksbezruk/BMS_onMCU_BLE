@@ -5,6 +5,10 @@ RED='\033[0;31m'
 
 cd ./Integration_Tests
 
+# Start QSPY
+# sh "./start_qspy.sh" &
+# sleep 5
+
 # Run tests suit
 pytest --version
 pyocd reset --target cy8c6xx7_nosmif --uid 1714186503068400 # reset/boot target before run tests

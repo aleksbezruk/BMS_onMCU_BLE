@@ -32,15 +32,15 @@ pipeline {
         stage('Run BMS Integration tests') {
             agent {label "jenkins-agent"}
             steps {
-                // sh "./Integration_Tests/run_ITs_qspy.sh"
-                parallel(
-                    qspy: {
-                        sh "./Integration_Tests/start_qspy.sh"
-                    },
-                    tests: {
-                        sh "./Integration_Tests/run_ITs.sh"
-                    }
-                )
+                sh "./Integration_Tests/run_ITs_qspy.sh"
+                // parallel(
+                //     qspy: {
+                //         sh "./Integration_Tests/start_qspy.sh"
+                //     },
+                //     tests: {
+                //         sh "./Integration_Tests/run_ITs.sh"
+                //     }
+                // )
             }
         }
     }
