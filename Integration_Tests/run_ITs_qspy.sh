@@ -1,5 +1,5 @@
 #!/bin/bash
-nice -n 10 sh "./Integration_Tests/start_qspy.sh" &
+nice -n 1 sh "./Integration_Tests/start_qspy.sh" &
 nice -n 11 sh "./Integration_Tests/run_ITs.sh" &
 process_id=$!
 echo "PID: $process_id"
