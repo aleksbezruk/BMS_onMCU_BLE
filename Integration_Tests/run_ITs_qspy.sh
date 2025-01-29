@@ -1,6 +1,6 @@
 #!/bin/bash
-sh "./Integration_Tests/start_qspy.sh" &
-sh "./Integration_Tests/run_ITs.sh" &
+nice -n 10 sh "./Integration_Tests/start_qspy.sh" &
+nice -n 11 sh "./Integration_Tests/run_ITs.sh" &
 process_id=$!
 echo "PID: $process_id"
 wait $process_id
