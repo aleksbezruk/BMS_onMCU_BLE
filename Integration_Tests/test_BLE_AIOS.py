@@ -108,3 +108,4 @@ def test_disconnect_bms():
     pytest.BMS.disconnect()
     assert pytest.BMS.is_connected() == False, "BLE disconnect failed"
     print("Successfully disconnected.")
+    time.sleep(40) # for synchronization purpose
