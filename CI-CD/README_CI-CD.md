@@ -125,6 +125,8 @@ The Job is already built-in in Jenkins server out of the box.
 > - $ PATH=$PATH:$HOME/.local/bin ; <br> 
 > - $ pip3 install -U pytest --break-system-packages ; <br>
 > - $ pip install pytest-dependency --break-system-packages ; <br>
+> - $ pip install pytest-repeat --break-system-packages ; <br>
+> - for more details also see https://pypi.org/project/pytest-repeat/ ; <br>
 > bring-up BLE stack on RPI4B side: <br>
 > - check BlueZ version: $ bluetoothctl --version <br> ;
 > - $ bluetoothctl -> open BLE manager & use cmds loke 'help', 'list'->list of BLE controllers ; <br>

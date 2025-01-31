@@ -16,13 +16,14 @@ def test_open_adapter():
     choice = 0
     pytest.ADAPTER = adapters[choice]
     print(f"Selected adapter: {pytest.ADAPTER.identifier()} [{pytest.ADAPTER.address()}]")
-
-@pytest.mark.dependency(depends=["test_open_adapter"], name="test_find_bms")
-def test_find_bms():
-    print("-------- test_find_bms ------------")
     pytest.ADAPTER.set_callback_on_scan_start(lambda: print("Scan started."))
     pytest.ADAPTER.set_callback_on_scan_stop(lambda: print("Scan complete."))
     pytest.ADAPTER.set_callback_on_scan_found(lambda peripheral: print(f"Found {peripheral.identifier()} [{peripheral.address()}]"))
+
+@pytest.mark.dependency(depends=["test_open_adapter"], name="test_find_bms")
+@pytest.mark.repeat(2)
+def test_find_bms():
+    print("-------- test_find_bms ------------")
     # Scan for 15 seconds
     pytest.ADAPTER.scan_for(15000)
     peripherals = pytest.ADAPTER.scan_get_results()
@@ -57,6 +58,7 @@ def test_discover_bas():
     assert is_BAS_char_discovered == True, "BAS Battery Level Characteristic isn't discovered"
 
 @pytest.mark.dependency(depends=["test_discover_bas"], name="test_read_bas")
+@pytest.mark.repeat(2)
 def test_read_bas():
     print("-------- test_read_bas ------------")
     service_uuid, characteristic_uuid = pytest.service_characteristic_pair[0]
@@ -66,6 +68,7 @@ def test_read_bas():
     assert (batLevel > 0 and batLevel <= 100) == True, "Battery percent level is out of range"
 
 @pytest.mark.dependency(depends=["test_read_bas"], name="test_notify_bas")
+@pytest.mark.repeat(3)
 def test_notify_bas():
     print("-------- test_notify_bas ------------")
     service_uuid, characteristic_uuid = pytest.service_characteristic_pair[0]
