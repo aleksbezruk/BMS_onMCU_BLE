@@ -1,6 +1,7 @@
 import simplepyble
 import pytest
 import time
+from testfixture_general import testfixture_resetDUT
 
 pytest.ADAPTER = {}
 pytest.BMS = {}
@@ -16,6 +17,7 @@ def test_open_adapter():
     pytest.ADAPTER = adapters[choice]
     print(f"Selected adapter: {pytest.ADAPTER.identifier()} [{pytest.ADAPTER.address()}]")
     print("Preparing to test. It may takes up to 1 minute ...")
+    testfixture_resetDUT()
     time.sleep(40)  # for synchronization purpose
     pytest.ADAPTER.set_callback_on_scan_start(lambda: print("Scan started."))
     pytest.ADAPTER.set_callback_on_scan_stop(lambda: print("Scan complete."))
