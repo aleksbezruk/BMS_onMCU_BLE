@@ -38,9 +38,9 @@
                                         <Field>
                                             <FieldProperties>
                                                 <Property id="Name" value="Name"/>
-                                                <Property id="Value" value="BMS_PSOC63"/>
+                                                <Property id="Value" value="BMS_MCU"/>
                                                 <Property id="Format" value="f_utf8s"/>
-                                                <Property id="ByteLength" value="10"/>
+                                                <Property id="ByteLength" value="7"/>
                                             </FieldProperties>
                                         </Field>
                                     </Fields>
@@ -1066,7 +1066,7 @@
         <General>
             <Property id="DeviceAddress" value="00A050-000000"/>
             <Property id="MacGeneratedAddress" value="false"/>
-            <Property id="DeviceName" value="BMS_PSOC63"/>
+            <Property id="DeviceName" value="BMS_MCU"/>
             <Property id="Appearance" value="3264"/>
             <Property id="HostTxPowerLevel" value="Pos_0"/>
             <Property id="EnableRpaTimeout" value="false"/>

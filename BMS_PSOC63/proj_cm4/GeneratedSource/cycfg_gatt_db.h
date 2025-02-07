@@ -8,7 +8,7 @@
 * Bluetooth Configurator 2.90.0.2529
 *
 ********************************************************************************
-* Copyright 2024 Cypress Semiconductor Corporation (an Infineon company) or
+* Copyright 2025 Cypress Semiconductor Corporation (an Infineon company) or
 * an affiliate of Cypress Semiconductor Corporation.
 * SPDX-License-Identifier: Apache-2.0
 *
@@ -52,7 +52,7 @@
 /* Characteristic Device Name */
 #define HDLC_GAP_DEVICE_NAME                                            0x0002
 #define HDLC_GAP_DEVICE_NAME_VALUE                                      0x0003
-#define MAX_LEN_GAP_DEVICE_NAME                                         0x000A
+#define MAX_LEN_GAP_DEVICE_NAME                                         0x0007
 /* Characteristic Appearance */
 #define HDLC_GAP_APPEARANCE                                             0x0004
 #define HDLC_GAP_APPEARANCE_VALUE                                       0x0005

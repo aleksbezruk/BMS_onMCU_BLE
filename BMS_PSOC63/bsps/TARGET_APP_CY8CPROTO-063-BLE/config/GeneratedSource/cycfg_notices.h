@@ -10,7 +10,7 @@
  * mtb-pdl-cat1 3.11.0.34443
  *
  *******************************************************************************
- * Copyright 2024 Cypress Semiconductor Corporation (an Infineon company) or
+ * Copyright 2025 Cypress Semiconductor Corporation (an Infineon company) or
  * an affiliate of Cypress Semiconductor Corporation.
  * SPDX-License-Identifier: Apache-2.0
  *
@@ -51,4 +51,3 @@ extern "C" {
 #endif /* defined(__cplusplus) */
 
 #endif /* CYCFG_NOTICES_H */
-// #warning "(CYBLE-416045-02/CYBLE-416045-02-device: 12-bit SAR ADC) Noise and offset can cause unsigned results to underflow (wrap-around to +ve full scale) when Vneg is set to Vssa or External."

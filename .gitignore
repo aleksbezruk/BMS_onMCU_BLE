@@ -5,6 +5,11 @@
 *.css
 *.png
 *.pyc
+*.svg
+*.js
+*.bin
 
 # ignore folders
 doxygen/
+docs/
+mtb_shared/

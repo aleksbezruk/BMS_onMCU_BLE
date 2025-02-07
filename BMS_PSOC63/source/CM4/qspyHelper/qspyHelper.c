@@ -54,26 +54,13 @@ static void QS_initTimer_(void)
     NVIC_SetPriority(SysTick_IRQn, 1U);
 }
 
-void SysTick_Handler(void) 
+void vApplicationTickHook(void) 
 {
     volatile uint32_t tmp;
 
     tmp = SysTick->CTRL; // clear CTRL_COUNTFLAG
     (void) tmp;
     QS_tickTime_ += QS_tickPeriod_; // account for the clock rollover
-
-    // RTOS tick
-    portDISABLE_INTERRUPTS();
-    {
-        /* Increment the RTOS tick. */
-        if( xTaskIncrementTick() != pdFALSE )
-        {
-            /* A context switch is required.  Context switching is performed in
-             * the PendSV interrupt.  Pend the PendSV interrupt. */
-            portNVIC_INT_CTRL_REG = portNVIC_PENDSVSET_BIT;
-        }
-    }
-    portENABLE_INTERRUPTS();
 }
 
 /**

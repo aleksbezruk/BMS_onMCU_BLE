@@ -329,7 +329,7 @@
                         <Param id="chanIdEn" value="false"/>
                         <Param id="clk" value="CY_SAR_CLK_PERI"/>
                         <Param id="clrTrRd" value="false"/>
-                        <Param id="diff_format" value="CY_SAR_DIFFERENTIAL_UNSIGNED"/>
+                        <Param id="diff_format" value="CY_SAR_DIFFERENTIAL_SIGNED"/>
                         <Param id="fifo" value="false"/>
                         <Param id="inFlash" value="true"/>
                         <Param id="inj_avg" value="false"/>
@@ -347,7 +347,7 @@
                         <Param id="sample_rate" value="200000"/>
                         <Param id="scanCnt" value="false"/>
                         <Param id="scanCntIntr" value="false"/>
-                        <Param id="se_format" value="CY_SAR_SINGLE_ENDED_UNSIGNED"/>
+                        <Param id="se_format" value="CY_SAR_SINGLE_ENDED_SIGNED"/>
                         <Param id="soc_en" value="false"/>
                         <Param id="trOut" value="false"/>
                         <Param id="trTimer" value="false"/>
