@@ -1341,6 +1341,7 @@ class QSpy:
         QSpy._sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
         QSpy._sock.setblocking(0) # NON-BLOCKING socket
         try:
+            print("bind  _local_port: " "%d"%(QSpy._local_port))
             QSpy._sock.bind(("0.0.0.0", QSpy._local_port))
             #print("bind: ", ("0.0.0.0", QSpy._local_port))
         except Exception:
@@ -1557,12 +1558,15 @@ class QSpy:
 
     @staticmethod
     def _sendTo(packet, str=None):
+        print("_tx_seq: " "%d"%(QSpy._tx_seq))
         tx_packet = bytearray([QSpy._tx_seq & 0xFF])
         tx_packet.extend(packet)
         if str is not None:
             tx_packet.extend(bytes(str, "utf-8"))
             tx_packet.extend(b"\0") # zero-terminate
         try:
+            print("_sock.sendto: " "%s, %d"%(QSpy._host_addr[0], QSpy._host_addr[1]))
+            print("tx_packet: " "%s"%(tx_packet))
             QSpy._sock.sendto(tx_packet, QSpy._host_addr)
         except Exception:
             QView._showerror("UDP Socket Error",

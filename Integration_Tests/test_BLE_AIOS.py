@@ -109,3 +109,5 @@ def test_disconnect_bms():
     print("Successfully disconnected.")
     print("Wait some time before shutdown test... It may takes up to 1 minute.")
     time.sleep(40) # for synchronization purpose
+
+# END OF FILE
