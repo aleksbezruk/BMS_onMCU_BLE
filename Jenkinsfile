@@ -9,7 +9,7 @@ pipeline {
             agent {label "jenkins-controller"}
             options {
                 // Timeout counter starts BEFORE agent is allocated
-                timeout(time: 100, unit: 'SECONDS')
+                timeout(time: 200, unit: 'SECONDS')
             }
             steps {
                 sh "./CI-CD/build/rebuild_debug.sh"
