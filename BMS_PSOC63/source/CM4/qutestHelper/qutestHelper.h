@@ -2,7 +2,7 @@
  * @file  qutestHelper.h
  * @brief qutestHelper functions definitions
  * 
- * @version 0.1.0
+ * @version 0.4.0
  */
 
 #ifndef QUTESTHELPER_MODULE_H

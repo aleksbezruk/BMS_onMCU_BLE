@@ -3,7 +3,7 @@
  * 
  * @brief Helper functions for QSPY & QUtest framework. Also includes API for Application
  * 
- * @version 0.1.0
+ * @version 0.4.0
  */
 
 #ifndef QSPYHELPER_MODULE_H
@@ -16,13 +16,13 @@
 // Definitions
 ///////////////////
 
-/** QSPY status */
+/*! QSPY status */
 typedef enum {
     QSPY_STATUS_ERROR,
     QSPY_STATUS_SUCCESS
 } qspy_status_t;
 
-/** Application-specific trace records */
+/*! Application-specific trace records */
 enum AppRecords { 
     MAIN = QS_USER,
     UTEST,
@@ -33,7 +33,7 @@ enum AppRecords {
     BLE_AIOS
 };
 
-/** QSPY/Qview cmds */
+/*! QSPY/Qview cmds */
 enum {
     QS_CMD_RED_LED,
     QS_CMD_UT_FUN,
@@ -45,6 +45,12 @@ enum {
     QS_CMD_BLE_STOP_ADV,
     QS_CMD_MAX
 };
+
+/*! QSPY receive buffer status */
+typedef enum {
+    QSPY_RX_EMPTY,
+    QSPY_RX_NOT_EMPTY
+} QSPY_rx_status_t;
 
 ///////////////////
 // API 
@@ -61,6 +67,7 @@ QSTimeCtr QS_onGetTime(void);
 void QS_addUsrRecToDic(enum_t const rec);
 void QS_initGlbFilters(void);
 void QS_rxCallback(uint8_t *data, uint16_t len);
+QSPY_rx_status_t QS_get_rxStatus(void);
 
 #endif // QSPYHELPER_MODULE_H
 

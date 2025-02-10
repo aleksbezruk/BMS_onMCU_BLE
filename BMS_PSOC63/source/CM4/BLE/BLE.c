@@ -58,7 +58,7 @@
  *                      5.2.4 Set scan response data (TX power lvl) <br>
  *                  5.3 GATT settings (via bt-configurator) <br> 
  *                      5.3.1 Starting from simple Battery Service (BAS) <br>
- *                      5.3.2 TODO: Add standard SIG or custom service that will satisfy BMS use case <br>
+ *                      5.3.2 Add standard SIG or custom service that will satisfy BMS use case -> AIOS <br>
  *                  5.4 Stack initialization  <br>
  *                      Note: BLE Controller is implemented as part of prebuild image <br>
  *                      'psoc6cm0p_bless.bin' as described above. So according to <br>
@@ -85,13 +85,13 @@
  *                          - bless_interrupt_IRQHandler ;
  *                          - Looks like the implementation of the IRQ handler is hidden inside CMOp prebuild image . <br>
  *                   5.6 Application callbacks <br> 
- *                      TODO: inplement APP callbacks <br> 
+ *                      Inplement APP callbacks - advertising, connections, GATT etc. <br> 
  *
  *               ### 6. BLE security <br>
  *                      6.1 For the first revisions the security feature is disabled <br>
  *                      6.2 "Enable RPA timeout" -> false
  * 
- * @version 0.1.0
+ * @version 0.4.0
  */
 
 #include "BLE.h"

@@ -3,7 +3,7 @@
  *
  * @brief Defines BMS application's events.
  *
- * @version 0.1.0
+ * @version 0.4.0
  */
 
 #ifndef EVENTS_MODULE_H

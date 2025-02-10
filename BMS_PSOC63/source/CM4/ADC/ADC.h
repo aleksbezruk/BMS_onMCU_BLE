@@ -3,7 +3,7 @@
  *
  * @brief Analog to digital converter module functions declaration.
  *
- * @version 0.1.0
+ * @version 0.4.0
  */
 
 #ifndef ADC_MODULE_H

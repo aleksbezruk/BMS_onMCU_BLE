@@ -19,7 +19,7 @@
  *                   - mtb-hal-cat1/release-v2.6.1/include_pvt/cyhal_analog_common.h . <br>
  *               2.2 Cypress ModToolBox is used to config ADC peripheral (pins, clocks, etc) .
  * 
- * @version 0.1.0
+ * @version 0.4.0
  */
 
 #include "cyhal_adc.h"

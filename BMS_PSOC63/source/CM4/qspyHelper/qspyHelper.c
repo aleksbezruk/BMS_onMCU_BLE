@@ -4,7 +4,7 @@
  * @brief Implements helper functions for QSPY & QUtest framework. 
  *        Also includes API for Application.
  * 
- * @version 0.1.0
+ * @version 0.4.0
  */
 
 #include "cy_pdl.h"
@@ -339,6 +339,25 @@ void QS_addUsrRecToDic(enum_t const rec)
 void QS_initGlbFilters(void) 
 {
     QS_GLB_FILTER(QS_ALL_RECORDS);   // enable all records
+}
+
+/**
+ * @brief Get QSPY recive buffer status
+ * 
+ * @param None
+ * 
+ * @retval see @QSPY_rx_status_t
+ */
+QSPY_rx_status_t QS_get_rxStatus(void)
+{
+    __disable_irq();
+    uint16_t nFree = QS_rxGetNfree();
+    __enable_irq();
+    if (nFree == (sizeof(qsRxBuf) - 1U)) {
+        return QSPY_RX_EMPTY;
+    } else {
+        return QSPY_RX_NOT_EMPTY;
+    }
 }
 
 /******************************** END OF FILE **********************************************************************/

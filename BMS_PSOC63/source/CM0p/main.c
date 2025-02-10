@@ -3,7 +3,7 @@
 *
 * @brief This is the source code for CM0+ in the the Dual CPU Application.
 *
-* @version 0.1.0
+* @version 0.4.0
 */
 
 #include "cy_pdl.h"
