@@ -67,10 +67,10 @@ def test_read_switch_state():
     print("Switches state = %d" %(swState))
     assert swState == 0, "All switches should be disabled at start up"
 
-@pytest.mark.dependency(depends=["test_read_switch_state"], name="test_enable_switch")
+@pytest.mark.dependency(depends=["test_read_switch_state"], name="test_enable_disable_switch")
 @pytest.mark.repeat(2)
-def test_enable_switch():
-    print("-------- test_enable_switch ------------")
+def test_enable_disable_switch():
+    print("-------- test_enable_disable_switch ------------")
     # Write the content to the characteristic
     # Note: `write_request` required the payload to be presented as a bytes object.
     service_uuid, characteristic_uuid = pytest.service_characteristic_pair[0]
@@ -84,14 +84,7 @@ def test_enable_switch():
     print("Switches state notif = %d" %(swState[0]))
     assert swState[0] == 0x01, "Discharge switch was not enabled"
 
-@pytest.mark.dependency(depends=["test_enable_switch"], name="test_disable_switches")
-@pytest.mark.repeat(2)
-def test_disable_switches():
     print("-------- test_disable_switches ------------")
-    # Write the content to the characteristic
-    # Note: `write_request` required the payload to be presented as a bytes object.
-    service_uuid, characteristic_uuid = pytest.service_characteristic_pair[0]
-
     # Wait notification response from DUT
     swState = []
     pytest.BMS.notify(service_uuid, characteristic_uuid, lambda data: swState.append(data[0]))
@@ -101,7 +94,7 @@ def test_disable_switches():
     print("Switches state notif = %d" %(swState[0]))
     assert swState[0] == 0x00, "Switches was not disabled"
 
-@pytest.mark.dependency(depends=["test_disable_switches"], name="test_disconnect_bms")
+@pytest.mark.dependency(depends=["test_enable_disable_switch"], name="test_disconnect_bms")
 def test_disconnect_bms():
     print("-------- test_disconnect_bms ------------")
     pytest.BMS.disconnect()
