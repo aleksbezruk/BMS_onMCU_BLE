@@ -5,6 +5,7 @@ import time
 pytest.ADAPTER = {}
 pytest.BMS = {}
 pytest.service_characteristic_pair = []
+pytest.AIOS_NUM_ITER = 2
 
 @pytest.mark.dependency(name="test_open_adapter")
 def test_open_adapter():
@@ -68,31 +69,35 @@ def test_read_switch_state():
     assert swState == 0, "All switches should be disabled at start up"
 
 @pytest.mark.dependency(depends=["test_read_switch_state"], name="test_enable_disable_switch")
-@pytest.mark.repeat(2)
 def test_enable_disable_switch():
     print("-------- test_enable_disable_switch ------------")
-    # Write the content to the characteristic
-    # Note: `write_request` required the payload to be presented as a bytes object.
-    service_uuid, characteristic_uuid = pytest.service_characteristic_pair[0]
+    num_iter = 0
+    while num_iter < pytest.AIOS_NUM_ITER:
+        num_iter += 1
+        print("AIOS switches test, iteration #%d"%(num_iter))
+        # Write the content to the characteristic
+        # Note: `write_request` required the payload to be presented as a bytes object.
+        service_uuid, characteristic_uuid = pytest.service_characteristic_pair[0]
 
-    # Wait notification response from DUT
-    swState = []
-    pytest.BMS.notify(service_uuid, characteristic_uuid, lambda data: swState.append(data[0]))
-    bytes_array = str.encode("1000")
-    pytest.BMS.write_request(service_uuid, characteristic_uuid, bytes_array)
-    time.sleep(60)
-    print("Switches state notif = %d" %(swState[0]))
-    assert swState[0] == 0x01, "Discharge switch was not enabled"
+        # Wait notification response from DUT
+        print("-------- test_enable_switches ------------")
+        swState = []
+        pytest.BMS.notify(service_uuid, characteristic_uuid, lambda data: swState.append(data[0]))
+        bytes_array = str.encode("1000")
+        pytest.BMS.write_request(service_uuid, characteristic_uuid, bytes_array)
+        time.sleep(60)
+        print("Switches state notif = %d" %(swState[0]))
+        assert swState[0] == 0x01, "Discharge switch was not enabled"
 
-    print("-------- test_disable_switches ------------")
-    # Wait notification response from DUT
-    swState = []
-    pytest.BMS.notify(service_uuid, characteristic_uuid, lambda data: swState.append(data[0]))
-    bytes_array = str.encode("0000")
-    pytest.BMS.write_request(service_uuid, characteristic_uuid, bytes_array)
-    time.sleep(60)
-    print("Switches state notif = %d" %(swState[0]))
-    assert swState[0] == 0x00, "Switches was not disabled"
+        print("-------- test_disable_switches ------------")
+        # Wait notification response from DUT
+        swState = []
+        pytest.BMS.notify(service_uuid, characteristic_uuid, lambda data: swState.append(data[0]))
+        bytes_array = str.encode("0000")
+        pytest.BMS.write_request(service_uuid, characteristic_uuid, bytes_array)
+        time.sleep(60)
+        print("Switches state notif = %d" %(swState[0]))
+        assert swState[0] == 0x00, "Switches was not disabled"
 
 @pytest.mark.dependency(depends=["test_enable_disable_switch"], name="test_disconnect_bms")
 def test_disconnect_bms():
