@@ -362,6 +362,8 @@ void vApplicationIdleHook(void)
 {
      /** Handle QSPY communication */
      QS_onIdle();
+    /** temporary solution for LPM debug purposes, @todo: fix */
+     QS_FLUSH();
 
     /** Enter Sleep mode */
     LP_periph_ready_t periphStatus = LP_getPeriphStatus();
