@@ -37,9 +37,28 @@
  *                                  #define CY_CFG_PWR_MODE_ACTIVE 0x04UL       <br>
  *                                  #define CY_CFG_PWR_MODE_SLEEP 0x08UL        <br>
  *                                  #define CY_CFG_PWR_MODE_DEEPSLEEP 0x10UL    <br>
- *                          - #define CY_CFG_PWR_MODE_SLEEP - looks like setup CPU core Sleep mode; <br>
- *                          - #define CY_CFG_PWR_MODE_DEEPSLEEP -> ??? ; <br>
- *                          - #define DEEPSLEEP_ENABLE -> Local definition for the vApplicationSleep() callback ; <br>
+ *                          - #define CY_CFG_PWR_MODE_SLEEP - looks like setup CPU core Sleep mode ( see cyhal_syspm_sleep() ); <br>
+ *                          - #define CY_CFG_PWR_MODE_DEEPSLEEP: <br>
+ *                              - Core regulator : <br>
+ *                                  - @todo Normal Current LDO ??? ; <br>
+ *                                  - @todo Minimum Current LDO ??? ; <br>
+ *                                  - @todo Normal Current Buck ??? ; <br>
+ *                                  - @todo Minimum Current Buck ??? ; <br>
+ *                              - System Active power mode : <br>
+ *                                  - LP - is the default operating mode of the device after reset and provides maximum system performance. ; <br>
+ *                                  - @todo ULP Ultra Low Power (ULP) mode is identical to LP mode with a performance tradeoff made to achieve lower <br>
+ *                                    system current. This tradeoff lowers the core operating voltage, which then requires reduced operating clock
+ *                                    frequency and limited high-frequency clock sources. ; <br>
+ *                              - CY_CFG_PWR_DEEPSLEEP_LATENCY / CY_CFG_PWR_DEEPSLEEP_LATENCY-> ??? ; <br>
+ *                              - @todo CYHAL_SYSPM_RSLT_DEEPSLEEP_LOCKED -> ??? ; <br>
+ *                              - cyhal_syspm_tickless_deepsleep() -> _cyhal_syspm_deepsleep_internal() -> Cy_SysPm_CpuEnterDeepSleep(CY_SYSPM_WAIT_FOR_INTERRUPT) ; <br>
+ *                              - @todo wake up sources & mechanism -> ??? ; <br>
+ *                              - @todo SCB operation in DPSLP ???
+ *                          - #define DEEPSLEEP_ENABLE -> Local 'CY_driver' definition for the vApplicationSleep() callback ; <br>
+ * 
+ *                ### 3. @todo Define BMS system parameters that affects power consumption
+ *                    3.1 @todo Advertising interval ???
+ *                    3.2 @todo ADC measurements duration ???
  * 
  * @version 0.4.0
  */

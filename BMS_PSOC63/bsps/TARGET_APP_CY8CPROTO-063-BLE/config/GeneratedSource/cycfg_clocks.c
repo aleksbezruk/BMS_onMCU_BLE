@@ -49,7 +49,7 @@ void init_cycfg_clocks(void)
     Cy_SysClk_PeriphSetDivider(CY_SYSCLK_DIV_16_BIT, 0U, 5U);
     Cy_SysClk_PeriphEnableDivider(CY_SYSCLK_DIV_16_BIT, 0U);
     Cy_SysClk_PeriphDisableDivider(CY_SYSCLK_DIV_24_5_BIT, 0U);
-    Cy_SysClk_PeriphSetFracDivider(CY_SYSCLK_DIV_24_5_BIT, 0U, 107U, 16U);
+    Cy_SysClk_PeriphSetFracDivider(CY_SYSCLK_DIV_24_5_BIT, 0U, 26U, 4U);
     Cy_SysClk_PeriphEnableDivider(CY_SYSCLK_DIV_24_5_BIT, 0U);
 }
 void reserve_cycfg_clocks(void)
