@@ -30,9 +30,16 @@ typedef enum {
     LP_PERIPH_READY
 } LP_periph_ready_t;
 
+/** Low Power module operations status */
+typedef enum {
+    LP_INIT_STATUS_OK,
+    LP_INIT_STATUS_FAIL
+} LP_status_t;
+
 ///////////////////////
 // API
 ///////////////////////
+LP_status_t LP_init(void);
 void LP_setMode(LP_modes_t mode);
 void LP_enterSleep(void);
 LP_periph_ready_t LP_getPeriphStatus(void);

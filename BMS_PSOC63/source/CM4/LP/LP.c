@@ -14,7 +14,7 @@
  *                          - 'WFI' -> sleep <br>
  *                    b. configUSE_TICKLESS_IDLE=2 : User defined tickless idle functionality : <br>
  *                      - mtb_shared/abstraction-rtos/release-v1.8.2/source/COMPONENT_FREERTOS/cyabs_freertos_helpers.c -> <br> 
- *                          portSUPPRESS_TICKS_AND_SLEEP() macro ; <br>
+ *                          portSUPPRESS_TICKS_AND_SLEEP() macro -> vApplicationSleep() ; <br>
  *                      - #define DEEPSLEEP_ENABLE ; <br>
  *                1.3 mtb_shared/freertos/release-v10.5.002/Source/tasks.c ; <br>
  *                1.4 tasks.c -> prvGetExpectedIdleTime() ; <br>
@@ -46,14 +46,22 @@
  *                                  - @todo Minimum Current Buck ??? ; <br>
  *                              - System Active power mode : <br>
  *                                  - LP - is the default operating mode of the device after reset and provides maximum system performance. ; <br>
- *                                  - @todo ULP Ultra Low Power (ULP) mode is identical to LP mode with a performance tradeoff made to achieve lower <br>
+ *                                  - ULP Ultra Low Power (ULP) mode is identical to LP mode with a performance tradeoff made to achieve lower <br>
  *                                    system current. This tradeoff lowers the core operating voltage, which then requires reduced operating clock
  *                                    frequency and limited high-frequency clock sources. ; <br>
- *                              - CY_CFG_PWR_DEEPSLEEP_LATENCY / CY_CFG_PWR_DEEPSLEEP_LATENCY-> ??? ; <br>
+ *                              - CY_CFG_PWR_DEEPSLEEP_LATENCY / CY_CFG_PWR_DEEPSLEEP_LATENCY-> set DPSLP latency ; <br>
  *                              - @todo CYHAL_SYSPM_RSLT_DEEPSLEEP_LOCKED -> ??? ; <br>
  *                              - cyhal_syspm_tickless_deepsleep() -> _cyhal_syspm_deepsleep_internal() -> Cy_SysPm_CpuEnterDeepSleep(CY_SYSPM_WAIT_FOR_INTERRUPT) ; <br>
- *                              - @todo wake up sources & mechanism -> ??? ; <br>
- *                              - @todo SCB operation in DPSLP ???
+ *                              - wake up sources: BLE, LP timers, GPIO ; <br>
+ *                              - UART operation in DPSLP: <br>
+ *                                  - retention Enabled; <br>
+ *                                  - wake-up isn't available, so RX line should be configred for Input with IRQ on falling edge (START bit) ; <br>
+ *                                  - FW should re-eanble receiver after wake up ; <br>
+ *                              - SAR ADC is Off in DPSLP, so needed logic to de-init ADC before DPSLP & re-init after wake-up/before measurements <br>
+ *                              - @todo register callbacks before / after transition to DPDSLP: <br> 
+ *                                  - see \ref Cy_SysPm_CpuEnterDeepSleep() ; <br> 
+ *                                  - see \ref CY_SYSPM_BEFORE_TRANSITION, CY_SYSPM_AFTER_TRANSITION, cy_en_syspm_callback_mode_t ; <br>
+ *                                  - see \ref Cy_SysPm_RegisterCallback() ; <br>
  *                          - #define DEEPSLEEP_ENABLE -> Local 'CY_driver' definition for the vApplicationSleep() callback ; <br>
  * 
  *                ### 3. @todo Define BMS system parameters that affects power consumption
@@ -63,21 +71,63 @@
  * @version 0.4.0
  */
 
+#include <stdbool.h>
+
 #include "cy_pdl.h"
 #include "cyhal.h"
 #include "cybsp.h"
 
 #include "LP.h"
 #include "qspyHelper.h"
+#include "ADC.h"
+
+///////////////////////
+// Functions prototype
+///////////////////////
+static cy_en_syspm_status_t _beforeDeepSleepCallback(cy_stc_syspm_callback_params_t *callbackParams, cy_en_syspm_callback_mode_t mode);
 
 ///////////////////////
 // Private data
 ///////////////////////
 static volatile LP_modes_t _mode;
 
+static cy_stc_syspm_callback_params_t _beforeDeepSleepCallbackParams;
+static cy_stc_syspm_callback_t _pmBeforeDeepSlpCallback = {
+    .callback = _beforeDeepSleepCallback,
+    .type = CY_SYSPM_DEEPSLEEP,
+    .skipMode = CY_SYSPM_SKIP_CHECK_READY | CY_SYSPM_SKIP_CHECK_FAIL | CY_SYSPM_SKIP_AFTER_TRANSITION, // only before transition
+    .callbackParams = &_beforeDeepSleepCallbackParams,
+    .prevItm = NULL,    // for CY driver intranal usage
+    .nextItm = NULL,    // for CY driver intranal usage
+    .order = 0U
+};
+
 ///////////////////////
 // Code
 ///////////////////////
+
+LP_status_t LP_init(void)
+{
+    LP_status_t status = LP_INIT_STATUS_OK;
+
+    if (!Cy_SysPm_RegisterCallback(&_pmBeforeDeepSlpCallback)) {
+        status = LP_INIT_STATUS_FAIL;
+    }
+
+    return status;
+}
+
+static cy_en_syspm_status_t _beforeDeepSleepCallback(cy_stc_syspm_callback_params_t *callbackParams, cy_en_syspm_callback_mode_t mode)
+{
+    (void) callbackParams;
+
+    /** De-init ADC */
+    ADC_setState(false);
+    ADC_deinit();
+
+    return CY_SYSPM_SUCCESS;
+}
+
 /**
  * @brief Get BMS peripherals rediness status for Low Power mode
  * 

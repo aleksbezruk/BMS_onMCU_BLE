@@ -26,6 +26,8 @@ typedef enum {
 // Code
 ///////////////////////
 ADC_status_t ADC_init(void);
+void ADC_deinit(void);
+void ADC_setState(bool on_off);
 
 #endif  //ADC_MODULE_H
 

@@ -68,7 +68,13 @@
             "wiced_bt_uuid.h": "c",
             "cybsp.h": "c",
             "stdbool.h": "c",
-            "batteryservice.h": "c"
+            "batteryservice.h": "c",
+            "array": "cpp",
+            "compare": "cpp",
+            "functional": "cpp",
+            "tuple": "cpp",
+            "type_traits": "cpp",
+            "utility": "cpp"
         },
         "clangd.arguments": [
             "--query-driver=${config:modustoolbox.toolsPath}/gcc/bin/arm-none-eabi-gcc",

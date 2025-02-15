@@ -534,7 +534,7 @@
                         <Param id="backupSrc" value="VDDD"/>
                         <Param id="coreRegulator" value="CY_SYSPM_LDO_MODE_NORMAL"/>
                         <Param id="deepsleepLatency" value="0"/>
-                        <Param id="idlePwrMode" value="CY_CFG_PWR_MODE_SLEEP"/>
+                        <Param id="idlePwrMode" value="CY_CFG_PWR_MODE_DEEPSLEEP"/>
                         <Param id="pmicEnable" value="false"/>
                         <Param id="pwrMode" value="LDO_1_1"/>
                         <Param id="vBackupMv" value="2500"/>

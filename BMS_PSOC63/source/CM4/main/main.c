@@ -198,6 +198,12 @@ static void mainTask_(cy_thread_arg_t arg)
         CY_ASSERT(0);
     }
 
+    /** Init Low Power modes */
+    LP_status_t lpStatus = LP_init();
+    if (lpStatus != LP_INIT_STATUS_OK) {
+        CY_ASSERT(0);
+    }
+
     /** Set default state (OFF) for discharge control switch */
     MAIN_initDischargeSw();
     MAIN_setDischargeSw(MAIN_BMS_DISCHARGE_OFF);
