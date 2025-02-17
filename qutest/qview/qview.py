@@ -621,7 +621,7 @@ class QView:
 
     @staticmethod
     def _onTargetInfo(*args):
-        QSpy._sendTo(pack("<B", QSpy._TRGT_INFO))
+        QSpy._sendTo(pack("<B", QSpy._TRGT_INFO), enWakeup = True)
 
     @staticmethod
     def _onClearQspy(*args):
@@ -1429,9 +1429,9 @@ class QSpy:
             # (keep the poll0 loop running)
             if QView._reset_request:
                 QView._reset_request = False
-                QSpy._sendTo(pack("<B", QSpy._TRGT_RESET))
+                QSpy._sendTo(pack("<B", QSpy._TRGT_RESET), enWakeup = True)
             else:
-                QSpy._sendTo(pack("<B", QSpy._TRGT_INFO))
+                QSpy._sendTo(pack("<B", QSpy._TRGT_INFO), enWakeup = True)
 
             # switch to the regular polling...
             QSpy._after_id = QView._gui.after(QSpy._POLLI, QSpy._poll)
@@ -1557,7 +1557,7 @@ class QSpy:
 
 
     @staticmethod
-    def _sendTo(packet, str=None):
+    def _sendTo(packet, enWakeup = False, str=None):
         print("_tx_seq: " "%d"%(QSpy._tx_seq))
         tx_packet = bytearray([QSpy._tx_seq & 0xFF])
         tx_packet.extend(packet)
@@ -1565,6 +1565,16 @@ class QSpy:
             tx_packet.extend(bytes(str, "utf-8"))
             tx_packet.extend(b"\0") # zero-terminate
         try:
+            if enWakeup == True:
+                print("Send Traget wakeup")
+                wakeUp_packet = pack("<BBIII", QSpy._TRGT_COMMAND,
+                                     255, 0xAAAAAAAA, 0xAAAAAAAA, 0xAAAAAAAA)
+                tx_wakeUp_packet = bytearray([QSpy._tx_seq & 0xFF])
+                tx_wakeUp_packet.extend(wakeUp_packet)
+                QSpy._sock.sendto(tx_wakeUp_packet, QSpy._host_addr)
+                QSpy._tx_seq += 1
+            else:
+                print("No Traget wakeup")
             print("_sock.sendto: " "%s, %d"%(QSpy._host_addr[0], QSpy._host_addr[1]))
             print("tx_packet: " "%s"%(tx_packet))
             QSpy._sock.sendto(tx_packet, QSpy._host_addr)
@@ -1642,7 +1652,7 @@ HOME_DIR = None   ##< home directory of the customization script
 ## @brief Send the RESET packet to the Target
 def reset_target(*args):
     if QView._have_info:
-        QSpy._sendTo(pack("<B", QSpy._TRGT_RESET))
+        QSpy._sendTo(pack("<B", QSpy._TRGT_RESET), enWakeup = True)
     else:
         QView._reset_request = True
 
@@ -1651,16 +1661,16 @@ def reset_target(*args):
 def command(cmdId, param1 = 0, param2 = 0, param3 = 0):
     if isinstance(cmdId, int):
         QSpy._sendTo(pack("<BBIII", QSpy._TRGT_COMMAND,
-                         cmdId, param1, param2, param3))
+                         cmdId, param1, param2, param3), enWakeup = True)
     else:
         QSpy._sendTo(pack("<BBIII", QSpy._QSPY_SEND_COMMAND,
-                         0, param1, param2, param3),
-            cmdId) # add string command ID to end
+                         0, param1, param2, param3), enWakeup = True,
+            str = cmdId) # add string command ID to end
 
 ## @brief trigger system clock tick in the Target
 # @sa qutest_dsl.tick()
 def tick(tick_rate = 0):
-    QSpy._sendTo(pack("<BB", QSpy._TRGT_TICK, tick_rate))
+    QSpy._sendTo(pack("<BB", QSpy._TRGT_TICK, tick_rate), enWakeup = True)
 
 ## @brief peeks data in the Target
 # @sa qutest_dsl.peek()
@@ -1743,7 +1753,7 @@ def glb_filter(*args):
 
     QSpy._sendTo(pack("<BBQQ", QSpy._TRGT_GLB_FILTER, 16,
                       QView._glb_filter & 0xFFFFFFFFFFFFFFFF,
-                      QView._glb_filter >> 64))
+                      QView._glb_filter >> 64), enWakeup = True)
     QView._updateMenus()
 
 ## @brief Set/clear the Local-Filter in the Target.
@@ -1780,7 +1790,7 @@ def loc_filter(*args):
 
     QSpy._sendTo(pack("<BBQQ", QSpy._TRGT_LOC_FILTER, 16,
                       QView._loc_filter & 0xFFFFFFFFFFFFFFFF,
-                      QView._loc_filter >> 64))
+                      QView._loc_filter >> 64), enWakeup = True)
 
 ## @brief Set/clear the Active-Object Local-Filter in the Target.
 # @sa qutest_dsl.ao_filter()

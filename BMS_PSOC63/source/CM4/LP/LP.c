@@ -81,10 +81,19 @@
 #include "qspyHelper.h"
 #include "ADC.h"
 
+#include "cycfg.h"
+
+// RTOS includes
+#include "FreeRTOS.h"
+#include "cyabs_rtos.h"
+
 ///////////////////////
 // Functions prototype
 ///////////////////////
+static cy_en_syspm_status_t _checkReadyDeepSleepCallback(cy_stc_syspm_callback_params_t *callbackParams, cy_en_syspm_callback_mode_t mode);
 static cy_en_syspm_status_t _beforeDeepSleepCallback(cy_stc_syspm_callback_params_t *callbackParams, cy_en_syspm_callback_mode_t mode);
+static cy_en_syspm_status_t _afterDeepSleepCallback(cy_stc_syspm_callback_params_t *callbackParams, cy_en_syspm_callback_mode_t mode);
+static void blockSleepTimerCallback_(cy_timer_callback_arg_t arg);
 
 ///////////////////////
 // Private data
@@ -102,6 +111,50 @@ static cy_stc_syspm_callback_t _pmBeforeDeepSlpCallback = {
     .order = 0U
 };
 
+static cy_stc_syspm_callback_params_t _afterDeepSleepCallbackParams;
+static cy_stc_syspm_callback_t _pmAfterDeepSlpCallback = {
+    .callback = _afterDeepSleepCallback,
+    .type = CY_SYSPM_DEEPSLEEP,
+    .skipMode = CY_SYSPM_SKIP_CHECK_READY | CY_SYSPM_SKIP_CHECK_FAIL | CY_SYSPM_SKIP_BEFORE_TRANSITION, // only after transition
+    .callbackParams = &_afterDeepSleepCallbackParams,
+    .prevItm = NULL,    // for CY driver intranal usage
+    .nextItm = NULL,    // for CY driver intranal usage
+    .order = 0U
+};
+
+static cy_stc_syspm_callback_params_t _checkReadyDeepSleepCallbackParams;
+static cy_stc_syspm_callback_t _pmCheckReadyDeepSlpCallback = {
+    .callback = _checkReadyDeepSleepCallback,
+    .type = CY_SYSPM_DEEPSLEEP,
+    .skipMode = CY_SYSPM_SKIP_AFTER_TRANSITION | CY_SYSPM_SKIP_CHECK_FAIL | CY_SYSPM_SKIP_BEFORE_TRANSITION, // only CY_SYSPM_SKIP_CHECK_READY
+    .callbackParams = &_checkReadyDeepSleepCallbackParams,
+    .prevItm = NULL,    // for CY driver intranal usage
+    .nextItm = NULL,    // for CY driver intranal usage
+    .order = 0U
+};
+
+// QSPY RX line config for wakeup
+static const cy_stc_gpio_pin_config_t QSPY_wakeup_config =
+{
+    .outVal = 1,
+    .driveMode = CY_GPIO_DM_PULLUP,     /**< Resistive Pull-Up. Input buffer on */
+    .hsiom = HSIOM_SEL_GPIO,
+    .intEdge = CY_GPIO_INTR_FALLING,    /**< Catch START bit */
+    .intMask = 1UL,                     /**< Enable Wakeup interrupt */
+    .vtrip = CY_GPIO_VTRIP_CMOS,
+    .slewRate = CY_GPIO_SLEW_FAST,
+    .driveSel = CY_GPIO_DRIVE_1_2,
+    .vregEn = 0UL,
+    .ibufMode = 0UL,
+    .vtripSel = 0UL,
+    .vrefSel = 0UL,
+    .vohSel = 0UL,
+};
+
+static volatile bool _blockSleep;
+static volatile bool _qspyWakeup;
+static cy_timer_t _blockSleepTimer;
+
 ///////////////////////
 // Code
 ///////////////////////
@@ -109,12 +162,47 @@ static cy_stc_syspm_callback_t _pmBeforeDeepSlpCallback = {
 LP_status_t LP_init(void)
 {
     LP_status_t status = LP_INIT_STATUS_OK;
+    cy_rslt_t result;
 
     if (!Cy_SysPm_RegisterCallback(&_pmBeforeDeepSlpCallback)) {
         status = LP_INIT_STATUS_FAIL;
     }
 
+    if (status == LP_INIT_STATUS_OK) {
+        if (!Cy_SysPm_RegisterCallback(&_pmAfterDeepSlpCallback)) {
+            status = LP_INIT_STATUS_FAIL;
+        }
+    }
+
+    if (status == LP_INIT_STATUS_OK) {
+        if (!Cy_SysPm_RegisterCallback(&_pmCheckReadyDeepSlpCallback)) {
+            status = LP_INIT_STATUS_FAIL;
+        }
+    }
+
+    result = cy_rtos_timer_init(
+        &_blockSleepTimer,
+        CY_TIMER_TYPE_ONCE,
+        blockSleepTimerCallback_,
+        0U // arg
+    );
+
+    if (result != CY_RSLT_SUCCESS) {
+        status = LP_INIT_STATUS_FAIL;
+    }
+
     return status;
+}
+
+static cy_en_syspm_status_t _checkReadyDeepSleepCallback(cy_stc_syspm_callback_params_t *callbackParams, cy_en_syspm_callback_mode_t mode)
+{
+    (void) callbackParams;
+
+    if (_blockSleep == true) {
+        return CY_SYSPM_CANCELED;
+    } else {
+        return CY_SYSPM_SUCCESS;
+    }
 }
 
 static cy_en_syspm_status_t _beforeDeepSleepCallback(cy_stc_syspm_callback_params_t *callbackParams, cy_en_syspm_callback_mode_t mode)
@@ -125,7 +213,59 @@ static cy_en_syspm_status_t _beforeDeepSleepCallback(cy_stc_syspm_callback_param
     ADC_setState(false);
     ADC_deinit();
 
+    /** Enable wake-up on QSPY command */
+    _qspyWakeup = false;
+    Cy_GPIO_Pin_Init(CYBSP_UART_RX_PORT, CYBSP_UART_RX_PIN, &QSPY_wakeup_config);
+    Cy_GPIO_ClearInterrupt(CYBSP_UART_RX_PORT, CYBSP_UART_RX_PIN);
+    /** Enable NVIC IRQ, \ref IRQn_Type in cy8c6347bzi_bld53.h */
+    NVIC_SetPriority(ioss_interrupts_gpio_5_IRQn, 2U);
+    NVIC_EnableIRQ(ioss_interrupts_gpio_5_IRQn);
+
     return CY_SYSPM_SUCCESS;
+}
+
+static cy_en_syspm_status_t _afterDeepSleepCallback(cy_stc_syspm_callback_params_t *callbackParams, cy_en_syspm_callback_mode_t mode)
+{
+    (void) callbackParams;
+
+    /** Check if wakeup is due to QSPY */
+    if (Cy_GPIO_GetInterruptStatusMasked(CYBSP_UART_RX_PORT, CYBSP_UART_RX_PIN) == 1U) {
+        _qspyWakeup = true;
+    }
+
+    /** Reconfigure QSPY RX line to enable UART receiver back, Disable GPIO IRQ
+     * \ref CYBSP_UART_RX_PIN, CYBSP_UART_RX_config
+     */
+    Cy_GPIO_Pin_Init(CYBSP_UART_RX_PORT, CYBSP_UART_RX_PIN, &CYBSP_UART_RX_config);
+    Cy_GPIO_SetInterruptMask(CYBSP_UART_RX_PORT, CYBSP_UART_RX_PIN, 0U);
+    Cy_GPIO_ClearInterrupt(CYBSP_UART_RX_PORT, CYBSP_UART_RX_PIN);
+    NVIC_DisableIRQ(ioss_interrupts_gpio_5_IRQn);
+    NVIC_ClearPendingIRQ(ioss_interrupts_gpio_5_IRQn);
+
+    /** Start DPSLP blocking timer if QSPY cmd is received */
+    if (_qspyWakeup) {
+        _blockSleep = true;
+        cy_rslt_t result = cy_rtos_timer_start(&_blockSleepTimer, 100U); // 100 ms
+        if (result != CY_RSLT_SUCCESS) {
+            CY_ASSERT(0);
+        }
+    }
+
+    return CY_SYSPM_SUCCESS;
+}
+
+void ioss_interrupts_gpio_5_IRQHandler(void)
+{
+    /** Check if wakeup is due to QSPY */
+    if (Cy_GPIO_GetInterruptStatusMasked(CYBSP_UART_RX_PORT, CYBSP_UART_RX_PIN) == 1U) {
+        Cy_GPIO_ClearInterrupt(CYBSP_UART_RX_PORT, CYBSP_UART_RX_PIN);
+        _qspyWakeup = true;
+    }
+}
+
+static void blockSleepTimerCallback_(cy_timer_callback_arg_t arg)
+{
+    _blockSleep = false;
 }
 
 /**

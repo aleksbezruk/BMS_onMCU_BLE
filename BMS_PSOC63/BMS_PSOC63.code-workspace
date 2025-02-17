@@ -74,7 +74,8 @@
             "functional": "cpp",
             "tuple": "cpp",
             "type_traits": "cpp",
-            "utility": "cpp"
+            "utility": "cpp",
+            "cstdint": "cpp"
         },
         "clangd.arguments": [
             "--query-driver=${config:modustoolbox.toolsPath}/gcc/bin/arm-none-eabi-gcc",
