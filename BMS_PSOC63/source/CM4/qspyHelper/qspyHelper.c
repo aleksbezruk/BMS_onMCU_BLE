@@ -45,6 +45,9 @@ void QUTEST_init(void);
 static QSTimeCtr QS_tickTime_;       /**< ms */
 static QSTimeCtr QS_tickPeriod_;     /**< ms */
 
+static volatile TickType_t _prevTicks;
+static volatile TickType_t _currTicks;
+
 ///////////////////
 // Private functions
 ///////////////////
@@ -60,7 +63,11 @@ void vApplicationTickHook(void)
 
     tmp = SysTick->CTRL; // clear CTRL_COUNTFLAG
     (void) tmp;
-    QS_tickTime_ += QS_tickPeriod_; // account for the clock rollover
+    // QS_tickTime_ += QS_tickPeriod_; // account for the clock rollover
+    /** @todo account for the clock rollover */
+    _currTicks = xTaskGetTickCount();
+    QS_tickTime_ +=  (_currTicks - _prevTicks);
+    _prevTicks = _currTicks;
 }
 
 /**
