@@ -41,7 +41,6 @@ typedef enum {
 ///////////////////////
 LP_status_t LP_init(void);
 void LP_setMode(LP_modes_t mode);
-void LP_enterSleep(void);
 LP_periph_ready_t LP_getPeriphStatus(void);
 
 #endif //LP_MODULE_H

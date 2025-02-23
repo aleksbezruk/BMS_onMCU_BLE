@@ -52,6 +52,12 @@ typedef enum {
     QSPY_RX_NOT_EMPTY
 } QSPY_rx_status_t;
 
+/*! QSPY transmit buffer status */
+typedef enum {
+    QSPY_TX_EMPTY,
+    QSPY_TX_NOT_EMPTY
+} QSPY_tx_status_t;
+
 ///////////////////
 // API 
 ///////////////////
@@ -68,6 +74,7 @@ void QS_addUsrRecToDic(enum_t const rec);
 void QS_initGlbFilters(void);
 void QS_rxCallback(uint8_t *data, uint16_t len);
 QSPY_rx_status_t QS_get_rxStatus(void);
+QSPY_tx_status_t QS_get_txStatus(void);
 
 #endif // QSPYHELPER_MODULE_H
 

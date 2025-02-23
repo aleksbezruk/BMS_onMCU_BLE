@@ -92,6 +92,10 @@ void QS_initBuf(
     // hold off flushing after successful initialization (see QS_INIT())
 }
 
+uint16_t QS_getTxBufNumBytes(void) {
+    return (uint16_t) QS_priv_.used;
+}
+
 //${QS::QS-TX::getByte} ......................................................
 //! @static @public @memberof QS
 uint16_t QS_getByte(void) {

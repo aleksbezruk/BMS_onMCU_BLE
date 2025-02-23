@@ -451,6 +451,24 @@ bool BSP_isUartTxReady(void)
     return (num > 0);
 }
 
+/**
+ * @brief  Check if UART transmission is ongoing
+ * 
+ * @details Checks TX FIFO and transmit shift register status
+ * 
+ * @param  None
+ * 
+ * @retval true - TX is ongoing, false - no active transmission
+ */
+bool BSP_isUartTxActive(void)
+{
+    bool isTxInProgress;
+
+    isTxInProgress = cyhal_uart_is_tx_active(&uartObj);
+
+    return isTxInProgress;
+}
+
 #if BSP_ENABLE_UART_EXTENDED_FUNCS == true
 /**
  * @brief  Check if UART TX FIFO is empty

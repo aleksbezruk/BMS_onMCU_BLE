@@ -75,6 +75,7 @@
 
 #include "cy_pdl.h"
 #include "cyhal.h"
+#include "cyhal_syspm.h"
 #include "cybsp.h"
 
 #include "LP.h"
@@ -94,6 +95,14 @@ static cy_en_syspm_status_t _checkReadyDeepSleepCallback(cy_stc_syspm_callback_p
 static cy_en_syspm_status_t _beforeDeepSleepCallback(cy_stc_syspm_callback_params_t *callbackParams, cy_en_syspm_callback_mode_t mode);
 static cy_en_syspm_status_t _afterDeepSleepCallback(cy_stc_syspm_callback_params_t *callbackParams, cy_en_syspm_callback_mode_t mode);
 static void blockSleepTimerCallback_(cy_timer_callback_arg_t arg);
+void LP_enterSleep(TickType_t xExpectedIdleTime);
+
+uint32_t cyabs_rtos_get_deepsleep_latency(void);
+
+///////////////////////
+// Defines
+///////////////////////
+#define pdTICKS_TO_MS(xTicks)    ( ( ( TickType_t ) ( xTicks ) * 1000u ) / configTICK_RATE_HZ )
 
 ///////////////////////
 // Private data
@@ -154,6 +163,7 @@ static const cy_stc_gpio_pin_config_t QSPY_wakeup_config =
 static volatile bool _blockSleep;
 static volatile bool _qspyWakeup;
 static cy_timer_t _blockSleepTimer;
+static cyhal_lptimer_t* _lptimer = NULL;
 
 ///////////////////////
 // Code
@@ -198,7 +208,8 @@ static cy_en_syspm_status_t _checkReadyDeepSleepCallback(cy_stc_syspm_callback_p
 {
     (void) callbackParams;
 
-    if (_blockSleep == true) {
+    LP_periph_ready_t periphStatus = LP_getPeriphStatus();
+    if ((_blockSleep == true) || (periphStatus != LP_PERIPH_READY)) {
         return CY_SYSPM_CANCELED;
     } else {
         return CY_SYSPM_SUCCESS;
@@ -279,8 +290,15 @@ LP_periph_ready_t LP_getPeriphStatus(void)
 {
     LP_periph_ready_t readiness = LP_PERIPH_READY;
 
+    /** Is QSPY RX buffer empty ? */
     QSPY_rx_status_t qspy_rx_status = QS_get_rxStatus();
     if (qspy_rx_status == QSPY_RX_NOT_EMPTY) {
+        readiness = LP_PERIPH_NOT_READY;
+    }
+
+    /** Is QSPY TX buffer empty ? */
+    QSPY_tx_status_t qspy_tx_status = QS_get_txStatus();
+    if (qspy_tx_status == QSPY_TX_NOT_EMPTY) {
         readiness = LP_PERIPH_NOT_READY;
     }
 
@@ -303,31 +321,68 @@ void LP_setMode(LP_modes_t mode)
 /**
  * @brief Get BMS peripherals rediness status for Low Power mode
  * 
- * @param None
+ * @param[in] xExpectedIdleTime - expected time to sleep [RTOS ticks]
  * 
  * @retval None
  */
-void LP_enterSleep(void)
+void LP_enterSleep(TickType_t xExpectedIdleTime)
 {
+    cy_rslt_t result = CY_RSLT_SUCCESS;
+    uint32_t actual_sleep_ms = 0;
+    uint32_t sleep_ms;
+
     switch (_mode)
     {
+        /** LP_DISABLED_MODE */
         case LP_DISABLED_MODE:
         {
             // do nothing
-            break;
+            return;
         }
 
+        /** LP_SLEEP_MODE */
         case LP_SLEEP_MODE:
         {
-            /** @todo: implement */
-            __asm("nop");
+            sleep_ms = pdTICKS_TO_MS(xExpectedIdleTime);
+            uint32_t sleep_latency =
+            #if defined (CY_CFG_PWR_SLEEP_LATENCY)
+            CY_CFG_PWR_SLEEP_LATENCY +
+            #endif
+            0;
+            if (sleep_ms > sleep_latency) {
+                result = cyhal_syspm_tickless_sleep(
+                    _lptimer,
+                    (sleep_ms - sleep_latency),
+                    &actual_sleep_ms
+                );
+            } else {
+                result = CY_RTOS_TIMEOUT;
+            }
             break;
         }
 
+        /** LP_DEEP_SLEEP_MODE */
         case LP_DEEP_SLEEP_MODE:
         {
-            /** @todo: implement */
-            __asm("nop");
+            sleep_ms = pdTICKS_TO_MS(xExpectedIdleTime);
+            // Adjust the deep-sleep time by the sleep/wake latency if set.
+            #if defined(CY_CFG_PWR_DEEPSLEEP_LATENCY) || \
+            defined(CY_CFG_PWR_DEEPSLEEP_RAM_LATENCY)
+            uint32_t deep_sleep_latency = cyabs_rtos_get_deepsleep_latency();
+            if (sleep_ms > deep_sleep_latency) {
+                result = cyhal_syspm_tickless_deepsleep(
+                    _lptimer,
+                    (sleep_ms - deep_sleep_latency),
+                    &actual_sleep_ms
+                );
+            } else {
+                result = CY_RTOS_TIMEOUT;
+            }
+            #else \
+            // defined(CY_CFG_PWR_DEEPSLEEP_LATENCY) ||
+            // defined(CY_CFG_PWR_DEEPSLEEP_RAM_LATENCY)
+            result = cyhal_syspm_tickless_deepsleep(_lptimer, sleep_ms, &actual_sleep_ms);
+            #endif
             break;
         }
 
@@ -335,6 +390,64 @@ void LP_enterSleep(void)
         {
             CY_ASSERT(0);   // unexpected behavior
         }
+    }
+
+    /** Notify RTOS about wakeup from Sleep */
+    if (result == CY_RSLT_SUCCESS) {
+        // If you hit this assert, the latency time (CY_CFG_PWR_DEEPSLEEP_LATENCY) should
+        // be increased. This can be set though the Device Configurator, or by manually
+        // defining the variable in cybsp.h for the TARGET platform.
+        CY_ASSERT(actual_sleep_ms <= pdTICKS_TO_MS(xExpectedIdleTime));
+        vTaskStepTick(convert_ms_to_ticks(actual_sleep_ms));
+    }
+}
+
+//--------------------------------------------------------------------------------------------------
+// vApplicationSleep
+//
+/** User defined tickless idle sleep function.
+ *
+ * Provides a implementation for portSUPPRESS_TICKS_AND_SLEEP macro that allows
+ * the device to attempt to deep-sleep for the idle time the kernel expects before
+ * the next task is ready. This function disables the system timer and enables low power
+ * timer that can operate in deep-sleep mode to wake the device from deep-sleep after
+ * expected idle time has elapsed.
+ *
+ * @param[in] xExpectedIdleTime     Total number of tick periods before
+ *                                  a task is due to be moved into the Ready state.
+ */
+//--------------------------------------------------------------------------------------------------
+void vApplicationSleep(TickType_t xExpectedIdleTime)
+{
+    static cyhal_lptimer_t timer;
+    cy_rslt_t result = CY_RSLT_SUCCESS;
+
+    if (NULL == _lptimer) {
+        result = cyhal_lptimer_init(&timer);
+        if (result == CY_RSLT_SUCCESS) {
+            _lptimer = &timer;
+        } else {
+            CY_ASSERT(false);
+        }
+    }
+
+    if (NULL != _lptimer) {
+        /** Disable interrupts so that nothing can change the status of the RTOS while
+         * we try to go to sleep or deep-sleep.
+         */
+        uint32_t status = cyhal_system_critical_section_enter();
+        eSleepModeStatus sleep_status = eTaskConfirmSleepModeStatus();
+
+        if (sleep_status != eAbortSleep) {
+            // By default, the device will deep-sleep in the idle task unless if the device
+            // configurator overrides the behaviour to sleep in the System->Power->RTOS->System
+            // Idle Power Mode setting
+            LP_enterSleep(xExpectedIdleTime);
+        }
+
+        cyhal_system_critical_section_exit(status);
+    } else {
+        CY_ASSERT(false);   // timer should be allocated
     }
 }
 

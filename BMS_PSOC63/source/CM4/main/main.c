@@ -368,14 +368,6 @@ void vApplicationIdleHook(void)
 {
      /** Handle QSPY communication */
      QS_onIdle();
-    /** temporary solution for LPM debug purposes, @todo: fix */
-     QS_FLUSH();
-
-    /** Enter Sleep mode */
-    LP_periph_ready_t periphStatus = LP_getPeriphStatus();
-    if (periphStatus == LP_PERIPH_READY) {
-        LP_enterSleep();
-    }
 }
 
 /////////////////////////
@@ -778,7 +770,7 @@ static void MAIN_SM_handleAdcEvt(Evt_adc_data_t* evt)
              * 4. Send VBAT to BLE task
              */
             ble_update_vbat_(evt);
-            LP_setMode(LP_SLEEP_MODE);
+            LP_setMode(LP_DEEP_SLEEP_MODE);
             break;
         }
 
@@ -790,7 +782,7 @@ static void MAIN_SM_handleAdcEvt(Evt_adc_data_t* evt)
                 MAIN_post_evt((Main_evt_t*) &evt, EVT_SYSTEM);
             }
             ble_update_vbat_(evt);
-            LP_setMode(LP_SLEEP_MODE);
+            LP_setMode(LP_DEEP_SLEEP_MODE);
             break;
         }
 
@@ -802,7 +794,7 @@ static void MAIN_SM_handleAdcEvt(Evt_adc_data_t* evt)
                 MAIN_post_evt((Main_evt_t*) &evt, EVT_SYSTEM);
             }
             ble_update_vbat_(evt);
-            LP_setMode(LP_SLEEP_MODE);
+            LP_setMode(LP_DEEP_SLEEP_MODE);
             break;
         }
 
