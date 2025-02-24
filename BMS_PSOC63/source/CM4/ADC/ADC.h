@@ -3,7 +3,7 @@
  *
  * @brief Analog to digital converter module functions declaration.
  *
- * @version 0.1.0
+ * @version 0.4.0
  */
 
 #ifndef ADC_MODULE_H
@@ -26,6 +26,8 @@ typedef enum {
 // Code
 ///////////////////////
 ADC_status_t ADC_init(void);
+void ADC_deinit(void);
+void ADC_setState(bool on_off);
 
 #endif  //ADC_MODULE_H
 

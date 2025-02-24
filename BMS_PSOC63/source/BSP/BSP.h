@@ -5,7 +5,7 @@
  *        The board contains CYBLE-416045-02 chip based on 
  *        PSoC 6 MCU CY8C6347BZI-BLD53
  * 
- * @version 0.1.0
+ * @version 0.4.0
  */
 
 #ifndef __BSP_H__
@@ -98,6 +98,7 @@ bsp_status_init_t BSP_initUart(bspUartRxCallback callback);
 bool BSP_isUartTxReady(void);
 bool BSP_isUartTxEmpty(void);
 void BSP_uartTxData(uint8_t *data, uint16_t len);
+bool BSP_isUartTxActive(void);
 #if defined(Q_UTEST)
 void BSP_initUTdic(void);
 #endif //Q_UTEST

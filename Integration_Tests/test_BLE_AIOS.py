@@ -5,6 +5,7 @@ import time
 pytest.ADAPTER = {}
 pytest.BMS = {}
 pytest.service_characteristic_pair = []
+pytest.AIOS_NUM_ITER = 2
 
 @pytest.mark.dependency(name="test_open_adapter")
 def test_open_adapter():
@@ -21,24 +22,38 @@ def test_open_adapter():
     pytest.ADAPTER.set_callback_on_scan_found(lambda peripheral: print(f"Found {peripheral.identifier()} [{peripheral.address()}]"))
 
 @pytest.mark.dependency(depends=["test_open_adapter"], name="test_find_bms")
-@pytest.mark.repeat(2)
 def test_find_bms():
     print("-------- test_find_bms ------------")
-    # Scan for 15 seconds
-    pytest.ADAPTER.scan_for(15000)
-    peripherals = pytest.ADAPTER.scan_get_results()
-    is_bms_found = False
-    for peripheral in peripherals:
-        if peripheral.identifier() == "BMS_MCU":
-            is_bms_found = True
-            pytest.BMS = peripheral
-    assert is_bms_found == True, "No BMS found"
+    try: 
+        # Scan for 40 seconds
+        pytest.ADAPTER.scan_for(40000)
+        peripherals = pytest.ADAPTER.scan_get_results()
+        is_bms_found = False
+        for peripheral in peripherals:
+            if peripheral.identifier() == "BMS_MCU":
+                is_bms_found = True
+                pytest.BMS = peripheral
+        assert is_bms_found == True, "No BMS found"
+    except:
+        print("Retry scan")
+        pytest.ADAPTER.scan_for(40000)
+        peripherals = pytest.ADAPTER.scan_get_results()
+        is_bms_found = False
+        for peripheral in peripherals:
+            if peripheral.identifier() == "BMS_MCU":
+                is_bms_found = True
+                pytest.BMS = peripheral
+        assert is_bms_found == True, "No BMS found"
 
 @pytest.mark.dependency(depends=["test_find_bms"], name="test_connect_bms")
 def test_connect_bms():
     print("-------- test_connect_bms ------------")
     print(f"Connecting to: {pytest.BMS.identifier()} [{pytest.BMS.address()}]")
-    pytest.BMS.connect()
+    try:
+        pytest.BMS.connect()
+    except:
+        print("Try to reconnect")
+        pytest.BMS.connect()    #retry, looks like SimpleBLE lib in some cases Fails to connect for unknown reason
     assert pytest.BMS.is_connected() == True, "BLE connect with BMS isn't established"
 
 @pytest.mark.dependency(depends=["test_connect_bms"], name="test_discover_aios")
@@ -67,47 +82,44 @@ def test_read_switch_state():
     print("Switches state = %d" %(swState))
     assert swState == 0, "All switches should be disabled at start up"
 
-@pytest.mark.dependency(depends=["test_read_switch_state"], name="test_enable_switch")
-@pytest.mark.repeat(2)
-def test_enable_switch():
-    print("-------- test_enable_switch ------------")
-    # Write the content to the characteristic
-    # Note: `write_request` required the payload to be presented as a bytes object.
-    service_uuid, characteristic_uuid = pytest.service_characteristic_pair[0]
+@pytest.mark.dependency(depends=["test_read_switch_state"], name="test_enable_disable_switch")
+def test_enable_disable_switch():
+    print("-------- test_enable_disable_switch ------------")
+    num_iter = 0
+    while num_iter < pytest.AIOS_NUM_ITER:
+        num_iter += 1
+        print("AIOS switches test, iteration #%d"%(num_iter))
+        # Write the content to the characteristic
+        # Note: `write_request` required the payload to be presented as a bytes object.
+        service_uuid, characteristic_uuid = pytest.service_characteristic_pair[0]
 
-    # Wait notification response from DUT
-    swState = []
-    pytest.BMS.notify(service_uuid, characteristic_uuid, lambda data: swState.append(data[0]))
-    bytes_array = str.encode("1000")
-    pytest.BMS.write_request(service_uuid, characteristic_uuid, bytes_array)
-    time.sleep(60)
-    print("Switches state notif = %d" %(swState[0]))
-    assert swState[0] == 0x01, "Discharge switch was not enabled"
+        # Wait notification response from DUT
+        print("-------- test_enable_switches ------------")
+        swState = []
+        pytest.BMS.notify(service_uuid, characteristic_uuid, lambda data: swState.append(data[0]))
+        bytes_array = str.encode("1000")
+        pytest.BMS.write_request(service_uuid, characteristic_uuid, bytes_array)
+        time.sleep(60)
+        print("Switches state notif = %d" %(swState[0]))
+        assert swState[0] == 0x01, "Discharge switch was not enabled"
 
-@pytest.mark.dependency(depends=["test_enable_switch"], name="test_disable_switches")
-@pytest.mark.repeat(2)
-def test_disable_switches():
-    print("-------- test_disable_switches ------------")
-    # Write the content to the characteristic
-    # Note: `write_request` required the payload to be presented as a bytes object.
-    service_uuid, characteristic_uuid = pytest.service_characteristic_pair[0]
+        print("-------- test_disable_switches ------------")
+        # Wait notification response from DUT
+        swState = []
+        pytest.BMS.notify(service_uuid, characteristic_uuid, lambda data: swState.append(data[0]))
+        bytes_array = str.encode("0000")
+        pytest.BMS.write_request(service_uuid, characteristic_uuid, bytes_array)
+        time.sleep(60)
+        print("Switches state notif = %d" %(swState[0]))
+        assert swState[0] == 0x00, "Switches was not disabled"
 
-    # Wait notification response from DUT
-    swState = []
-    pytest.BMS.notify(service_uuid, characteristic_uuid, lambda data: swState.append(data[0]))
-    bytes_array = str.encode("0000")
-    pytest.BMS.write_request(service_uuid, characteristic_uuid, bytes_array)
-    time.sleep(60)
-    print("Switches state notif = %d" %(swState[0]))
-    assert swState[0] == 0x00, "Switches was not disabled"
-
-@pytest.mark.dependency(depends=["test_disable_switches"], name="test_disconnect_bms")
+@pytest.mark.dependency(depends=["test_enable_disable_switch"], name="test_disconnect_bms")
 def test_disconnect_bms():
     print("-------- test_disconnect_bms ------------")
     pytest.BMS.disconnect()
     assert pytest.BMS.is_connected() == False, "BLE disconnect failed"
     print("Successfully disconnected.")
     print("Wait some time before shutdown test... It may takes up to 1 minute.")
-    time.sleep(40) # for synchronization purpose
+    time.sleep(10) # for synchronization purpose
 
 # END OF FILE

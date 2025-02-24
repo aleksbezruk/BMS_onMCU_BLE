@@ -5,7 +5,7 @@
  * The board contains CYBLE-416045-02 chip based on 
  * PSoC 6 MCU CY8C6347BZI-BLD53
  * 
- * @version 0.1.0
+ * @version 0.4.0
  */
 
 #include "cy_pdl.h"
@@ -449,6 +449,24 @@ bool BSP_isUartTxReady(void)
     uint32_t num = cyhal_uart_writable(&uartObj);
 
     return (num > 0);
+}
+
+/**
+ * @brief  Check if UART transmission is ongoing
+ * 
+ * @details Checks TX FIFO and transmit shift register status
+ * 
+ * @param  None
+ * 
+ * @retval true - TX is ongoing, false - no active transmission
+ */
+bool BSP_isUartTxActive(void)
+{
+    bool isTxInProgress;
+
+    isTxInProgress = cyhal_uart_is_tx_active(&uartObj);
+
+    return isTxInProgress;
 }
 
 #if BSP_ENABLE_UART_EXTENDED_FUNCS == true

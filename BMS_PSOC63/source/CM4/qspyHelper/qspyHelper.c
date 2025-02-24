@@ -4,7 +4,7 @@
  * @brief Implements helper functions for QSPY & QUtest framework. 
  *        Also includes API for Application.
  * 
- * @version 0.1.0
+ * @version 0.4.0
  */
 
 #include "cy_pdl.h"
@@ -45,6 +45,9 @@ void QUTEST_init(void);
 static QSTimeCtr QS_tickTime_;       /**< ms */
 static QSTimeCtr QS_tickPeriod_;     /**< ms */
 
+static volatile TickType_t _prevTicks;
+static volatile TickType_t _currTicks;
+
 ///////////////////
 // Private functions
 ///////////////////
@@ -60,7 +63,11 @@ void vApplicationTickHook(void)
 
     tmp = SysTick->CTRL; // clear CTRL_COUNTFLAG
     (void) tmp;
-    QS_tickTime_ += QS_tickPeriod_; // account for the clock rollover
+    // QS_tickTime_ += QS_tickPeriod_; // account for the clock rollover
+    /** @todo account for the clock rollover */
+    _currTicks = xTaskGetTickCount();
+    QS_tickTime_ +=  (_currTicks - _prevTicks);
+    _prevTicks = _currTicks;
 }
 
 /**
@@ -339,6 +346,41 @@ void QS_addUsrRecToDic(enum_t const rec)
 void QS_initGlbFilters(void) 
 {
     QS_GLB_FILTER(QS_ALL_RECORDS);   // enable all records
+}
+
+/**
+ * @brief Get QSPY recive buffer status
+ * 
+ * @param None
+ * 
+ * @retval \ref QSPY_rx_status_t
+ */
+QSPY_rx_status_t QS_get_rxStatus(void)
+{
+    uint16_t nFree = QS_rxGetNfree();
+    if (nFree == (sizeof(qsRxBuf) - 1U)) {
+        return QSPY_RX_EMPTY;
+    } else {
+        return QSPY_RX_NOT_EMPTY;
+    }
+}
+
+/**
+ * @brief Get QSPY transmitter buffer status
+ *
+ * @param None
+ *
+ * @retval \ref QSPY_tx_status_t
+ */
+QSPY_tx_status_t QS_get_txStatus(void)
+{
+    uint16_t numBytes = QS_getTxBufNumBytes();
+    bool isOngoingTx = BSP_isUartTxActive();
+    if ((numBytes > 0) || (isOngoingTx == true)) {  // not End-Of-Data or TX shift register/FIFO not empty
+        return QSPY_TX_NOT_EMPTY;
+    } else {
+        return QSPY_TX_EMPTY;
+    }
 }
 
 /******************************** END OF FILE **********************************************************************/

@@ -19,7 +19,7 @@
  *                   - mtb-hal-cat1/release-v2.6.1/include_pvt/cyhal_analog_common.h . <br>
  *               2.2 Cypress ModToolBox is used to config ADC peripheral (pins, clocks, etc) .
  * 
- * @version 0.1.0
+ * @version 0.4.0
  */
 
 #include "cyhal_adc.h"
@@ -71,9 +71,9 @@
  */
 #define ADC_BANK_VOLT_CALC(v_neg, v_pos)    (int16_t) ( v_pos - v_neg )
 #define ADC_CONV_BY_RATIO(val, ratio)   (int16_t) ( (float) val * ratio )
-#define ADC_NUM_MEAS 100U
+#define ADC_NUM_MEAS 5U
 
-#define ADC_TASK_INTERVAL   20000U
+#define ADC_TASK_INTERVAL   30000U  /**< ms */
 #define ADC_TASK_STACK_SIZE 560U   /**< bytes, aligned to 8 bytes */
 
 ///////////////////////
@@ -99,6 +99,8 @@ static cy_thread_t adcTaskHandle_;
  */
 static uint64_t adcTaskStack_[ADC_TASK_STACK_SIZE/8U];
 
+static volatile bool _adcEnabled = true;
+
 ///////////////////////
 // Functions prototype
 ///////////////////////
@@ -108,6 +110,39 @@ static int16_t calcBankAvgVolt_(cyhal_adc_channel_t* chnl, float convRatio, int1
 ///////////////////////
 // Code
 ///////////////////////
+/**
+ * @brief Init ADC peripheral
+ * 
+ * @param None
+ * 
+ * @retval See \ref cy_rslt_t
+ * 
+ */
+cy_rslt_t ADC_init_periph(void)
+{
+    cy_rslt_t result = cyhal_adc_init_cfg(
+        &adc_, 
+        channels_, 
+        &num_channels_,
+        &pass_0_sar_0_hal_config
+    );
+
+    return result;
+}
+
+/**
+ * @brief De-init ADC peripheral
+ * 
+ * @param None
+ * 
+ * @retval None
+ * 
+ */
+void ADC_deinit(void)
+{
+    cyhal_adc_free(&adc_);
+}
+
 /**
  * @brief Init ADC peripheral and create RTOS task
  * 
@@ -122,12 +157,7 @@ ADC_status_t ADC_init(void)
     cy_rslt_t result;
 
     /** Init ADC periph */
-    result = cyhal_adc_init_cfg(
-        &adc_, 
-        channels_, 
-        &num_channels_,
-        &pass_0_sar_0_hal_config
-    );
+    result = ADC_init_periph();
 
     /** Check operation status */
     if (result != CY_RSLT_SUCCESS) {
@@ -166,9 +196,19 @@ static void adcTask_(cy_thread_arg_t arg)
     (void) arg;
     Evt_adc_data_t adcEvt;
     int16_t b1_v, b2_v, b3_v, b4_v, bankAdcIn;
+    cy_rslt_t result;
 
     while(1) {
         (void)cy_rtos_delay_milliseconds(ADC_TASK_INTERVAL);    // the API always returns SUCCESS becaause of hardcode
+
+        /** Enable ADC if disabled (during Deep Sleep) */
+        if (!_adcEnabled) {
+            result = ADC_init_periph();
+            _adcEnabled = true;
+            if (result != CY_RSLT_SUCCESS) {
+                CY_ASSERT(0);
+            }
+        }
 
         /** Measure Bat Cell1 */
         b1_v = calcBankAvgVolt_(
@@ -263,6 +303,11 @@ static int16_t calcBankAvgVolt_(cyhal_adc_channel_t* chnl, float convRatio, int1
     *pAdcInVolt = avgAdcIn / ADC_NUM_MEAS;
     retVal = adcMeasSum / ADC_NUM_MEAS;
     return retVal;
+}
+
+void ADC_setState(bool on_off)
+{
+    _adcEnabled = on_off;
 }
 
 /* [] END OF FILE */

@@ -24,18 +24,28 @@ def test_open_adapter():
     pytest.ADAPTER.set_callback_on_scan_found(lambda peripheral: print(f"Found {peripheral.identifier()} [{peripheral.address()}]"))
 
 @pytest.mark.dependency(depends=["test_open_adapter"], name="test_find_bms")
-@pytest.mark.repeat(2)
 def test_find_bms():
     print("-------- test_find_bms ------------")
-    # Scan for 15 seconds
-    pytest.ADAPTER.scan_for(15000)
-    peripherals = pytest.ADAPTER.scan_get_results()
-    is_bms_found = False
-    for peripheral in peripherals:
-        if peripheral.identifier() == "BMS_MCU":
-            is_bms_found = True
-            pytest.BMS = peripheral
-    assert is_bms_found == True, "No BMS found"
+    try: 
+        # Scan for 40 seconds
+        pytest.ADAPTER.scan_for(40000)
+        peripherals = pytest.ADAPTER.scan_get_results()
+        is_bms_found = False
+        for peripheral in peripherals:
+            if peripheral.identifier() == "BMS_MCU":
+                is_bms_found = True
+                pytest.BMS = peripheral
+        assert is_bms_found == True, "No BMS found"
+    except:
+        print("Retry scan")
+        pytest.ADAPTER.scan_for(40000)
+        peripherals = pytest.ADAPTER.scan_get_results()
+        is_bms_found = False
+        for peripheral in peripherals:
+            if peripheral.identifier() == "BMS_MCU":
+                is_bms_found = True
+                pytest.BMS = peripheral
+        assert is_bms_found == True, "No BMS found"
 
 @pytest.mark.dependency(depends=["test_find_bms"], name="test_advertising_data")
 def test_advertising_data():

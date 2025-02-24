@@ -680,6 +680,8 @@ void QS_initBuf(
 //! @static @public @memberof QS
 uint16_t QS_getByte(void);
 
+uint16_t QS_getTxBufNumBytes(void);
+
 //${QS::QS-TX::getBlock} .....................................................
 //! @static @public @memberof QS
 uint8_t const * QS_getBlock(uint16_t * const pNbytes);

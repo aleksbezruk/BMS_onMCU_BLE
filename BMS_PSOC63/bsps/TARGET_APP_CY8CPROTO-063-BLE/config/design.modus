@@ -369,8 +369,8 @@
                 <Personality template="pclk" version="3.0">
                     <Block location="peri[0].div_24_5[0]" locked="true"/>
                     <Parameters>
-                        <Param id="fracDivider" value="16"/>
-                        <Param id="intDivider" value="108"/>
+                        <Param id="fracDivider" value="4"/>
+                        <Param id="intDivider" value="27"/>
                         <Param id="startOnReset" value="true"/>
                     </Parameters>
                 </Personality>
@@ -445,7 +445,7 @@
                     <Block location="srss[0].clock[0].fll[0]" locked="true"/>
                     <Parameters>
                         <Param id="configuration" value="auto"/>
-                        <Param id="desiredFrequency" value="100.000"/>
+                        <Param id="desiredFrequency" value="50.000"/>
                         <Param id="enableOutputDivider" value="false"/>
                     </Parameters>
                 </Personality>
@@ -507,7 +507,7 @@
                 <Personality template="periclk" version="2.0">
                     <Block location="srss[0].clock[0].periclk[0]" locked="true"/>
                     <Parameters>
-                        <Param id="divider" value="1"/>
+                        <Param id="divider" value="2"/>
                     </Parameters>
                 </Personality>
                 <Personality template="slowclk" version="2.0">
@@ -530,11 +530,11 @@
                 <Personality template="power" version="1.3">
                     <Block location="srss[0].power[0]" locked="true"/>
                     <Parameters>
-                        <Param id="actPwrMode" value="LP"/>
+                        <Param id="actPwrMode" value="ULP"/>
                         <Param id="backupSrc" value="VDDD"/>
                         <Param id="coreRegulator" value="CY_SYSPM_LDO_MODE_NORMAL"/>
                         <Param id="deepsleepLatency" value="0"/>
-                        <Param id="idlePwrMode" value="CY_CFG_PWR_MODE_ACTIVE"/>
+                        <Param id="idlePwrMode" value="CY_CFG_PWR_MODE_DEEPSLEEP"/>
                         <Param id="pmicEnable" value="false"/>
                         <Param id="pwrMode" value="LDO_1_1"/>
                         <Param id="vBackupMv" value="2500"/>

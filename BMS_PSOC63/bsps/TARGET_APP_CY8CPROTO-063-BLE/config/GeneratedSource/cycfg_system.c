@@ -39,19 +39,19 @@
 #define CY_CFG_SYSCLK_CLKFAST_DIVIDER 0
 #define CY_CFG_SYSCLK_FLL_ENABLED 1
 #define CY_CFG_SYSCLK_FLL_MULT 500U
-#define CY_CFG_SYSCLK_FLL_REFDIV 20U
-#define CY_CFG_SYSCLK_FLL_CCO_RANGE CY_SYSCLK_FLL_CCO_RANGE4
+#define CY_CFG_SYSCLK_FLL_REFDIV 40U
+#define CY_CFG_SYSCLK_FLL_CCO_RANGE CY_SYSCLK_FLL_CCO_RANGE2
 #define CY_CFG_SYSCLK_FLL_ENABLE_OUTDIV true
 #define CY_CFG_SYSCLK_FLL_LOCK_TOLERANCE 10U
 #define CY_CFG_SYSCLK_FLL_IGAIN 9U
-#define CY_CFG_SYSCLK_FLL_PGAIN 5U
+#define CY_CFG_SYSCLK_FLL_PGAIN 0U
 #define CY_CFG_SYSCLK_FLL_SETTLING_COUNT 8U
 #define CY_CFG_SYSCLK_FLL_OUTPUT_MODE CY_SYSCLK_FLLPLL_OUTPUT_OUTPUT
-#define CY_CFG_SYSCLK_FLL_CCO_FREQ 355U
-#define CY_CFG_SYSCLK_FLL_OUT_FREQ 100000000
+#define CY_CFG_SYSCLK_FLL_CCO_FREQ 235U
+#define CY_CFG_SYSCLK_FLL_OUT_FREQ 50000000
 #define CY_CFG_SYSCLK_CLKHF0_ENABLED 1
 #define CY_CFG_SYSCLK_CLKHF0_DIVIDER CY_SYSCLK_CLKHF_NO_DIVIDE
-#define CY_CFG_SYSCLK_CLKHF0_FREQ_MHZ 100UL
+#define CY_CFG_SYSCLK_CLKHF0_FREQ_MHZ 50UL
 #define CY_CFG_SYSCLK_CLKHF0_CLKPATH CY_SYSCLK_CLKHF_IN_CLKPATH0
 #define CY_CFG_SYSCLK_ILO_ENABLED 1
 #define CY_CFG_SYSCLK_ILO_HIBERNATE true
@@ -84,8 +84,8 @@
 #define CY_CFG_PWR_INIT 1
 #define CY_CFG_PWR_USING_PMIC 0
 #define CY_CFG_PWR_VBACKUP_USING_VDDD 1
-#define CY_CFG_PWR_LDO_VOLTAGE CY_SYSPM_LDO_VOLTAGE_LP
-#define CY_CFG_PWR_USING_ULP 0
+#define CY_CFG_PWR_LDO_VOLTAGE CY_SYSPM_LDO_VOLTAGE_ULP
+#define CY_CFG_PWR_USING_ULP 1
 #define CY_CFG_PWR_REGULATOR_MODE_MIN 0
 #define CY_CFG_PWR_BKP_ERROR 6
 
@@ -97,15 +97,15 @@ static cy_stc_pra_system_config_t srss_0_clock_0_secureConfig;
 static const cy_stc_fll_manual_config_t srss_0_clock_0_fll_0_fllConfig =
 {
     .fllMult = 500U,
-    .refDiv = 20U,
-    .ccoRange = CY_SYSCLK_FLL_CCO_RANGE4,
+    .refDiv = 40U,
+    .ccoRange = CY_SYSCLK_FLL_CCO_RANGE2,
     .enableOutputDiv = true,
     .lockTolerance = 10U,
     .igain = 9U,
-    .pgain = 5U,
+    .pgain = 0U,
     .settlingCount = 8U,
     .outputMode = CY_SYSCLK_FLLPLL_OUTPUT_OUTPUT,
-    .cco_Freq = 355U,
+    .cco_Freq = 235U,
 };
 #endif /* (!defined(CY_DEVICE_SECURE)) */
 
@@ -686,7 +686,7 @@ __STATIC_INLINE void Cy_SysClk_ClkPath4Init()
 }
 __STATIC_INLINE void Cy_SysClk_ClkPeriInit()
 {
-    Cy_SysClk_ClkPeriSetDivider(0U);
+    Cy_SysClk_ClkPeriSetDivider(1U);
 }
 __STATIC_INLINE void Cy_SysClk_ClkSlowInit()
 {
@@ -732,9 +732,9 @@ __STATIC_INLINE void init_cycfg_power(void)
     #if !(defined(CY_DEVICE_SECURE))
         #if defined (CY_IP_M4CPUSS)
             #if CY_CFG_PWR_USING_LDO
-                Cy_SysPm_LdoSetVoltage(CY_SYSPM_LDO_VOLTAGE_LP);
+                Cy_SysPm_LdoSetVoltage(CY_SYSPM_LDO_VOLTAGE_ULP);
             #else
-                Cy_SysPm_BuckEnable(CY_SYSPM_BUCK_OUT1_VOLTAGE_LP);
+                Cy_SysPm_BuckEnable(CY_SYSPM_BUCK_OUT1_VOLTAGE_ULP);
             #endif /* CY_CFG_PWR_USING_LDO */
         #endif /* defined (CY_IP_M4CPUSS) */
         #if CY_CFG_PWR_REGULATOR_MODE_MIN

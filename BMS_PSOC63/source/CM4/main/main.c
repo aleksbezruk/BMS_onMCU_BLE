@@ -3,7 +3,7 @@
  *
  * @brief Implementation main() function entry and main Task's business logic.
  *
- * @version 0.1.0
+ * @version 0.4.0
  */
 
 #include <string.h>
@@ -20,6 +20,7 @@
 #include "ADC.h"
 #include "BLE.h"
 #include "MAIN.h"
+#include "LP.h"
 
 // RTOS includes
 #include "FreeRTOS.h"
@@ -146,6 +147,9 @@ int main(void)
     BSP_initUTdic();
 #endif //Q_UTEST
 
+    /** Set Low Power mode at start up  */
+    LP_setMode(LP_DISABLED_MODE);
+
     /** Create main task */
     result = cy_rtos_thread_create(
         &mainTaskHandle_, 
@@ -191,6 +195,12 @@ static void mainTask_(cy_thread_arg_t arg)
     /** Init BLE peripheral & create BLE tasks */
     BLE_status_t bleStatus = BLE_init();
     if (bleStatus != BLE_STATUS_OK) {
+        CY_ASSERT(0);
+    }
+
+    /** Init Low Power modes */
+    LP_status_t lpStatus = LP_init();
+    if (lpStatus != LP_INIT_STATUS_OK) {
         CY_ASSERT(0);
     }
 
@@ -356,7 +366,7 @@ static void handleSystemEvt_(Evt_sys_data_t* evt)
  */
 void vApplicationIdleHook(void)
 {
-     /** Do job on Idle */
+     /** Handle QSPY communication */
      QS_onIdle();
 }
 
@@ -760,6 +770,7 @@ static void MAIN_SM_handleAdcEvt(Evt_adc_data_t* evt)
              * 4. Send VBAT to BLE task
              */
             ble_update_vbat_(evt);
+            LP_setMode(LP_DEEP_SLEEP_MODE);
             break;
         }
 
@@ -771,6 +782,7 @@ static void MAIN_SM_handleAdcEvt(Evt_adc_data_t* evt)
                 MAIN_post_evt((Main_evt_t*) &evt, EVT_SYSTEM);
             }
             ble_update_vbat_(evt);
+            LP_setMode(LP_DEEP_SLEEP_MODE);
             break;
         }
 
@@ -782,6 +794,7 @@ static void MAIN_SM_handleAdcEvt(Evt_adc_data_t* evt)
                 MAIN_post_evt((Main_evt_t*) &evt, EVT_SYSTEM);
             }
             ble_update_vbat_(evt);
+            LP_setMode(LP_DEEP_SLEEP_MODE);
             break;
         }
 

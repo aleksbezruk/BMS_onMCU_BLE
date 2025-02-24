@@ -15,6 +15,7 @@ pytest._QSPY_DETACH     = 129
 pytest._PKT_ATTACH_CONF = 128
 pytest._PKT_DETACH      = 129
 pytest._TRGT_RESET      = 2
+pytest._TRGT_COMMAND    = 1
 
 pytest._qspy_tx_seq = 0
 
@@ -76,7 +77,7 @@ def QSPY_attach():
             # send either reset or target-info request
             # (keep the poll0 loop running)
             print("--QSPY attach: success. Send cmd to reset target")
-            _sendTo(pack("<B", pytest._TRGT_RESET))
+            _sendTo(pack("<B", pytest._TRGT_RESET), enWakeup = True)
             # else:
             #     QSpy._sendTo(pack("<B", QSpy._TRGT_INFO))
             return
@@ -126,7 +127,7 @@ def QSPY_deinit():
     QSPY_detach()
 
 # Send packet to QSPY via socket
-def _sendTo(packet, str=None):
+def _sendTo(packet, enWakeup = False, str=None):
     print("_tx_seq: " "%d"%(pytest._qspy_tx_seq))
     tx_packet = bytearray([pytest._qspy_tx_seq & 0xFF])
     tx_packet.extend(packet)
@@ -135,6 +136,16 @@ def _sendTo(packet, str=None):
         tx_packet.extend(b"\0") # zero-terminate
     try:
         host_addr = tuple(pytest._host_addr) # convert to immutable tuple
+        if enWakeup == True:
+            print("Send Traget wakeup")
+            wakeUp_packet = pack("<BBIII", pytest._TRGT_COMMAND,
+                                    255, 0xAAAAAAAA, 0xAAAAAAAA, 0xAAAAAAAA)
+            tx_wakeUp_packet = bytearray([pytest._qspy_tx_seq & 0xFF])
+            tx_wakeUp_packet.extend(wakeUp_packet)
+            pytest._sock.sendto(tx_wakeUp_packet, host_addr)
+            pytest._qspy_tx_seq += 1
+        else:
+            print("No Traget wakeup")
         print("_sock.sendto: " "%s, %d"%(pytest._host_addr[0], pytest._host_addr[1]))
         print("tx_packet: " "%s"%(tx_packet))
         pytest._sock.sendto(tx_packet, host_addr)
@@ -256,7 +267,7 @@ def qunpack(fmt, bstr):
 # Get ADC measurement result
 # timeout - in seconds
 # retuens adc_meas_result, @ref adc_meas_result
-def QSPY_get_ADC_meas(timeout=30):
+def QSPY_get_ADC_meas(timeout=40):
     adc_meas_timeout = timeout
     polling_step = 0.25 #seconds
     num_iterations = int(adc_meas_timeout / polling_step)
