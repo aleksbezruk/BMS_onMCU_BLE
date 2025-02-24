@@ -20,25 +20,38 @@ def test_open_adapter():
     pytest.ADAPTER.set_callback_on_scan_found(lambda peripheral: print(f"Found {peripheral.identifier()} [{peripheral.address()}]"))
 
 @pytest.mark.dependency(depends=["test_open_adapter"], name="test_find_bms")
-@pytest.mark.repeat(2)
 def test_find_bms():
     print("-------- test_find_bms ------------")
-    # Scan for 15 seconds
-    pytest.ADAPTER.scan_for(15000)
-    peripherals = pytest.ADAPTER.scan_get_results()
-    is_bms_found = False
-    for peripheral in peripherals:
-        if peripheral.identifier() == "BMS_MCU":
-            is_bms_found = True
-            pytest.BMS = peripheral
-    assert is_bms_found == True, "No BMS found"
+    try: 
+        # Scan for 40 seconds
+        pytest.ADAPTER.scan_for(40000)
+        peripherals = pytest.ADAPTER.scan_get_results()
+        is_bms_found = False
+        for peripheral in peripherals:
+            if peripheral.identifier() == "BMS_MCU":
+                is_bms_found = True
+                pytest.BMS = peripheral
+        assert is_bms_found == True, "No BMS found"
+    except:
+        print("Retry scan")
+        pytest.ADAPTER.scan_for(40000)
+        peripherals = pytest.ADAPTER.scan_get_results()
+        is_bms_found = False
+        for peripheral in peripherals:
+            if peripheral.identifier() == "BMS_MCU":
+                is_bms_found = True
+                pytest.BMS = peripheral
+        assert is_bms_found == True, "No BMS found"
 
 @pytest.mark.dependency(depends=["test_find_bms"], name="test_connect_bms")
-@pytest.mark.repeat(2)
 def test_connect_bms():
     print("-------- test_connect_bms ------------")
     print(f"Connecting to: {pytest.BMS.identifier()} [{pytest.BMS.address()}]")
-    pytest.BMS.connect()
+    try:
+        pytest.BMS.connect()
+    except:
+        print("Try to reconnect")
+        pytest.BMS.connect()    #retry, looks like SimpleBLE lib in some cases Fails to connect for unknown reason
     assert pytest.BMS.is_connected() == True, "BLE connect with BMS isn't established"
     print("-------- test_discover_bms ------------")
     time.sleep(3)

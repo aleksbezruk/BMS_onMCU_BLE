@@ -71,9 +71,9 @@
  */
 #define ADC_BANK_VOLT_CALC(v_neg, v_pos)    (int16_t) ( v_pos - v_neg )
 #define ADC_CONV_BY_RATIO(val, ratio)   (int16_t) ( (float) val * ratio )
-#define ADC_NUM_MEAS 100U
+#define ADC_NUM_MEAS 5U
 
-#define ADC_TASK_INTERVAL   20000U
+#define ADC_TASK_INTERVAL   30000U  /**< ms */
 #define ADC_TASK_STACK_SIZE 560U   /**< bytes, aligned to 8 bytes */
 
 ///////////////////////

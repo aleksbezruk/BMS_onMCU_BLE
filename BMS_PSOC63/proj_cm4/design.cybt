@@ -1076,22 +1076,22 @@
             <PeripheralConfiguration name="Peripheral configuration 0">
                 <AdvertisementProperties>
                     <Property id="AdvChannelType" value="All"/>
-                    <Property id="HostHighAdvIntervalMin" value="1000"/>
-                    <Property id="HostHighAdvIntervalMax" value="1000"/>
+                    <Property id="HostHighAdvIntervalMin" value="3000"/>
+                    <Property id="HostHighAdvIntervalMax" value="3000"/>
                     <Property id="HostHighAdvTimeoutEnabled" value="false"/>
-                    <Property id="HostLowAdvIntervalMin" value="1000"/>
-                    <Property id="HostLowAdvIntervalMax" value="1000"/>
+                    <Property id="HostLowAdvIntervalMin" value="3000"/>
+                    <Property id="HostLowAdvIntervalMax" value="3000"/>
                     <Property id="HostLowAdvTimeoutEnabled" value="false"/>
-                    <Property id="HostHighDirAdvIntervalMin" value="1000"/>
-                    <Property id="HostHighDirAdvIntervalMax" value="1000"/>
-                    <Property id="HostLowDirAdvIntervalMin" value="1000"/>
-                    <Property id="HostLowDirAdvIntervalMax" value="1000"/>
+                    <Property id="HostHighDirAdvIntervalMin" value="3000"/>
+                    <Property id="HostHighDirAdvIntervalMax" value="3000"/>
+                    <Property id="HostLowDirAdvIntervalMin" value="3000"/>
+                    <Property id="HostLowDirAdvIntervalMax" value="3000"/>
                     <Property id="HostLowDirAdvTimeoutEnabled" value="false"/>
-                    <Property id="HostHighNonconnAdvIntervalMin" value="1000"/>
-                    <Property id="HostHighNonconnAdvIntervalMax" value="1000"/>
+                    <Property id="HostHighNonconnAdvIntervalMin" value="3000"/>
+                    <Property id="HostHighNonconnAdvIntervalMax" value="3000"/>
                     <Property id="HostHighNonconnAdvTimeoutEnabled" value="false"/>
-                    <Property id="HostLowNonconnAdvIntervalMin" value="1000"/>
-                    <Property id="HostLowNonconnAdvIntervalMax" value="1000"/>
+                    <Property id="HostLowNonconnAdvIntervalMin" value="3000"/>
+                    <Property id="HostLowNonconnAdvIntervalMax" value="3000"/>
                     <Property id="HostLowNonconnAdvTimeoutEnabled" value="false"/>
                 </AdvertisementProperties>
                 <AdvertisementPacket>

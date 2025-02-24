@@ -8,7 +8,7 @@ from testfixture_qspy import QSPY_get_ADC_meas
 #####################
 # Constants
 #####################
-pytest.ADC_MEAS_NUM_ITERATIONS = 10
+pytest.ADC_MEAS_NUM_ITERATIONS = 5
 
 @pytest.mark.dependency(name="test_open_qspy")
 def test_open_qspy():

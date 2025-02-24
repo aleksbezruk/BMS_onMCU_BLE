@@ -267,7 +267,7 @@ def qunpack(fmt, bstr):
 # Get ADC measurement result
 # timeout - in seconds
 # retuens adc_meas_result, @ref adc_meas_result
-def QSPY_get_ADC_meas(timeout=30):
+def QSPY_get_ADC_meas(timeout=40):
     adc_meas_timeout = timeout
     polling_step = 0.25 #seconds
     num_iterations = int(adc_meas_timeout / polling_step)

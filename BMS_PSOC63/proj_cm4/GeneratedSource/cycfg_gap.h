@@ -99,27 +99,27 @@
 /* Advertisement settings */
 #define CY_BT_CHANNEL_MAP                                     (BTM_BLE_ADVERT_CHNL_37 | BTM_BLE_ADVERT_CHNL_38 | BTM_BLE_ADVERT_CHNL_39)
 
-#define CY_BT_HIGH_DUTY_ADV_MIN_INTERVAL                      1600
-#define CY_BT_HIGH_DUTY_ADV_MAX_INTERVAL                      1600
+#define CY_BT_HIGH_DUTY_ADV_MIN_INTERVAL                      4800
+#define CY_BT_HIGH_DUTY_ADV_MAX_INTERVAL                      4800
 #define CY_BT_HIGH_DUTY_ADV_DURATION                          0
 
-#define CY_BT_LOW_DUTY_ADV_MIN_INTERVAL                       1600
-#define CY_BT_LOW_DUTY_ADV_MAX_INTERVAL                       1600
+#define CY_BT_LOW_DUTY_ADV_MIN_INTERVAL                       4800
+#define CY_BT_LOW_DUTY_ADV_MAX_INTERVAL                       4800
 #define CY_BT_LOW_DUTY_ADV_DURATION                           0
 
-#define CY_BT_HIGH_DUTY_DIRECTED_ADV_MIN_INTERVAL             1600
-#define CY_BT_HIGH_DUTY_DIRECTED_ADV_MAX_INTERVAL             1600
+#define CY_BT_HIGH_DUTY_DIRECTED_ADV_MIN_INTERVAL             4800
+#define CY_BT_HIGH_DUTY_DIRECTED_ADV_MAX_INTERVAL             4800
 
-#define CY_BT_LOW_DUTY_DIRECTED_ADV_MIN_INTERVAL              1600
-#define CY_BT_LOW_DUTY_DIRECTED_ADV_MAX_INTERVAL              1600
+#define CY_BT_LOW_DUTY_DIRECTED_ADV_MIN_INTERVAL              4800
+#define CY_BT_LOW_DUTY_DIRECTED_ADV_MAX_INTERVAL              4800
 #define CY_BT_LOW_DUTY_DIRECTED_ADV_DURATION                  0
 
-#define CY_BT_HIGH_DUTY_NONCONN_ADV_MIN_INTERVAL              1600
-#define CY_BT_HIGH_DUTY_NONCONN_ADV_MAX_INTERVAL              1600
+#define CY_BT_HIGH_DUTY_NONCONN_ADV_MIN_INTERVAL              4800
+#define CY_BT_HIGH_DUTY_NONCONN_ADV_MAX_INTERVAL              4800
 #define CY_BT_HIGH_DUTY_NONCONN_ADV_DURATION                  0
 
-#define CY_BT_LOW_DUTY_NONCONN_ADV_MIN_INTERVAL               1600
-#define CY_BT_LOW_DUTY_NONCONN_ADV_MAX_INTERVAL               1600
+#define CY_BT_LOW_DUTY_NONCONN_ADV_MIN_INTERVAL               4800
+#define CY_BT_LOW_DUTY_NONCONN_ADV_MAX_INTERVAL               4800
 #define CY_BT_LOW_DUTY_NONCONN_ADV_DURATION                   0
 
 

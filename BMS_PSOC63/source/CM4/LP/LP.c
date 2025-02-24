@@ -30,7 +30,7 @@
  *                          - Makefile: COMPONENT_CM0P_BLESS - This image starts BLE controller on CM0+ core, <br>
  *                                       starts CM4 core at CY_CORTEX_M4_APPL_ADDR and puts CM0+ core into a deep sleep mode. <br>
  *                                       It's alredy implemented, CMO+ core additional setting not needed. <br>
- *                      2.2 @todo LP for SDK & BLE stack  <br>
+ *                      2.2 LP for SDK & BLE stack  <br>
  *                          - #define CY_CFG_PWR_SYS_IDLE_MODE (set in MTB Generated sources): <br>
  *                              #define CY_CFG_PWR_MODE_LP 0x01UL               <br>
  *                                  #define CY_CFG_PWR_MODE_ULP 0x02UL          <br>
@@ -39,34 +39,33 @@
  *                                  #define CY_CFG_PWR_MODE_DEEPSLEEP 0x10UL    <br>
  *                          - #define CY_CFG_PWR_MODE_SLEEP - looks like setup CPU core Sleep mode ( see cyhal_syspm_sleep() ); <br>
  *                          - #define CY_CFG_PWR_MODE_DEEPSLEEP: <br>
- *                              - Core regulator : <br>
- *                                  - @todo Normal Current LDO ??? ; <br>
- *                                  - @todo Minimum Current LDO ??? ; <br>
- *                                  - @todo Normal Current Buck ??? ; <br>
- *                                  - @todo Minimum Current Buck ??? ; <br>
+ *                              - Available Core regulator for PSOC63: <br>
+ *                                  - Normal Current LDO ; <br>
+ *                                  - Minimum Current LDO ; <br>
+ *                                  - Normal Current Buck ; <br>
+ *                                  - Minimum Current Buck ; <br>
  *                              - System Active power mode : <br>
  *                                  - LP - is the default operating mode of the device after reset and provides maximum system performance. ; <br>
  *                                  - ULP Ultra Low Power (ULP) mode is identical to LP mode with a performance tradeoff made to achieve lower <br>
  *                                    system current. This tradeoff lowers the core operating voltage, which then requires reduced operating clock
  *                                    frequency and limited high-frequency clock sources. ; <br>
  *                              - CY_CFG_PWR_DEEPSLEEP_LATENCY / CY_CFG_PWR_DEEPSLEEP_LATENCY-> set DPSLP latency ; <br>
- *                              - @todo CYHAL_SYSPM_RSLT_DEEPSLEEP_LOCKED -> ??? ; <br>
+ *                              - CYHAL_SYSPM_RSLT_DEEPSLEEP_LOCKED -> option to lock/unlock DPSLP at runtime ; <br>
  *                              - cyhal_syspm_tickless_deepsleep() -> _cyhal_syspm_deepsleep_internal() -> Cy_SysPm_CpuEnterDeepSleep(CY_SYSPM_WAIT_FOR_INTERRUPT) ; <br>
  *                              - wake up sources: BLE, LP timers, GPIO ; <br>
  *                              - UART operation in DPSLP: <br>
  *                                  - retention Enabled; <br>
  *                                  - wake-up isn't available, so RX line should be configred for Input with IRQ on falling edge (START bit) ; <br>
- *                                  - FW should re-eanble receiver after wake up ; <br>
  *                              - SAR ADC is Off in DPSLP, so needed logic to de-init ADC before DPSLP & re-init after wake-up/before measurements <br>
- *                              - @todo register callbacks before / after transition to DPDSLP: <br> 
+ *                              - register callbacks before / after transition to DPDSLP: <br> 
  *                                  - see \ref Cy_SysPm_CpuEnterDeepSleep() ; <br> 
  *                                  - see \ref CY_SYSPM_BEFORE_TRANSITION, CY_SYSPM_AFTER_TRANSITION, cy_en_syspm_callback_mode_t ; <br>
  *                                  - see \ref Cy_SysPm_RegisterCallback() ; <br>
  *                          - #define DEEPSLEEP_ENABLE -> Local 'CY_driver' definition for the vApplicationSleep() callback ; <br>
  * 
- *                ### 3. @todo Define BMS system parameters that affects power consumption
- *                    3.1 @todo Advertising interval ???
- *                    3.2 @todo ADC measurements duration ???
+ *                ### 3. Define BMS system parameters that affects power consumption
+ *                    3.1 Advertising interval - 3 seconds
+ *                    3.2 ADC measurements duration - 5 measurements to avreage result
  * 
  * @version 0.4.0
  */

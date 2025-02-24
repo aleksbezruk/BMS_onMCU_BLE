@@ -12,7 +12,7 @@ pytest --version
 printf "=== Reboot DUT ===\n"
 pyocd reset --target cy8c6xx7_nosmif --uid 1714186503068400 # reset/boot target before run tests
 
-sleep 20  #delay between tests to obtain QSPY logs
+sleep 10  #delay between tests to obtain QSPY logs
 
 pytest -s ./test_ADC_meas.py
 RETURN=$?
@@ -25,7 +25,7 @@ else
   printf "${RED}The test_ADC_meas.py FAILED and returned the code $RETURN\n"
   exit $RETURN
 fi
-sleep 20  #delay between tests to obtain QSPY logs
+sleep 10  #delay between tests to obtain QSPY logs
 
 pytest -s ./test_BLE_scan.py
 RETURN=$?
@@ -39,7 +39,7 @@ else
   exit $RETURN
 fi
 
-sleep 20  #delay between tests to obtain QSPY logs
+sleep 10  #delay between tests to obtain QSPY logs
 pytest -s ./test_BLE_connect.py
 RETURN=$?
 if [ $RETURN -eq 0 ];
@@ -52,7 +52,7 @@ else
   exit $RETURN
 fi
 
-sleep 20  #delay between tests to obtain QSPY logs
+sleep 10  #delay between tests to obtain QSPY logs
 pytest -s ./test_BLE_BAS.py
 RETURN=$?
 if [ $RETURN -eq 0 ];
@@ -65,7 +65,7 @@ else
   exit $RETURN
 fi
 
-sleep 20  #delay between tests to obtain QSPY logs
+sleep 10  #delay between tests to obtain QSPY logs
 pytest -s ./test_BLE_AIOS.py
 RETURN=$?
 if [ $RETURN -eq 0 ];
