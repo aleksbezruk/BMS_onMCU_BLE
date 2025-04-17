@@ -28,6 +28,38 @@ message(STATUS "CMAKE_TOOLCHAIN_FILE is: ${CMAKE_TOOLCHAIN_FILE}")
 set(SRC_FILES
         test_main.c
         startup/startup_qn908x.S
+        CMSIS/system_QN908XC.c
+        drivers/fsl_adc.c
+        #drivers/fsl_aes.c
+        drivers/fsl_calibration.c
+        drivers/fsl_clock.c
+        drivers/fsl_common.c
+        drivers/fsl_ctimer.c
+        drivers/fsl_flash.c
+        drivers/fsl_flexcomm.c
+        drivers/fsl_gpio.c
+        #drivers/fsl_i2c_freertos.c
+        drivers/fsl_i2c.c
+        drivers/fsl_inputmux.c
+        drivers/fsl_power.c
+        drivers/fsl_reset.c
+        drivers/fsl_rf.c
+        drivers/fsl_rng.c
+        drivers/fsl_rtc.c
+        #drivers/fsl_spi_freertos.c
+        drivers/fsl_spi.c
+        #drivers/fsl_usart_freertos.c
+        drivers/fsl_usart.c
+        drivers/fsl_wdt.c
+        #framework/common/FwkInit.c
+        #framework/FunctionLib/FunctionLib.c
+        #BSP/board.c
+        BSP/clock_config.c
+        BSP/gpio_pins.c
+        BSP/pin_mux.c
+        utilities/fsl_debug_console.c
+        framework/LED/Source/LED.c
+        framework/GPIO/GPIO_Adapter.c
         )
 
 # Build the executable based on the source files
@@ -37,11 +69,22 @@ add_executable(${EXECUTABLE} ${SRC_FILES})
 target_compile_definitions(${EXECUTABLE} PRIVATE
         -D__STARTUP_CLEAR_BSS
         -D__ATOLLIC__
+        -DCPU_QN9080C
         )
 
 # List of includ directories
 target_include_directories(${EXECUTABLE} PRIVATE
         startup
+        CMSIS
+        drivers
+        framework/common
+        framework/FunctionLib
+        BSP
+        utilities
+        framework/RNG/Interface
+        framework/GPIO
+        framework/LED/Interface
+        framework/TimersManager/Interface
         )
 
 # Compiler options

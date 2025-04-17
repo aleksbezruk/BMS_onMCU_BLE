@@ -8,6 +8,28 @@
 		},
 		{
 			"path": "startup"
+		},
+		{
+			"path": "CMSIS"
+		},
+		{
+			"path": "drivers"
+		},
+		{
+			"path": "framework"
+		},
+		{
+			"path": "BSP"
+		},
+		{
+			"path": "utilities"
 		}
-	]
+	],
+	"settings": {
+		"files.associations": {
+			"clock_config.h": "c",
+			"gpio_adapter.h": "c",
+			"fsl_power.h": "c"
+		}
+	}
 }
