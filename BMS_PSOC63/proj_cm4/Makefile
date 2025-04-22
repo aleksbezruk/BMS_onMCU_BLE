@@ -68,38 +68,38 @@ CORE_NAME=CM4_0
 
 $(info Set BUILD CONFIGURATION IS -> $(BUILD_CONFIG)) 
 ifeq ($(BUILD_CONFIG), Debug)
-SOURCES=    ../source/CM4/main/main.c	\
-			../source/BSP/BSP.c \
-			../source/CM4/qspy/qs_64bit.c \
-			../source/CM4/qspy/qs_fp.c \
-			../source/CM4/qspy/qs_rx.c \
-			../source/CM4/qspy/qs.c \
-			../source/CM4/qspy/qstamp.c \
-			../source/CM4/qspyHelper/qspyHelper.c \
-			../source/CM4/ADC/ADC.c	\
-			../source/CM4/BLE/BLE.c	\
-			../source/CM4/LP/LP.c	\
-			../source/CM4/BLE/BatteryService.c	\
-			../source/CM4/BLE/AIOService.c
+SOURCES=    ../../source/CM4/main/main.c	\
+			../BSP/BSP.c \
+			../../source/CM4/qspy/qs_64bit.c \
+			../../source/CM4/qspy/qs_fp.c \
+			../../source/CM4/qspy/qs_rx.c \
+			../../source/CM4/qspy/qs.c \
+			../../source/CM4/qspy/qstamp.c \
+			../../source/CM4/qspyHelper/qspyHelper.c \
+			../../source/CM4/ADC/ADC.c	\
+			../../source/CM4/BLE/BLE.c	\
+			../../source/CM4/LP/LP.c	\
+			../../source/CM4/BLE/BatteryService.c	\
+			../../source/CM4/BLE/AIOService.c
 else ifeq ($(BUILD_CONFIG), Release)
 SOURCES=
 else ifeq ($(BUILD_CONFIG), Qutest)
-SOURCES=    ../source/CM4/qspy/qutest.c \
-		    ../source/CM4/qutestHelper/qutestHelper.c	\
-			../source/CM4/main/main.c	\
-		    ../source/BSP/BSP.c \
-			../source/BSP/test_BSP.c \
-			../source/CM4/qspy/qs_64bit.c \
-			../source/CM4/qspy/qs_fp.c \
-			../source/CM4/qspy/qs_rx.c \
-			../source/CM4/qspy/qs.c \
-			../source/CM4/qspy/qstamp.c \
-			../source/CM4/qspyHelper/qspyHelper.c \
-			../source/CM4/ADC/ADC.c	\
-			../source/CM4/BLE/BLE.c	\
-			../source/CM4/LP/LP.c	\
-			../source/CM4/BLE/BatteryService.c	\
-			../source/CM4/BLE/AIOService.c
+SOURCES=    ../../source/CM4/qspy/qutest.c \
+		    ../../source/CM4/qutestHelper/qutestHelper.c	\
+			../../source/CM4/main/main.c	\
+		    ../BSP/BSP.c \
+			../BSP/test_BSP.c \
+			../../source/CM4/qspy/qs_64bit.c \
+			../../source/CM4/qspy/qs_fp.c \
+			../../source/CM4/qspy/qs_rx.c \
+			../../source/CM4/qspy/qs.c \
+			../../source/CM4/qspy/qstamp.c \
+			../../source/CM4/qspyHelper/qspyHelper.c \
+			../../source/CM4/ADC/ADC.c	\
+			../../source/CM4/BLE/BLE.c	\
+			../../source/CM4/LP/LP.c	\
+			../../source/CM4/BLE/BatteryService.c	\
+			../../source/CM4/BLE/AIOService.c
 else
 # $(error !!! BUILD CONFIGURATION IS udefined !!!. Please set Debug or Qutest or Release)
 $(info Set BUILD CONFIGURATION IS nor defined. Please doublecheck. Maybe it's Cypress Device Confidurator running) 
@@ -107,14 +107,14 @@ endif	# BUILD configuration
 
 # Like SOURCES, but for include directories. Value should be paths to
 # directories (without a leading -I).
-INCLUDES=SOURCES= ../source/BSP/ \
-				  ../source/CM4/qspy/ \
-				  ../source/CM4/qspyHelper \
-				  ../source/CM4/qutestHelper \
-				  ../source/CM4/ADC	\
-				  ../source/CM4/BLE	\
-				  ../source/CM4/main \
-				  ../source/CM4/LP
+INCLUDES=SOURCES= ../BSP/ \
+				  ../../source/CM4/qspy/ \
+				  ../../source/CM4/qspyHelper \
+				  ../../source/CM4/qutestHelper \
+				  ../../source/CM4/ADC	\
+				  ../../source/CM4/BLE	\
+				  ../../source/CM4/main \
+				  ../../source/CM4/LP
 
 # Add additional defines to the build process (without a leading -D).
 ifeq ($(BUILD_CONFIG), Debug)

@@ -1,18 +1,20 @@
 {
     "folders": [
-
-		{
-			"path": "."
-		},
-		{
-			"path": "proj_cm0p"
-		},
-		{
-			"path": "proj_cm4"
-		},
-		{
-			"path": "../mtb_shared"
-		}
+        {
+            "path": "."
+        },
+        {
+            "path": "proj_cm0p"
+        },
+        {
+            "path": "proj_cm4"
+        },
+        {
+            "path": "../mtb_shared"
+        },
+        {
+            "path": "../source"
+        }
     ],
     "settings": {
         //mtb//  If this project will be shared with multiple users, the
