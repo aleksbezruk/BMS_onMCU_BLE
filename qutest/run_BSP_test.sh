@@ -1,1 +1,1 @@
-python3 ./qutest.py ../BMS_PSOC63/source/BSP/test_BSP.py
+python3 ./qutest.py ../BMS_PSOC63//BSP/test_BSP.py
