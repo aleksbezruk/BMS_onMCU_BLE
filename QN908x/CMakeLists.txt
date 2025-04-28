@@ -53,10 +53,10 @@ set(SRC_FILES
         drivers/fsl_wdt.c
         #framework/common/FwkInit.c
         #framework/FunctionLib/FunctionLib.c
-        #BSP/board.c
-        BSP/clock_config.c
-        BSP/gpio_pins.c
-        BSP/pin_mux.c
+        #board/board.c
+        board/clock_config.c
+        board/gpio_pins.c
+        board/pin_mux.c
         utilities/fsl_debug_console.c
         framework/LED/Source/LED.c
         framework/GPIO/GPIO_Adapter.c
@@ -80,7 +80,7 @@ target_include_directories(${EXECUTABLE} PRIVATE
         drivers
         framework/common
         framework/FunctionLib
-        BSP
+        board
         utilities
         framework/RNG/Interface
         framework/GPIO

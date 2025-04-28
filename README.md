@@ -92,3 +92,25 @@ In the project Target testing is used. To write coverage data to PC from targer,
 Plan - to develop Desktop and Mobile apps. <br> 
 Qt C++ framework & QtBluetooth/SimpleBLE_lib is prefered way to develop cross platform app: <br>
 Windows, Linux, MacOS, Android, iOS <br> 
+
+_________________________________________________________________________________________________
+
+## XI. QN908x port details
+One of the main goal of the project is to develop BMS firmware <br>
+that is ported to several MCUs from different vendors: <br>
+- PSOC63 Cypress/Infineon ; <br>
+- QN908x NXP ; <br>
+- NRF52840 Nordic ; <br>
+- an maybe more . <br>
+
+To achieve this goal a HAL will be provided. <br>
+QN908x port development -> QN9080 DK v1.3. <br>
+
+To accelerate firmware porting to QN908x the MCU Config tools will be used (power, clock, pin, peripherals config). <br>
+*.mex - MCU Exported Configuration file - is used by NXP tool. <br>
+> See https://www.nxp.com/design/design-center/software/development-software/mcuxpresso-software-and-tools-/mcuxpresso-config-tools-pins-clocks-and-peripherals:MCUXpresso-Config-Tools <br>
+
+_________________________________________________________________________________________________
+
+## X1I. NRF52840 port details
+TBD.

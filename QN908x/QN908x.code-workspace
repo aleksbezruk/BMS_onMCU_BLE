@@ -19,13 +19,13 @@
 			"path": "framework"
 		},
 		{
-			"path": "BSP"
-		},
-		{
 			"path": "utilities"
 		},
 		{
 			"path": "../source"
+		},
+		{
+			"path": "board"
 		}
 	],
 	"settings": {
