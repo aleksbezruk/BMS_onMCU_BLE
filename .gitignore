@@ -8,6 +8,7 @@
 *.svg
 *.js
 *.bin
+*.bak
 
 # ignore folders
 doxygen/

@@ -577,7 +577,7 @@
                <clock_outputs>
                   <clock_output id="AHB_clock.outFreq" value="32 MHz" locked="true" accuracy="0.001"/>
                   <clock_output id="APB_clock.outFreq" value="32 MHz" locked="true" accuracy="0.001"/>
-                  <clock_output id="BLE_clock.outFreq" value="8 MHz" locked="false" accuracy=""/>
+                  <clock_output id="BLE_clock.outFreq" value="8 MHz" locked="true" accuracy="0.001"/>
                   <clock_output id="CLK_32K_clock.outFreq" value="32.768 kHz" locked="false" accuracy=""/>
                   <clock_output id="CLK_XIN_clock.outFreq" value="32 MHz" locked="true" accuracy="0.001"/>
                   <clock_output id="GPIO_clock.outFreq" value="32 MHz" locked="true" accuracy="0.001"/>
