@@ -23,13 +23,17 @@
 		},
 		{
 			"path": "utilities"
+		},
+		{
+			"path": "../source"
 		}
 	],
 	"settings": {
 		"files.associations": {
 			"clock_config.h": "c",
 			"gpio_adapter.h": "c",
-			"fsl_power.h": "c"
+			"fsl_power.h": "c",
+			"led.h": "c"
 		}
 	}
 }

@@ -1,0 +1,12 @@
+{
+    "files.associations": {
+        "cybsp.h": "c",
+        "cyhal.h": "c",
+        "cyhal_drivers.h": "c",
+        "cyhal_sdhc.h": "c",
+        "cyhal_hw_types.h": "c",
+        "system_qn908xc.h": "c",
+        "gpio_adapter.h": "c",
+        "led.h": "c"
+    }
+}

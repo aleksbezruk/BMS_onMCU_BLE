@@ -77,7 +77,10 @@
             "tuple": "cpp",
             "type_traits": "cpp",
             "utility": "cpp",
-            "cstdint": "cpp"
+            "cstdint": "cpp",
+            "string.h": "c",
+            "aioservice.h": "c",
+            "hal.h": "c"
         },
         "clangd.arguments": [
             "--query-driver=${config:modustoolbox.toolsPath}/gcc/bin/arm-none-eabi-gcc",

@@ -109,6 +109,9 @@
 #include "BatteryService.h"
 #include "AIOService.h"
 
+// HAL
+#include "hal.h"
+
 ///////////////////////
 // Defines
 ///////////////////////
@@ -597,7 +600,7 @@ static void le_app_init(void)
         QS_END()
         QS_FLUSH();
 
-        CY_ASSERT(0);
+        HAL_ASSERT(0);
     }
 }
 
@@ -620,7 +623,7 @@ static void bleTask_(cy_thread_arg_t arg)
                                      (uint8_t *) bleQueueSto,
                                      &staticQueueHandle);
     if (bleTaskQueueHandle == NULL) {
-        CY_ASSERT(0);
+        HAL_ASSERT(0);
     }
 
     /** Events processing loop */
@@ -630,7 +633,7 @@ static void bleTask_(cy_thread_arg_t arg)
                                    &queueItem,
                                    CY_RTOS_NEVER_TIMEOUT);
         if (result != CY_RSLT_SUCCESS) {
-            CY_ASSERT(0);
+            HAL_ASSERT(0);
         }
 
         /** Handle an evt */
@@ -658,7 +661,7 @@ static void bleTask_(cy_thread_arg_t arg)
  */
 void BLE_post_evt(Ble_evt_t* evt, Evt_types_t eventType)
 {
-    CY_ASSERT((evt != NULL) && (eventType < EVT_TYPE_MAX));
+    HAL_ASSERT((evt != NULL) && (eventType < EVT_TYPE_MAX));
 
     Ble_queue_data_t queueItem;
 
@@ -669,7 +672,7 @@ void BLE_post_evt(Ble_evt_t* evt, Evt_types_t eventType)
                                          &queueItem,
                                          CY_RTOS_NEVER_TIMEOUT);
     if (result != CY_RSLT_SUCCESS) {
-        CY_ASSERT(0);
+        HAL_ASSERT(0);
     }
 }
 
@@ -735,7 +738,7 @@ static void parseQueueItem_(Ble_queue_data_t* queueItem)
         }
 
         default:
-            CY_ASSERT(0);   // unexpected evt
+            HAL_ASSERT(0);   // unexpected evt
             break;
     }
 }

@@ -10,7 +10,6 @@
 
 #include "cy_pdl.h"
 #include "cyhal.h"
-#include "cybsp.h"
 #include "BSP.h"
 #include "qspyHelper.h"
 #if defined(Q_UTEST)
@@ -26,6 +25,9 @@
 #include "FreeRTOS.h"
 #include "task.h"
 #include "cyabs_rtos.h"
+
+// HAL
+#include "hal.h"
 
 ///////////////////
 // Functions prototypes
@@ -105,12 +107,10 @@ static void initSemihosting(void)
  */
 int main(void)
 {
-    cy_rslt_t result;
-
     /** Initialize the device and board peripherals */
-    result = cybsp_init();
-    if (result != CY_RSLT_SUCCESS) {
-        CY_ASSERT(0);
+    HAL_status_t initStatus = HAL_init_hardware();
+    if (initStatus != HAL_STATUS_OK) {
+        HAL_ASSERT(0);
     }
 
     /** Enable global interrupts */
@@ -151,7 +151,7 @@ int main(void)
     LP_setMode(LP_DISABLED_MODE);
 
     /** Create main task */
-    result = cy_rtos_thread_create(
+    cy_rslt_t result = cy_rtos_thread_create(
         &mainTaskHandle_, 
         mainTask_,
         "mainTask", 
@@ -161,15 +161,15 @@ int main(void)
         NULL                    // no args
     );
     if (result != CY_RSLT_SUCCESS) {
-        CY_ASSERT(0);
+        HAL_ASSERT(0);
     }
 
     /** Start FreeRTOS scheduler */
     vTaskStartScheduler();
 
     /** Never reach the point unless error conditions */
-    CY_ASSERT(0);
-    while(1) {}
+    HAL_ASSERT(0);
+    while(true) {}
 }
 
 
@@ -189,19 +189,19 @@ static void mainTask_(cy_thread_arg_t arg)
     /** Init ADC peripheral & create ADC task */
     ADC_status_t adcStatus = ADC_init();
     if (adcStatus != ADC_STATUS_OK) {
-        CY_ASSERT(0);
+        HAL_ASSERT(0);
     }
 
     /** Init BLE peripheral & create BLE tasks */
     BLE_status_t bleStatus = BLE_init();
     if (bleStatus != BLE_STATUS_OK) {
-        CY_ASSERT(0);
+        HAL_ASSERT(0);
     }
 
     /** Init Low Power modes */
     LP_status_t lpStatus = LP_init();
     if (lpStatus != LP_INIT_STATUS_OK) {
-        CY_ASSERT(0);
+        HAL_ASSERT(0);
     }
 
     /** Set default state (OFF) for discharge control switch */
@@ -234,7 +234,7 @@ static void mainTask_(cy_thread_arg_t arg)
                                      (uint8_t *) mainQueueSto,
                                      &staticQueueHandle);
     if (mainTaskQueueHandle == NULL) {
-        CY_ASSERT(0);
+        HAL_ASSERT(0);
     }
 
     /** 
@@ -250,7 +250,7 @@ static void mainTask_(cy_thread_arg_t arg)
                                    &queueItem,
                                    CY_RTOS_NEVER_TIMEOUT);
         if (result != CY_RSLT_SUCCESS) {
-            CY_ASSERT(0);
+            HAL_ASSERT(0);
         }
 
         /** Errors handling 
@@ -301,7 +301,7 @@ static void parseQueueItem_(Main_queue_data_t* queueItem)
             break;
         
         default:
-            CY_ASSERT(0);
+            HAL_ASSERT(0);
             break;
     }
 }
@@ -385,7 +385,7 @@ void vApplicationIdleHook(void)
  */
 void MAIN_post_evt(Main_evt_t* evt, Evt_types_t eventType)
 {
-    CY_ASSERT((evt != NULL) && (eventType < EVT_TYPE_MAX));
+    HAL_ASSERT((evt != NULL) && (eventType < EVT_TYPE_MAX));
 
     Main_queue_data_t queueItem;
 
@@ -396,7 +396,7 @@ void MAIN_post_evt(Main_evt_t* evt, Evt_types_t eventType)
                                          &queueItem,
                                          CY_RTOS_NEVER_TIMEOUT);
     if (result != CY_RSLT_SUCCESS) {
-        CY_ASSERT(0);
+        HAL_ASSERT(0);
     }
 }
 
@@ -475,7 +475,7 @@ static void MAIN_setDischargeSw(MAIN_dischargeSw_state_t state)
             break;
         }
         default:
-            CY_ASSERT(0);
+            HAL_ASSERT(0);
             break;
     }
 }
@@ -514,7 +514,7 @@ static void MAIN_setChargeSw(MAIN_chargeSw_state_t state)
             break;
         }
         default:
-            CY_ASSERT(0);
+            HAL_ASSERT(0);
             break;
     }
 }
@@ -581,7 +581,7 @@ static void MAIN_initBalancerSw(void)
  */
 static void MAIN_enableBalancerSw(uint8_t balBanksEnMask)
 {
-    CY_ASSERT((balBanksEnMask > 0) && (balBanksEnMask <= MAIN_BMS_ALL_BANKS));
+    HAL_ASSERT((balBanksEnMask > 0) && (balBanksEnMask <= MAIN_BMS_ALL_BANKS));
 
     Switch_state_t* sw_state = (Switch_state_t *) &swState_;
 
@@ -629,7 +629,7 @@ static void MAIN_enableBalancerSw(uint8_t balBanksEnMask)
  */
 static void MAIN_disableBalancerSw(uint8_t balBanksDisMask)
 {
-    CY_ASSERT((balBanksDisMask > 0) && (balBanksDisMask <= MAIN_BMS_ALL_BANKS));
+    HAL_ASSERT((balBanksDisMask > 0) && (balBanksDisMask <= MAIN_BMS_ALL_BANKS));
 
     Switch_state_t* sw_state = (Switch_state_t *) &swState_;
 
@@ -717,19 +717,19 @@ static void MAIN_SM_handleSysEvt(Evt_sys_data_t* evt)
         case BMS_STATE_ERROR:
         {
             /** @todo Implement */
-            CY_ASSERT(0);
+            HAL_ASSERT(0);
             break;
         }
 
         case BMS_STATE_SHELF:
         {
              /** @todo Implement */
-             CY_ASSERT(0);
+            HAL_ASSERT(0);
             break;
         }
 
         default:
-            CY_ASSERT(0);
+            HAL_ASSERT(0);
     }
 }
 
@@ -801,19 +801,19 @@ static void MAIN_SM_handleAdcEvt(Evt_adc_data_t* evt)
         case BMS_STATE_ERROR:
         {
             /** @todo Implement */
-            CY_ASSERT(0);
+            HAL_ASSERT(0);
             break;
         }
 
         case BMS_STATE_SHELF:
         {
              /** @todo Implement */
-             CY_ASSERT(0);
+            HAL_ASSERT(0);
             break;
         }
 
         default:
-            CY_ASSERT(0);
+            HAL_ASSERT(0);
     }
 }
 
@@ -855,7 +855,7 @@ static void led_blink_alive_(void)
     // start timer
     cy_rslt_t result = cy_rtos_timer_start(&blinkTimer, 100U); // 100 ms
     if (result != CY_RSLT_SUCCESS) {
-        CY_ASSERT(0);
+        HAL_ASSERT(0);
     }
 }
 
@@ -875,7 +875,7 @@ static void blinkTimerCallback_(cy_timer_callback_arg_t arg)
         // re-start timer to continue blink
         cy_rslt_t result = cy_rtos_timer_start(&blinkTimer, 100U); // 100 ms
         if (result != CY_RSLT_SUCCESS) {
-            CY_ASSERT(0);
+            HAL_ASSERT(0);
         }
     }
 }

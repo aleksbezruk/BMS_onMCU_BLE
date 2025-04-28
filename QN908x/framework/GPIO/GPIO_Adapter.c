@@ -59,7 +59,7 @@
 *************************************************************************************
 ********************************************************************************** */
 void Gpio_CommonIsr(void);
-static gpioStatus_t Gpio_InstallPortISR(IRQn_Type irqId, uint32_t nvicPrio);
+// static gpioStatus_t Gpio_InstallPortISR(IRQn_Type irqId, uint32_t nvicPrio); // commented out to avoid compilation warnings
 #if (FSL_FEATURE_SOC_INTMUX_COUNT <= 0) && (FSL_FEATURE_SOC_SYSCON_COUNT > 0)
 void           GpioSetInterruptType(GPIO_Type *base, uint8_t gpioPin, pinInterrupt_t int_mode);
 pinInterrupt_t GpioGetInterruptType(GPIO_Type *base, gpioPort_t gpioPort, uint8_t gpioPin);
@@ -92,7 +92,7 @@ static gpioIsr_t mGpioIsr[gGpioMaxIsrEntries_c];
 static uint16_t mGpioIsrCount = 0;
 static PORT_Type *const maPortBases[] = PORT_BASE_PTRS;
 static GPIO_Type *const maGpioBases[] = GPIO_BASE_PTRS;
-static IRQn_Type maPortIrqId[] = PORT_IRQS;
+// static IRQn_Type maPortIrqId[] = PORT_IRQS;  // commented out to avoid compilation warnings
 #if defined(FSL_FEATURE_SOC_INTMUX_COUNT) && FSL_FEATURE_SOC_INTMUX_COUNT
 static INTMUX_Type *const maIntmuxBases[] = INTMUX_BASE_PTRS;
 static const IRQn_Type maIntmuxIRQNumber[][FSL_FEATURE_INTMUX_CHANNEL_COUNT] = INTMUX_IRQS;

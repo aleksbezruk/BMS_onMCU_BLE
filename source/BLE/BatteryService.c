@@ -6,12 +6,13 @@
  * @version 0.4.0
  */
 
+#include <stdbool.h>
+
 #include "BatteryService.h"
 #include "qspyHelper.h"
 
-#include "cybsp.h"
-
-#include <stdbool.h>
+// HAL
+#include "hal.h"
 
 ///////////////////////
 // Private data
@@ -78,7 +79,7 @@ void BAS_sendNotification(uint8_t batLvl, uint16_t conn_id)
                 QS_U16(0, status);
             QS_END()
             QS_FLUSH();
-            CY_ASSERT(0);
+            HAL_ASSERT(0);
         }
     }
 }

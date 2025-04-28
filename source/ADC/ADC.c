@@ -34,6 +34,9 @@
 #include "task.h"
 #include "cyabs_rtos.h"
 
+// HAL
+#include "hal.h"
+
 ///////////////////////
 // Defines
 ///////////////////////
@@ -206,7 +209,7 @@ static void adcTask_(cy_thread_arg_t arg)
             result = ADC_init_periph();
             _adcEnabled = true;
             if (result != CY_RSLT_SUCCESS) {
-                CY_ASSERT(0);
+                HAL_ASSERT(0);
             }
         }
 

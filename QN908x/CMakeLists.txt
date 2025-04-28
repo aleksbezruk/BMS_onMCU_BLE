@@ -60,6 +60,7 @@ set(SRC_FILES
         utilities/fsl_debug_console.c
         framework/LED/Source/LED.c
         framework/GPIO/GPIO_Adapter.c
+        ../source/HAL/QN9080/hal/hal.c
         )
 
 # Build the executable based on the source files
@@ -85,6 +86,8 @@ target_include_directories(${EXECUTABLE} PRIVATE
         framework/GPIO
         framework/LED/Interface
         framework/TimersManager/Interface
+        ../source/HAL/QN9080/hal
+        ../source/main
         )
 
 # Compiler options
@@ -100,6 +103,8 @@ target_compile_options(${EXECUTABLE} PRIVATE
         -Wall
         -O0
         -g3
+
+        -include app_preinclude.h
         )
 
 # Linker options

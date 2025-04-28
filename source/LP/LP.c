@@ -75,7 +75,6 @@
 #include "cy_pdl.h"
 #include "cyhal.h"
 #include "cyhal_syspm.h"
-#include "cybsp.h"
 
 #include "LP.h"
 #include "qspyHelper.h"
@@ -86,6 +85,9 @@
 // RTOS includes
 #include "FreeRTOS.h"
 #include "cyabs_rtos.h"
+
+// HAL
+#include "hal.h"
 
 ///////////////////////
 // Functions prototype
@@ -257,7 +259,7 @@ static cy_en_syspm_status_t _afterDeepSleepCallback(cy_stc_syspm_callback_params
         _blockSleep = true;
         cy_rslt_t result = cy_rtos_timer_start(&_blockSleepTimer, 100U); // 100 ms
         if (result != CY_RSLT_SUCCESS) {
-            CY_ASSERT(0);
+            HAL_ASSERT(0);
         }
     }
 
@@ -313,7 +315,7 @@ LP_periph_ready_t LP_getPeriphStatus(void)
  */
 void LP_setMode(LP_modes_t mode)
 {
-    CY_ASSERT((mode >= LP_DISABLED_MODE) && (mode <= LP_SHELF_MODE));
+    HAL_ASSERT((mode >= LP_DISABLED_MODE) && (mode <= LP_SHELF_MODE));
     _mode = mode;
 }
 
@@ -387,7 +389,7 @@ void LP_enterSleep(TickType_t xExpectedIdleTime)
 
         default:
         {
-            CY_ASSERT(0);   // unexpected behavior
+            HAL_ASSERT(0);   // unexpected behavior
         }
     }
 
@@ -396,7 +398,7 @@ void LP_enterSleep(TickType_t xExpectedIdleTime)
         // If you hit this assert, the latency time (CY_CFG_PWR_DEEPSLEEP_LATENCY) should
         // be increased. This can be set though the Device Configurator, or by manually
         // defining the variable in cybsp.h for the TARGET platform.
-        CY_ASSERT(actual_sleep_ms <= pdTICKS_TO_MS(xExpectedIdleTime));
+        HAL_ASSERT(actual_sleep_ms <= pdTICKS_TO_MS(xExpectedIdleTime));
         vTaskStepTick(convert_ms_to_ticks(actual_sleep_ms));
     }
 }
@@ -426,7 +428,7 @@ void vApplicationSleep(TickType_t xExpectedIdleTime)
         if (result == CY_RSLT_SUCCESS) {
             _lptimer = &timer;
         } else {
-            CY_ASSERT(false);
+            HAL_ASSERT(false);
         }
     }
 
@@ -446,7 +448,7 @@ void vApplicationSleep(TickType_t xExpectedIdleTime)
 
         cyhal_system_critical_section_exit(status);
     } else {
-        CY_ASSERT(false);   // timer should be allocated
+        HAL_ASSERT(false);   // timer should be allocated
     }
 }
 
