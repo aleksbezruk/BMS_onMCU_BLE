@@ -28,6 +28,7 @@
 
 // HAL
 #include "hal.h"
+#include "hal_led.h"
 
 ///////////////////
 // Functions prototypes
@@ -122,8 +123,8 @@ int main(void)
 #endif //Q_UTEST
 
     /** Init LEDs */
-    BSP_init_led_green();
-    BSP_init_led_red();
+    HAL_LED_init_green();
+    HAL_LED_init_red();
 
     /** Init QSPY */
     QS_onStartup(NULL);
@@ -865,9 +866,9 @@ static void led_blink_alive_(void)
 static void blinkTimerCallback_(cy_timer_callback_arg_t arg)
 {
     if (ledBlinkCntr_%2 == 0) {
-        BSP_led_green_on();
+        HAL_LED_green_on();
     } else {
-        BSP_led_green_off();
+        HAL_LED_green_off();
     }
 
     ledBlinkCntr_++;

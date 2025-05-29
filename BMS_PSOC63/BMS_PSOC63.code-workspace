@@ -80,7 +80,8 @@
             "cstdint": "cpp",
             "string.h": "c",
             "aioservice.h": "c",
-            "hal.h": "c"
+            "hal.h": "c",
+            "hal_led.h": "c"
         },
         "clangd.arguments": [
             "--query-driver=${config:modustoolbox.toolsPath}/gcc/bin/arm-none-eabi-gcc",

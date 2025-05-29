@@ -3,6 +3,8 @@
  *
  * @brief Implementation of generic HAL functions like init board/hardware, generic utils
  *
+ * @note QN9080
+ * 
  * @version 0.5.0
  */
 

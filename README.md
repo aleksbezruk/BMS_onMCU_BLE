@@ -110,6 +110,11 @@ To accelerate firmware porting to QN908x the MCU Config tools will be used (powe
 *.mex - MCU Exported Configuration file - is used by NXP tool. <br>
 > See https://www.nxp.com/design/design-center/software/development-software/mcuxpresso-software-and-tools-/mcuxpresso-config-tools-pins-clocks-and-peripherals:MCUXpresso-Config-Tools <br>
 
+Build project for QN9080: <br>
+1. cd to output build directory "QN908x/build"
+2. call CMake to generate the make files: <br>
+> *cmake -DCMAKE_MAKE_PROGRAM="make" -G "Unix Makefiles" ..*; <br>
+> build by running __*make*__ or "Run Task" FORM VSCode menu (see tasks.json) <br>
 _________________________________________________________________________________________________
 
 ## X1I. NRF52840 port details

@@ -61,6 +61,7 @@ set(SRC_FILES
         framework/LED/Source/LED.c
         framework/GPIO/GPIO_Adapter.c
         ../source/HAL/QN9080/hal/hal.c
+        ../source/HAL/QN9080/hal_led/hal_led.c
         )
 
 # Build the executable based on the source files
@@ -87,6 +88,7 @@ target_include_directories(${EXECUTABLE} PRIVATE
         framework/LED/Interface
         framework/TimersManager/Interface
         ../source/HAL/QN9080/hal
+        ../source/HAL/QN9080/hal_led
         ../source/main
         )
 

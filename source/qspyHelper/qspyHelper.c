@@ -18,6 +18,9 @@
 #include "MAIN.h"
 #include "BLE.h"
 
+// HAL
+#include "hal_led.h"
+
 ///////////////////
 // Defines
 ///////////////////
@@ -174,10 +177,10 @@ void QS_onCommand(uint8_t cmdId,
             switch (param1)
             {
             case 1:
-                BSP_led_red_On();
+                HAL_LED_red_On();
                 break;
             case 0:
-                BSP_led_red_Off();
+                HAL_LED_red_Off();
                 break;
             default:
                 break;

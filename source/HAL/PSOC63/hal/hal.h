@@ -3,6 +3,8 @@
  *
  * @brief Definition of generic HAL functions like init board/hardware, generic utils
  *
+ * @note PSOC63
+ * 
  * @version 0.5.0
  */
 
@@ -37,3 +39,5 @@ typedef enum {
 HAL_status_t HAL_init_hardware(void);
 
 #endif // HAL_GENERIC_MODULE_H
+
+/* [] END OF FILE */

@@ -33,7 +33,8 @@
 			"clock_config.h": "c",
 			"gpio_adapter.h": "c",
 			"fsl_power.h": "c",
-			"led.h": "c"
+			"led.h": "c",
+			"hal_led.h": "c"
 		}
 	}
 }
