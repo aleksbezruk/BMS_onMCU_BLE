@@ -234,7 +234,9 @@ void QS_onCommand(uint8_t cmdId,
             break;
         }
         default:
+        {
             break;  // just igmore if cmd isn't defined
+        }
     }
 }
 

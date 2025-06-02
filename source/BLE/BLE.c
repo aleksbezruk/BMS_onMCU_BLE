@@ -116,7 +116,7 @@
 // Defines
 ///////////////////////
 #define BLE_TASK_STACK_SIZE 560U   /**< bytes, aligned to 8 bytes */
-#define BLE_QUEUE_SIZE 3U
+#define BLE_QUEUE_SIZE 8U
 
 ///////////////////////
 // Functions prototype

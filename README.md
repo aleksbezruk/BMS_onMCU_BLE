@@ -115,6 +115,7 @@ Build project for QN9080: <br>
 2. call CMake to generate the make files: <br>
 > *cmake -DCMAKE_MAKE_PROGRAM="make" -G "Unix Makefiles" ..*; <br>
 > build by running __*make*__ or "Run Task" FORM VSCode menu (see tasks.json) <br>
+
 _________________________________________________________________________________________________
 
 ## X1I. NRF52840 port details

@@ -38,6 +38,8 @@ static void _initLed(void);
  *        to configure all hardware (power, clocks, peripheral) to be ready for
  *        further BMS operations. 
  * 
+ * @note Configures peripherals pins as well: UART, ADC pins.
+ * 
  * @details In general it may use low level BSP provided by
  *          particular Vendor if such exist and (or) use autogenerate vendor tool(s)
  *          that allow to configure hardware using convenient GUI. Using such COTS tools allow
@@ -65,6 +67,8 @@ HAL_status_t HAL_init_hardware(void)
 
     /** Init board pins */
     BOARD_InitPins();
+
+    /** @todo: Init UART, ADC pins */
 
     /** Calibrate RTC */
 #if (defined(BOARD_XTAL1_CLK_HZ) && (BOARD_XTAL1_CLK_HZ != CLK_XTAL_32KHZ))

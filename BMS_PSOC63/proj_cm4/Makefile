@@ -82,7 +82,8 @@ SOURCES=    ../../source/main/main.c	\
 			../../source/BLE/BatteryService.c	\
 			../../source/BLE/AIOService.c	\
 			../../source/HAL/PSOC63/hal/hal.c	\
-			../../source/HAL/PSOC63/hal_led/hal_led.c
+			../../source/HAL/PSOC63/hal_led/hal_led.c	\
+			../../source/HAL/PSOC63/hal_gpio/hal_gpio.c
 else ifeq ($(BUILD_CONFIG), Release)
 SOURCES=
 else ifeq ($(BUILD_CONFIG), Qutest)
@@ -103,7 +104,8 @@ SOURCES=    ../../source/qspy/qutest.c \
 			../../source/BLE/BatteryService.c	\
 			../../source/BLE/AIOService.c	\
 			../../source/HAL/PSOC63/hal/hal.c	\
-			../../source/HAL/PSOC63/hal_led/hal_led.c
+			../../source/HAL/PSOC63/hal_led/hal_led.c	\
+			../../source/HAL/PSOC63/hal_gpio/hal_gpio.c
 else
 # $(error !!! BUILD CONFIGURATION IS udefined !!!. Please set Debug or Qutest or Release)
 $(info Set BUILD CONFIGURATION IS nor defined. Please doublecheck. Maybe it's Cypress Device Confidurator running) 
@@ -120,7 +122,8 @@ INCLUDES=SOURCES= ../BSP/ \
 				  ../../source/main \
 				  ../../source/LP	\
 				  ../../source/HAL/PSOC63/hal	\
-				  ../../source/HAL/PSOC63/hal_led
+				  ../../source/HAL/PSOC63/hal_led	\
+				  ../../source/HAL/PSOC63/hal_gpio
 
 # Add additional defines to the build process (without a leading -D).
 ifeq ($(BUILD_CONFIG), Debug)

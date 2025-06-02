@@ -29,6 +29,7 @@
 // HAL
 #include "hal.h"
 #include "hal_led.h"
+#include "hal_gpio.h"
 
 ///////////////////
 // Functions prototypes
@@ -52,8 +53,8 @@ void vApplicationIdleHook(void);
 static void MAIN_initDischargeSw(void);
 static void MAIN_initChargeSw(void);
 static void MAIN_initBalancerSw(void);
-static void MAIN_setDischargeSw(MAIN_dischargeSw_state_t state);
-static void MAIN_setChargeSw(MAIN_chargeSw_state_t state);
+static void MAIN_setDischargeSw(HAL_dischargeSw_state_t state);
+static void MAIN_setChargeSw(HAL_chargeSw_state_t state);
 static void MAIN_enableBalancerSw(uint8_t balBanksEnMask);
 static void MAIN_disableBalancerSw(uint8_t balBanksDisMask);
 
@@ -66,7 +67,7 @@ static void blinkTimerCallback_(cy_timer_callback_arg_t arg);
 // Definitions
 ///////////////////
 #define MAIN_TASK_STACK_SIZE 560U   /**< size in bytes, aligned to 8 bytes */
-#define MAIN_QUEUE_SIZE 2U
+#define MAIN_QUEUE_SIZE 5U
 
 ///////////////////
 // Private data
@@ -207,15 +208,15 @@ static void mainTask_(cy_thread_arg_t arg)
 
     /** Set default state (OFF) for discharge control switch */
     MAIN_initDischargeSw();
-    MAIN_setDischargeSw(MAIN_BMS_DISCHARGE_OFF);
+    MAIN_setDischargeSw(HAL_BMS_DISCHARGE_OFF);
 
     /** Set default state (OFF) for charge control switch */
     MAIN_initChargeSw();
-    MAIN_setChargeSw(MAIN_BMS_CHARGE_OFF);
+    MAIN_setChargeSw(HAL_BMS_CHARGE_OFF);
 
     /** Set default state (OFF) for balancing switches */
     MAIN_initBalancerSw();
-    MAIN_disableBalancerSw(MAIN_BMS_ALL_BANKS);
+    MAIN_disableBalancerSw(HAL_BMS_ALL_BANKS);
 
     /** Init LED blink timer */
     result = cy_rtos_timer_init(
@@ -414,12 +415,13 @@ void MAIN_post_evt(Main_evt_t* evt, Evt_types_t eventType)
  */
 static void MAIN_initDischargeSw(void)
 {
-    Cy_GPIO_Pin_FastInit(
-        BMS_DISCHARGE_PORT,
-        BMS_DISCHARGE_PIN,
-        CY_GPIO_DM_STRONG_IN_OFF,
-        BMS_DISCHARGE_OFF, 
-        HSIOM_SEL_GPIO
+    HAL_GPIO_init_pin(
+        HAL_DISCHARGE_PORT,
+        HAL_DISCHARGE_PIN,
+        HAL_GPIO_DIGITAL_OUTPUT,
+        HAL_GPIO_PULL_DISABLED,
+        HAL_GPIO_DRIVE_HIGH,
+        HAL_DISCHARGE_OFF
     );
 }
 
@@ -433,12 +435,13 @@ static void MAIN_initDischargeSw(void)
  */
 static void MAIN_initChargeSw(void)
 {
-    Cy_GPIO_Pin_FastInit(
-        BMS_CHARGE_PORT,
-        BMS_CHARGE_PIN,
-        CY_GPIO_DM_STRONG_IN_OFF,
-        BMS_CHARGE_OFF, 
-        HSIOM_SEL_GPIO
+    HAL_GPIO_init_pin(
+        HAL_CHARGE_PORT,
+        HAL_CHARGE_PIN,
+        HAL_GPIO_DIGITAL_OUTPUT,
+        HAL_GPIO_PULL_DISABLED,
+        HAL_GPIO_DRIVE_HIGH,
+        HAL_CHARGE_OFF
     );
 }
 
@@ -450,28 +453,20 @@ static void MAIN_initChargeSw(void)
  * @retval None
  * 
  */
-static void MAIN_setDischargeSw(MAIN_dischargeSw_state_t state)
+static void MAIN_setDischargeSw(HAL_dischargeSw_state_t state)
 {
     Switch_state_t* sw_state = (Switch_state_t *) &swState_;
 
     switch(state) {
-        case MAIN_BMS_DISCHARGE_OFF:
+        case HAL_BMS_DISCHARGE_OFF:
         {
-            Cy_GPIO_Write(
-                BMS_DISCHARGE_PORT,
-                BMS_DISCHARGE_PIN,
-                BMS_DISCHARGE_OFF
-            );
+            HAL_GPIO_set_pin(HAL_DISCHARGE_PORT, HAL_DISCHARGE_PIN, HAL_DISCHARGE_OFF);
             sw_state->setDischState = 0;
             break;
         }
-        case MAIN_BMS_DISCHARGE_ON:
+        case HAL_BMS_DISCHARGE_ON:
         {
-            Cy_GPIO_Write(
-                BMS_DISCHARGE_PORT,
-                BMS_DISCHARGE_PIN,
-                BMS_DISCHARGE_ON
-            );
+            HAL_GPIO_set_pin(HAL_DISCHARGE_PORT, HAL_DISCHARGE_PIN, HAL_DISCHARGE_ON);
             sw_state->setDischState = 1;
             break;
         }
@@ -489,28 +484,20 @@ static void MAIN_setDischargeSw(MAIN_dischargeSw_state_t state)
  * @retval None
  * 
  */
-static void MAIN_setChargeSw(MAIN_chargeSw_state_t state)
+static void MAIN_setChargeSw(HAL_chargeSw_state_t state)
 {
     Switch_state_t* sw_state = (Switch_state_t *) &swState_;
 
     switch(state) {
-        case MAIN_BMS_CHARGE_OFF:
+        case HAL_BMS_CHARGE_OFF:
         {
-            Cy_GPIO_Write(
-                BMS_CHARGE_PORT,
-                BMS_CHARGE_PIN,
-                BMS_CHARGE_OFF
-            );
+            HAL_GPIO_set_pin(HAL_CHARGE_PORT, HAL_CHARGE_PIN, HAL_CHARGE_OFF);
             sw_state->setChargeState = 0;
             break;
         }
-        case MAIN_BMS_CHARGE_ON:
+        case HAL_BMS_CHARGE_ON:
         {
-            Cy_GPIO_Write(
-                BMS_CHARGE_PORT,
-                BMS_CHARGE_PIN,
-                BMS_CHARGE_ON
-            );
+            HAL_GPIO_set_pin(HAL_CHARGE_PORT, HAL_CHARGE_PIN, HAL_CHARGE_ON);
             sw_state->setChargeState = 1;
             break;
         }
@@ -536,39 +523,43 @@ static void MAIN_setChargeSw(MAIN_chargeSw_state_t state)
 static void MAIN_initBalancerSw(void)
 {
     /** Bank1 pin init */
-    Cy_GPIO_Pin_FastInit(
-        BMS_BAL_BANK1_PORT,
-        BMS_BAL_BANK1_PIN,
-        CY_GPIO_DM_STRONG_IN_OFF,
-        BMS_BAL_BANK1_OFF, 
-        HSIOM_SEL_GPIO
+    HAL_GPIO_init_pin(
+        HAL_BAL_BANK1_PORT,
+        HAL_BAL_BANK1_PIN,
+        HAL_GPIO_DIGITAL_OUTPUT,
+        HAL_GPIO_PULL_DISABLED,
+        HAL_GPIO_DRIVE_HIGH,
+        HAL_BAL_BANK1_OFF
     );
 
     /** Bank2 pin init */
-    Cy_GPIO_Pin_FastInit(
-        BMS_BAL_BANK2_PORT,
-        BMS_BAL_BANK2_PIN,
-        CY_GPIO_DM_STRONG_IN_OFF,
-        BMS_BAL_BANK2_OFF, 
-        HSIOM_SEL_GPIO
+    HAL_GPIO_init_pin(
+        HAL_BAL_BANK2_PORT,
+        HAL_BAL_BANK2_PIN,
+        HAL_GPIO_DIGITAL_OUTPUT,
+        HAL_GPIO_PULL_DISABLED,
+        HAL_GPIO_DRIVE_HIGH,
+        HAL_BAL_BANK2_OFF
     );
 
     /** Bank3 pin init */
-    Cy_GPIO_Pin_FastInit(
-        BMS_BAL_BANK3_PORT,
-        BMS_BAL_BANK3_PIN,
-        CY_GPIO_DM_STRONG_IN_OFF,
-        BMS_BAL_BANK3_OFF, 
-        HSIOM_SEL_GPIO
+    HAL_GPIO_init_pin(
+        HAL_BAL_BANK3_PORT,
+        HAL_BAL_BANK3_PIN,
+        HAL_GPIO_DIGITAL_OUTPUT,
+        HAL_GPIO_PULL_DISABLED,
+        HAL_GPIO_DRIVE_HIGH,
+        HAL_BAL_BANK3_OFF
     );
 
     /** Bank4 pin init */
-    Cy_GPIO_Pin_FastInit(
-        BMS_BAL_BANK4_PORT,
-        BMS_BAL_BANK4_PIN,
-        CY_GPIO_DM_STRONG_IN_OFF,
-        BMS_BAL_BANK4_OFF, 
-        HSIOM_SEL_GPIO
+    HAL_GPIO_init_pin(
+        HAL_BAL_BANK4_PORT,
+        HAL_BAL_BANK4_PIN,
+        HAL_GPIO_DIGITAL_OUTPUT,
+        HAL_GPIO_PULL_DISABLED,
+        HAL_GPIO_DRIVE_HIGH,
+        HAL_BAL_BANK4_OFF
     );
 }
 
@@ -582,40 +573,24 @@ static void MAIN_initBalancerSw(void)
  */
 static void MAIN_enableBalancerSw(uint8_t balBanksEnMask)
 {
-    HAL_ASSERT((balBanksEnMask > 0) && (balBanksEnMask <= MAIN_BMS_ALL_BANKS));
+    HAL_ASSERT((balBanksEnMask > 0) && (balBanksEnMask <= HAL_BMS_ALL_BANKS));
 
     Switch_state_t* sw_state = (Switch_state_t *) &swState_;
 
-    if (balBanksEnMask & MAIN_BMS_BANK1_MASK) {
-        Cy_GPIO_Write(
-            BMS_BAL_BANK1_PORT,
-            BMS_BAL_BANK1_PIN,
-            BMS_BAL_BANK1_ON
-        );
+    if (balBanksEnMask & HAL_BMS_BANK1_MASK) {
+        HAL_GPIO_set_pin(HAL_BAL_BANK1_PORT, HAL_BAL_BANK1_PIN, HAL_BAL_BANK1_ON);
         sw_state->setBank1Balancer = 1;
     }
-    if (balBanksEnMask & MAIN_BMS_BANK2_MASK) {
-        Cy_GPIO_Write(
-            BMS_BAL_BANK2_PORT,
-            BMS_BAL_BANK2_PIN,
-            BMS_BAL_BANK2_ON
-        );
+    if (balBanksEnMask & HAL_BMS_BANK2_MASK) {
+        HAL_GPIO_set_pin(HAL_BAL_BANK2_PORT, HAL_BAL_BANK2_PIN, HAL_BAL_BANK2_ON);
         sw_state->setBank2Balancer = 1;
     }
-    if (balBanksEnMask & MAIN_BMS_BANK3_MASK) {
-        Cy_GPIO_Write(
-            BMS_BAL_BANK3_PORT,
-            BMS_BAL_BANK3_PIN,
-            BMS_BAL_BANK3_ON
-        );
+    if (balBanksEnMask & HAL_BMS_BANK3_MASK) {
+        HAL_GPIO_set_pin(HAL_BAL_BANK3_PORT, HAL_BAL_BANK3_PIN, HAL_BAL_BANK3_ON);
         sw_state->setBank3Balancer = 1;
     }
-    if (balBanksEnMask & MAIN_BMS_BANK4_MASK) {
-        Cy_GPIO_Write(
-            BMS_BAL_BANK4_PORT,
-            BMS_BAL_BANK4_PIN,
-            BMS_BAL_BANK4_ON
-        );
+    if (balBanksEnMask & HAL_BMS_BANK4_MASK) {
+        HAL_GPIO_set_pin(HAL_BAL_BANK4_PORT, HAL_BAL_BANK4_PIN, HAL_BAL_BANK4_ON);
         sw_state->setBank4Balancer = 1;
     }
 }
@@ -630,40 +605,24 @@ static void MAIN_enableBalancerSw(uint8_t balBanksEnMask)
  */
 static void MAIN_disableBalancerSw(uint8_t balBanksDisMask)
 {
-    HAL_ASSERT((balBanksDisMask > 0) && (balBanksDisMask <= MAIN_BMS_ALL_BANKS));
+    HAL_ASSERT((balBanksDisMask > 0) && (balBanksDisMask <= HAL_BMS_ALL_BANKS));
 
     Switch_state_t* sw_state = (Switch_state_t *) &swState_;
 
-    if (balBanksDisMask & MAIN_BMS_BANK1_MASK) {
-        Cy_GPIO_Write(
-            BMS_BAL_BANK1_PORT,
-            BMS_BAL_BANK1_PIN,
-            BMS_BAL_BANK1_OFF
-        );
+    if (balBanksDisMask & HAL_BMS_BANK1_MASK) {
+        HAL_GPIO_set_pin(HAL_BAL_BANK1_PORT, HAL_BAL_BANK1_PIN, HAL_BAL_BANK1_OFF);
         sw_state->setBank1Balancer = 0;
     }
-    if (balBanksDisMask & MAIN_BMS_BANK2_MASK) {
-        Cy_GPIO_Write(
-            BMS_BAL_BANK2_PORT,
-            BMS_BAL_BANK2_PIN,
-            BMS_BAL_BANK2_OFF
-        );
+    if (balBanksDisMask & HAL_BMS_BANK2_MASK) {
+        HAL_GPIO_set_pin(HAL_BAL_BANK2_PORT, HAL_BAL_BANK2_PIN, HAL_BAL_BANK2_OFF);
         sw_state->setBank2Balancer = 0;
     }
-    if (balBanksDisMask & MAIN_BMS_BANK3_MASK) {
-        Cy_GPIO_Write(
-            BMS_BAL_BANK3_PORT,
-            BMS_BAL_BANK3_PIN,
-            BMS_BAL_BANK3_OFF
-        );
+    if (balBanksDisMask & HAL_BMS_BANK3_MASK) {
+        HAL_GPIO_set_pin(HAL_BAL_BANK3_PORT, HAL_BAL_BANK3_PIN, HAL_BAL_BANK3_OFF);
         sw_state->setBank3Balancer = 0;
     }
-    if (balBanksDisMask & MAIN_BMS_BANK4_MASK) {
-        Cy_GPIO_Write(
-            BMS_BAL_BANK4_PORT,
-            BMS_BAL_BANK4_PIN,
-            BMS_BAL_BANK4_OFF
-        );
+    if (balBanksDisMask & HAL_BMS_BANK4_MASK) {
+        HAL_GPIO_set_pin(HAL_BAL_BANK4_PORT, HAL_BAL_BANK4_PIN, HAL_BAL_BANK4_OFF);
         sw_state->setBank4Balancer = 0;
     }
 }
@@ -682,11 +641,11 @@ static void MAIN_SM_handleSysEvt(Evt_sys_data_t* evt)
         case BMS_STATE_IDLE:
         {
             if (evt->setDischState == 1U) {
-                MAIN_setDischargeSw(MAIN_BMS_DISCHARGE_ON);
+                MAIN_setDischargeSw(HAL_BMS_DISCHARGE_ON);
                 bmsState_ = BMS_STATE_DISCHARGE;
                 MAIN_SM_print_onStateChange();
             } else if (evt->setChargeState == 1U) {
-                MAIN_setChargeSw(MAIN_BMS_CHARGE_ON);
+                MAIN_setChargeSw(HAL_BMS_CHARGE_ON);
                 bmsState_ = BMS_STATE_CHARGE;
                 MAIN_SM_print_onStateChange();
             }
@@ -696,7 +655,7 @@ static void MAIN_SM_handleSysEvt(Evt_sys_data_t* evt)
         case BMS_STATE_DISCHARGE:
         {
             if (evt->setDischState == 0U) {
-                MAIN_setDischargeSw(MAIN_BMS_DISCHARGE_OFF);
+                MAIN_setDischargeSw(HAL_BMS_DISCHARGE_OFF);
                 bmsState_ = BMS_STATE_IDLE;
                 MAIN_SM_print_onStateChange();
             }
@@ -706,7 +665,7 @@ static void MAIN_SM_handleSysEvt(Evt_sys_data_t* evt)
         case BMS_STATE_CHARGE:
         {
             if (evt->setChargeState == 0U) {
-                MAIN_setChargeSw(MAIN_BMS_CHARGE_OFF);
+                MAIN_setChargeSw(HAL_BMS_CHARGE_OFF);
                 bmsState_ = BMS_STATE_IDLE;
                 MAIN_SM_print_onStateChange();
             } else {
@@ -730,31 +689,33 @@ static void MAIN_SM_handleSysEvt(Evt_sys_data_t* evt)
         }
 
         default:
+        {
             HAL_ASSERT(0);
+        }
     }
 }
 
 static void MAIN_SM_charge_setBal(Evt_sys_data_t* evt)
 {
     if (evt->setBank1Balancer == 1U) {
-        MAIN_enableBalancerSw(MAIN_BMS_BANK1_MASK);
+        MAIN_enableBalancerSw(HAL_BMS_BANK1_MASK);
     } else {
-        MAIN_disableBalancerSw(MAIN_BMS_BANK1_MASK);
+        MAIN_disableBalancerSw(HAL_BMS_BANK1_MASK);
     }
     if (evt->setBank2Balancer == 1U) {
-        MAIN_enableBalancerSw(MAIN_BMS_BANK2_MASK);
+        MAIN_enableBalancerSw(HAL_BMS_BANK2_MASK);
     } else {
-        MAIN_disableBalancerSw(MAIN_BMS_BANK2_MASK);
+        MAIN_disableBalancerSw(HAL_BMS_BANK2_MASK);
     }
     if (evt->setBank3Balancer == 1U) {
-        MAIN_enableBalancerSw(MAIN_BMS_BANK3_MASK);
+        MAIN_enableBalancerSw(HAL_BMS_BANK3_MASK);
     } else {
-        MAIN_disableBalancerSw(MAIN_BMS_BANK3_MASK);
+        MAIN_disableBalancerSw(HAL_BMS_BANK3_MASK);
     }
     if (evt->setBank4Balancer == 1U) {
-        MAIN_enableBalancerSw(MAIN_BMS_BANK4_MASK);
+        MAIN_enableBalancerSw(HAL_BMS_BANK4_MASK);
     } else {
-        MAIN_disableBalancerSw(MAIN_BMS_BANK4_MASK);
+        MAIN_disableBalancerSw(HAL_BMS_BANK4_MASK);
     }
 }
 
@@ -814,7 +775,9 @@ static void MAIN_SM_handleAdcEvt(Evt_adc_data_t* evt)
         }
 
         default:
+        {
             HAL_ASSERT(0);
+        }
     }
 }
 

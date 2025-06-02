@@ -1,5 +1,5 @@
 /**
- * @file  hal.c
+ * @file  hal_led.c
  *
  * @brief Implementation of LED functions.
  *

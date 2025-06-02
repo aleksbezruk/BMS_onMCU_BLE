@@ -29,7 +29,9 @@
 /**
  * @brief Generic API to init underlying hardware. Purpose is
  *        to configure all hardware (power, clocks, peripheral) to be ready for
- *        further BMS operations. 
+ *        further BMS operations.
+ * 
+ * @note Configures peripherals pins as well: UART, ADC pins.
  * 
  * @details In general it may use low level BSP provided by
  *          particular Vendor if such exist and (or) use autogenerate vendor tool(s)
