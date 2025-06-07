@@ -7,8 +7,6 @@
  * @version 0.4.0
  */
 
-#include "cy_pdl.h"
-#include "BSP.h"
 #include "qspyHelper.h"
 #include "qutestHelper.h"
 
@@ -20,6 +18,7 @@
 
 // HAL
 #include "hal_led.h"
+#include "hal_uart.h"
 
 ///////////////////
 // Defines
@@ -142,9 +141,9 @@ void QS_onFlush(void)
     for (;;) {
         uint16_t b = QS_getByte();
         if (b != QS_EOD) {
-            while (BSP_isUartTxReady() == false) { // while TX FIFO is full -> wait
+            while (HAL_UART_isTxReady() == false) { // while TX FIFO is full -> wait
             }
-            BSP_uartTxData((uint8_t *)&b, 1U) ; // put into the DR register
+            HAL_UART_txData((uint8_t *)&b, 1U) ; // put into the DR register
         }
         else {
             break;
@@ -265,18 +264,26 @@ uint8_t QS_onStartup(void const *arg)
     QS_rxInitBuf(qsRxBuf, sizeof(qsRxBuf));
 
     /** Configure QSPY link layer -> UART */
-    status = BSP_initUart(QS_rxCallback);
-    /** Config dictionaries */
-    QS_FUN_DICTIONARY(QS_onReset);
-
-    QUTEST_EMUL_ERR(status);
-    if (status != bsp_status_init_success) {
-        QUTEST_printError((uint32_t) status);
+    HAL_UART_config_t uartConfig = {
+        .baudRate = 115200u,
+        .enParityCheck = false,
+        .numStartBits = 1u,
+        .numStopBits = 1u
+    };
+    if (HAL_UART_init(&uartConfig, QS_rxCallback) != HAL_UART_SUCCESS) {
         status = QSPY_STATUS_ERROR;
     }
 
+    /** Config dictionaries */
+    QS_FUN_DICTIONARY(QS_onReset);
+
+    /** Check error Emulation used for testing purposes */
+    QUTEST_EMUL_ERR(status);
+    if (status != QSPY_STATUS_SUCCESS) {
+        QUTEST_printError((uint32_t) status);
+    }
+
     /** Configure QSPY tick */
-    // QS_tickPeriod_ = SystemCoreClock / BSP_TICKS_PER_SEC;
     QS_tickPeriod_ = 1;
     QS_tickTime_ = 0; // to start the timestamp at zero
 
@@ -294,13 +301,13 @@ void QS_onIdle(void)
 {
     QS_rxParse();  // parse all the received bytes
 
-    if (BSP_isUartTxReady() == true ) {
+    if (HAL_UART_isTxReady() == true ) {
         __disable_irq();
         uint16_t b = QS_getByte();
         __enable_irq();
 
         if (b != QS_EOD) {  // not End-Of-Data?
-            BSP_uartTxData((uint8_t *)&b, 1U);
+            HAL_UART_txData((uint8_t *)&b, 1U);
         }
     }
 }
@@ -380,7 +387,7 @@ QSPY_rx_status_t QS_get_rxStatus(void)
 QSPY_tx_status_t QS_get_txStatus(void)
 {
     uint16_t numBytes = QS_getTxBufNumBytes();
-    bool isOngoingTx = BSP_isUartTxActive();
+    bool isOngoingTx = HAL_UART_isTxActive();
     if ((numBytes > 0) || (isOngoingTx == true)) {  // not End-Of-Data or TX shift register/FIFO not empty
         return QSPY_TX_NOT_EMPTY;
     } else {

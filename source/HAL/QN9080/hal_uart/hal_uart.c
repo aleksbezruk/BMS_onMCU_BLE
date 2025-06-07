@@ -1,0 +1,32 @@
+/**
+ * @file  hal_uart.c
+ *
+ * @brief Implementation of UART functions.
+ *
+ * @note QN9080
+ * 
+ * @version 0.5.0
+ */
+
+#include "hal.h"
+#include "hal_uart.h"
+
+///////////////////////
+// Defines
+///////////////////////
+
+///////////////////////
+// Functions prototype
+///////////////////////
+
+
+///////////////////////
+// Private data
+///////////////////////
+
+///////////////////////
+// Code
+///////////////////////
+
+
+/* [] END OF FILE */

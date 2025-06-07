@@ -63,6 +63,7 @@ set(SRC_FILES
         ../source/HAL/QN9080/hal/hal.c
         ../source/HAL/QN9080/hal_led/hal_led.c
         ../source/HAL/QN9080/hal_gpio/hal_gpio.c
+        ../source/HAL/QN9080/hal_uart/hal_uart.c
         )
 
 # Build the executable based on the source files
@@ -91,6 +92,7 @@ target_include_directories(${EXECUTABLE} PRIVATE
         ../source/HAL/QN9080/hal
         ../source/HAL/QN9080/hal_led
         ../source/HAL/QN9080/hal_gpio
+        ../source/HAL/QN9080/hal_uart
         ../source/main
         )
 
