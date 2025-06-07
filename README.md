@@ -114,7 +114,7 @@ Build project for QN9080: <br>
 1. cd to output build directory "QN908x/build"
 2. call CMake to generate the make files: <br>
 > *cmake -DCMAKE_MAKE_PROGRAM="make" -G "Unix Makefiles" ..*; <br>
-> build by running __*make*__ or "Run Task" FORM VSCode menu (see tasks.json) <br>
+> build by running __*make*__ or "Run Task" from VSCode menu (see tasks.json) <br>
 
 _________________________________________________________________________________________________
 

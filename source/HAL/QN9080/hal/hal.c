@@ -8,7 +8,6 @@
  * @version 0.5.0
  */
 
-#include "hal.h"
 #include "fsl_power.h"
 #include "clock_config.h"
 #include "system_QN908XC.h"
@@ -16,6 +15,9 @@
 #include "fsl_rtc.h"
 #include "GPIO_Adapter.h"
 #include "gpio_pins.h"
+
+#include "hal.h"
+#include "hal_gpio.h"
 
 ///////////////////////
 // Defines
@@ -68,7 +70,56 @@ HAL_status_t HAL_init_hardware(void)
     /** Init board pins */
     BOARD_InitPins();
 
-    /** @todo: Init UART, ADC pins */
+    /** Init UART, ADC pins */
+    HAL_GPIO_init_pin(
+        HAL_GPIO_UART_TX_PORT, 
+        HAL_GPIO_UART_TX_PIN,
+        HAL_GPIO_UART_TX,
+        HAL_GPIO_PULL_DISABLED,
+        HAL_GPIO_DRIVE_HIGH,
+        1u  // initialState N/A for not GPIO pins (UART, SPI, etc.)
+    );
+    HAL_GPIO_init_pin(
+        HAL_GPIO_UART_RX_PORT,
+        HAL_GPIO_UART_RX_PIN,
+        HAL_GPIO_UART_RX,
+        HAL_GPIO_PULL_UP,
+        HAL_GPIO_DRIVE_NONE,
+        1u  // initialState N/A for Inputs
+    );
+
+    HAL_GPIO_init_pin(
+        HAL_GPIO_ADC1_PORT,
+        HAL_GPIO_ADC1_PIN,
+        HAL_GPIO_ANALOG_INPUT,
+        HAL_GPIO_PULL_DISABLED,
+        HAL_GPIO_DRIVE_NONE,
+        1u  // initialState N/A for Inputs
+    );
+    HAL_GPIO_init_pin(
+        HAL_GPIO_ADC2_PORT,
+        HAL_GPIO_ADC2_PIN,
+        HAL_GPIO_ANALOG_INPUT,
+        HAL_GPIO_PULL_DISABLED,
+        HAL_GPIO_DRIVE_NONE,
+        1u  // initialState N/A for Inputs
+    );
+    HAL_GPIO_init_pin(
+        HAL_GPIO_ADC3_PORT,
+        HAL_GPIO_ADC3_PIN,
+        HAL_GPIO_ANALOG_INPUT,
+        HAL_GPIO_PULL_DISABLED,
+        HAL_GPIO_DRIVE_NONE,
+        1u  // initialState N/A for Inputs
+    );
+    HAL_GPIO_init_pin(
+        HAL_GPIO_ADC4_PORT,
+        HAL_GPIO_ADC4_PIN,
+        HAL_GPIO_ANALOG_INPUT,
+        HAL_GPIO_PULL_DISABLED,
+        HAL_GPIO_DRIVE_NONE,
+        1u  // initialState N/A for Inputs
+    );
 
     /** Calibrate RTC */
 #if (defined(BOARD_XTAL1_CLK_HZ) && (BOARD_XTAL1_CLK_HZ != CLK_XTAL_32KHZ))

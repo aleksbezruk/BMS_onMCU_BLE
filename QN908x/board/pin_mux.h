@@ -26,6 +26,12 @@ extern "C" {
 void BOARD_InitBootPins(void);
 
 /*!
+ * @brief Function control register: Alternative connection 0. */
+#define PIO_FUNC_ALT0 0x00U
+/*!
+ * @brief Function control register: Alternative connection 1. */
+#define PIO_FUNC_ALT1 0x01U
+/*!
  * @brief Function control register: Alternative connection 4. */
 #define PIO_FUNC_ALT4 0x04U
 

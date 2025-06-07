@@ -3,7 +3,9 @@
 // HAL
 #include "hal.h"
 #include "hal_led.h"
+#include "hal_gpio.h"
 
+// LED stuff
 volatile bool test_green_led;
 volatile bool test_red_led;
 volatile uint8_t led_test;
@@ -18,6 +20,20 @@ volatile uint8_t led_test;
 #define RED_ON_INTERVAL SMALL_DELAY
 #define RED_OFF_INTERVAL 2*SMALL_DELAY
 #define RED_TOGGLE_INTERVAL 3*SMALL_DELAY
+
+// GPIO test
+volatile bool hal_gpio_test_en;
+volatile bool hal_gpio_test_disch_en;
+volatile bool hal_gpio_test_chrg_en;
+volatile bool hal_gpio_test_bal1;
+volatile bool hal_gpio_test_bal2;
+volatile bool hal_gpio_test_bal3;
+volatile bool hal_gpio_test_bal4;
+
+///////////////////////////////////
+/// Fuc Prototypes
+///////////////////////////////////
+static void TEST_gpio(void);
 
 int main(void)
 {
@@ -74,11 +90,178 @@ int main(void)
             }
         }
 
+        /** GPIO tests */
+        TEST_gpio();
+
         /** Next tests */
 
     }
     return 0;
 }
 
+
+//////////////////////////////
+/// Tests implementation
+//////////////////////////////
+/**
+ * @note Semimanual test. Need to connect debug probe, Enable GPIO test & Enable appropriate test.
+ */
+static void TEST_gpio(void)
+{
+    if (hal_gpio_test_en) {
+        /** Init pins */
+        HAL_GPIO_init_pin(
+            HAL_DISCHARGE_PORT,
+            HAL_DISCHARGE_PIN,
+            HAL_GPIO_DIGITAL_OUTPUT,
+            HAL_GPIO_PULL_DISABLED,
+            HAL_GPIO_DRIVE_HIGH,
+            HAL_DISCHARGE_OFF
+        );
+
+        HAL_GPIO_init_pin(
+            HAL_CHARGE_PORT,
+            HAL_CHARGE_PIN,
+            HAL_GPIO_DIGITAL_OUTPUT,
+            HAL_GPIO_PULL_DISABLED,
+            HAL_GPIO_DRIVE_HIGH,
+            HAL_CHARGE_OFF
+        );
+
+        HAL_GPIO_init_pin(
+            HAL_BAL_BANK1_PORT,
+            HAL_BAL_BANK1_PIN,
+            HAL_GPIO_DIGITAL_OUTPUT,
+            HAL_GPIO_PULL_DISABLED,
+            HAL_GPIO_DRIVE_HIGH,
+            HAL_BAL_BANK1_OFF
+        );
+
+        HAL_GPIO_init_pin(
+            HAL_BAL_BANK2_PORT,
+            HAL_BAL_BANK2_PIN,
+            HAL_GPIO_DIGITAL_OUTPUT,
+            HAL_GPIO_PULL_DISABLED,
+            HAL_GPIO_DRIVE_HIGH,
+            HAL_BAL_BANK2_OFF
+        );
+
+        HAL_GPIO_init_pin(
+            HAL_BAL_BANK3_PORT,
+            HAL_BAL_BANK3_PIN,
+            HAL_GPIO_DIGITAL_OUTPUT,
+            HAL_GPIO_PULL_DISABLED,
+            HAL_GPIO_DRIVE_HIGH,
+            HAL_BAL_BANK3_OFF
+        );
+
+        HAL_GPIO_init_pin(
+            HAL_BAL_BANK4_PORT,
+            HAL_BAL_BANK4_PIN,
+            HAL_GPIO_DIGITAL_OUTPUT,
+            HAL_GPIO_PULL_DISABLED,
+            HAL_GPIO_DRIVE_HIGH,
+            HAL_BAL_BANK4_OFF
+        );
+    }
+
+    while(hal_gpio_test_en) {
+        /** Discharge test */
+        while(hal_gpio_test_disch_en) {
+            HAL_GPIO_set_pin(
+                HAL_DISCHARGE_PORT,
+                HAL_DISCHARGE_PIN,
+                HAL_DISCHARGE_ON
+            );
+            __asm("nop");
+            HAL_GPIO_set_pin(
+                HAL_DISCHARGE_PORT,
+                HAL_DISCHARGE_PIN,
+                HAL_DISCHARGE_OFF
+            );
+            __asm("nop");
+        }
+
+        /** Charge test */
+        while(hal_gpio_test_chrg_en) {
+            HAL_GPIO_set_pin(
+                HAL_CHARGE_PORT,
+                HAL_CHARGE_PIN,
+                HAL_CHARGE_ON
+            );
+            __asm("nop");
+            HAL_GPIO_set_pin(
+                HAL_CHARGE_PORT,
+                HAL_CHARGE_PIN,
+                HAL_CHARGE_OFF
+            );
+            __asm("nop");
+        }
+
+        /** BAL1 test */
+        while(hal_gpio_test_bal1) {
+            HAL_GPIO_set_pin(
+                HAL_BAL_BANK1_PORT,
+                HAL_BAL_BANK1_PIN,
+                HAL_BAL_BANK1_ON
+            );
+            __asm("nop");
+            HAL_GPIO_set_pin(
+                HAL_BAL_BANK1_PORT,
+                HAL_BAL_BANK1_PIN,
+                HAL_BAL_BANK1_OFF
+            );
+            __asm("nop");
+        }
+
+        /** BAL2 test */
+        while(hal_gpio_test_bal2) {
+            HAL_GPIO_set_pin(
+                HAL_BAL_BANK2_PORT,
+                HAL_BAL_BANK2_PIN,
+                HAL_BAL_BANK2_ON
+            );
+            __asm("nop");
+            HAL_GPIO_set_pin(
+                HAL_BAL_BANK2_PORT,
+                HAL_BAL_BANK2_PIN,
+                HAL_BAL_BANK2_OFF
+            );
+            __asm("nop");
+        }
+
+        /** BAL3 test */
+        while(hal_gpio_test_bal3) {
+            HAL_GPIO_set_pin(
+                HAL_BAL_BANK3_PORT,
+                HAL_BAL_BANK3_PIN,
+                HAL_BAL_BANK3_ON
+            );
+            __asm("nop");
+            HAL_GPIO_set_pin(
+                HAL_BAL_BANK3_PORT,
+                HAL_BAL_BANK3_PIN,
+                HAL_BAL_BANK3_OFF
+            );
+            __asm("nop");
+        }
+
+        /** BAL4 test */
+        while(hal_gpio_test_bal4) {
+            HAL_GPIO_set_pin(
+                HAL_BAL_BANK4_PORT,
+                HAL_BAL_BANK4_PIN,
+                HAL_BAL_BANK4_ON
+            );
+            __asm("nop");
+            HAL_GPIO_set_pin(
+                HAL_BAL_BANK4_PORT,
+                HAL_BAL_BANK4_PIN,
+                HAL_BAL_BANK4_OFF
+            );
+            __asm("nop");
+        }
+    }
+}
 
 /* End of FILE */

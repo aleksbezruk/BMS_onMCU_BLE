@@ -23,6 +23,20 @@
          </generated_project_files>
          <pins_profile>
             <processor_version>24.12.0</processor_version>
+            <pin_labels>
+               <pin_label pin_num="11" pin_signal="GPIOA0/ADC0/SCT0_OUT0/CTIMER0_CAP0/FC0_RTS/FC2_SSEL3/WLAN_TX" label="BANK1_ADC"/>
+               <pin_label pin_num="10" pin_signal="GPIOA1/ADC1/SCT0_OUT1/CTIMER0_CAP1/FC0_CTS/FC2_SSEL2/WLAN_RX" label="BANK2_ADC"/>
+               <pin_label pin_num="46" pin_signal="GPIOA8/ADC4/SCT0_IN0/CTIMER1_CAP1/FC1_TXD_SCL/BLE_PTI2/SPIFI_IO2" label="BANK3_ADC"/>
+               <pin_label pin_num="45" pin_signal="GPIOA9/ADC5/SCT0_IN1/CTIMER1_MAT0/FC1_RXD_SDA/BLE_PTI3/SPIFI_IO3" label="BANK4_ADC"/>
+               <pin_label pin_num="42" pin_signal="GPIOA12/SCT0_OUT5/ACMP0_OUT/FC1_TXD_SCL/SD_DAC/ANT_SW" label="DISCH_SW"/>
+               <pin_label pin_num="44" pin_signal="GPIOA10/ADC6/SCT0_IN2/CTIMER1_MAT1/FC1_SCK/ACMP0_OUT/BLE_TX" label="CHRG_SW"/>
+               <pin_label pin_num="29" pin_signal="GPIOA16/CS2/SCT0_OUT1/CTIMER2_MAT0/FC0_TXD/FC3_MOSI/QDEC0_A" label="UART_TX"/>
+               <pin_label pin_num="28" pin_signal="GPIOA17/CS3/SD_DAC/CTIMER2_MAT1/FC0_RXD/FC3_MISO/QDEC0_B" label="UART_RX"/>
+               <pin_label pin_num="9" pin_signal="GPIOA2/QDEC0_A/SCT0_OUT2/CTIMER0_MAT0/FC2_SCL_SSEL1/RFE_RX_EN" label="BAL1"/>
+               <pin_label pin_num="25" pin_signal="GPIOA20/QDEC1_A/SCT0_OUT1/CTIMER2_MAT0/SWO/FC1_RTS_SCL/SPIFI_CLK" label="BAL2"/>
+               <pin_label pin_num="27" pin_signal="GPIOA18/CS4/SCT0_OUT3/CTIMER2_MAT2/FC0_SCK/FC3_SSEL2/BLE_SYNC" label="BAL3"/>
+               <pin_label pin_num="30" pin_signal="GPIOA15/CS1/SCT0_OUT0/CTIMER2_CAP1/FC0_CTS/FC3_SCK/QDEC1_B" label="BAL4"/>
+            </pin_labels>
          </pins_profile>
          <functions_list>
             <function name="BOARD_InitPins">
@@ -38,6 +52,11 @@
                         <data>true</data>
                      </feature>
                   </dependency>
+                  <dependency resourceType="Peripheral" resourceId="ADC" description="Peripheral ADC signals are routed in the Pins Tool, but the peripheral is not initialized in the Peripherals Tool." problem_level="1" source="Pins:BOARD_InitPins">
+                     <feature name="initialized" evaluation="equal">
+                        <data>true</data>
+                     </feature>
+                  </dependency>
                   <dependency resourceType="SWComponent" resourceId="platform.drivers.qn_iocon" description="Pins initialization requires the QN_IOCON Driver in the project." problem_level="2" source="Pins:BOARD_InitPins">
                      <feature name="enabled" evaluation="equal" configuration="cm4">
                         <data>true</data>
@@ -47,6 +66,16 @@
                <pins>
                   <pin peripheral="FLEXCOMM0" signal="RXD" pin_num="28" pin_signal="GPIOA17/CS3/SD_DAC/CTIMER2_MAT1/FC0_RXD/FC3_MISO/QDEC0_B"/>
                   <pin peripheral="FLEXCOMM0" signal="TXD" pin_num="29" pin_signal="GPIOA16/CS2/SCT0_OUT1/CTIMER2_MAT0/FC0_TXD/FC3_MOSI/QDEC0_A"/>
+                  <pin peripheral="ADC" signal="CH, 0" pin_num="11" pin_signal="GPIOA0/ADC0/SCT0_OUT0/CTIMER0_CAP0/FC0_RTS/FC2_SSEL3/WLAN_TX"/>
+                  <pin peripheral="ADC" signal="CH, 4" pin_num="46" pin_signal="GPIOA8/ADC4/SCT0_IN0/CTIMER1_CAP1/FC1_TXD_SCL/BLE_PTI2/SPIFI_IO2"/>
+                  <pin peripheral="ADC" signal="CH, 5" pin_num="45" pin_signal="GPIOA9/ADC5/SCT0_IN1/CTIMER1_MAT0/FC1_RXD_SDA/BLE_PTI3/SPIFI_IO3"/>
+                  <pin peripheral="GPIOA" signal="GPIOA, 12" pin_num="42" pin_signal="GPIOA12/SCT0_OUT5/ACMP0_OUT/FC1_TXD_SCL/SD_DAC/ANT_SW"/>
+                  <pin peripheral="GPIOA" signal="GPIOA, 10" pin_num="44" pin_signal="GPIOA10/ADC6/SCT0_IN2/CTIMER1_MAT1/FC1_SCK/ACMP0_OUT/BLE_TX"/>
+                  <pin peripheral="GPIOA" signal="GPIOA, 2" pin_num="9" pin_signal="GPIOA2/QDEC0_A/SCT0_OUT2/CTIMER0_MAT0/FC2_SCL_SSEL1/RFE_RX_EN"/>
+                  <pin peripheral="GPIOA" signal="GPIOA, 20" pin_num="25" pin_signal="GPIOA20/QDEC1_A/SCT0_OUT1/CTIMER2_MAT0/SWO/FC1_RTS_SCL/SPIFI_CLK"/>
+                  <pin peripheral="GPIOA" signal="GPIOA, 18" pin_num="27" pin_signal="GPIOA18/CS4/SCT0_OUT3/CTIMER2_MAT2/FC0_SCK/FC3_SSEL2/BLE_SYNC"/>
+                  <pin peripheral="GPIOA" signal="GPIOA, 15" pin_num="30" pin_signal="GPIOA15/CS1/SCT0_OUT0/CTIMER2_CAP1/FC0_CTS/FC3_SCK/QDEC1_B"/>
+                  <pin peripheral="ADC" signal="CH, 1" pin_num="10" pin_signal="GPIOA1/ADC1/SCT0_OUT1/CTIMER0_CAP1/FC0_CTS/FC2_SSEL2/WLAN_RX"/>
                </pins>
             </function>
             <function name="BOARD_InitButtons">

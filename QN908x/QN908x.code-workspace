@@ -34,7 +34,9 @@
 			"gpio_adapter.h": "c",
 			"fsl_power.h": "c",
 			"led.h": "c",
-			"hal_led.h": "c"
+			"hal_led.h": "c",
+			"fsl_gpio.h": "c",
+			"fsl_common.h": "c"
 		}
 	}
 }

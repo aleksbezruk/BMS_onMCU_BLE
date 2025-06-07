@@ -12,6 +12,19 @@ processor: QN908XC
 package_id: QN9080C
 mcu_data: ksdk2_0
 processor_version: 24.12.0
+pin_labels:
+- {pin_num: '11', pin_signal: GPIOA0/ADC0/SCT0_OUT0/CTIMER0_CAP0/FC0_RTS/FC2_SSEL3/WLAN_TX, label: BANK1_ADC}
+- {pin_num: '10', pin_signal: GPIOA1/ADC1/SCT0_OUT1/CTIMER0_CAP1/FC0_CTS/FC2_SSEL2/WLAN_RX, label: BANK2_ADC}
+- {pin_num: '46', pin_signal: GPIOA8/ADC4/SCT0_IN0/CTIMER1_CAP1/FC1_TXD_SCL/BLE_PTI2/SPIFI_IO2, label: BANK3_ADC}
+- {pin_num: '45', pin_signal: GPIOA9/ADC5/SCT0_IN1/CTIMER1_MAT0/FC1_RXD_SDA/BLE_PTI3/SPIFI_IO3, label: BANK4_ADC}
+- {pin_num: '42', pin_signal: GPIOA12/SCT0_OUT5/ACMP0_OUT/FC1_TXD_SCL/SD_DAC/ANT_SW, label: DISCH_SW}
+- {pin_num: '44', pin_signal: GPIOA10/ADC6/SCT0_IN2/CTIMER1_MAT1/FC1_SCK/ACMP0_OUT/BLE_TX, label: CHRG_SW}
+- {pin_num: '29', pin_signal: GPIOA16/CS2/SCT0_OUT1/CTIMER2_MAT0/FC0_TXD/FC3_MOSI/QDEC0_A, label: UART_TX}
+- {pin_num: '28', pin_signal: GPIOA17/CS3/SD_DAC/CTIMER2_MAT1/FC0_RXD/FC3_MISO/QDEC0_B, label: UART_RX}
+- {pin_num: '9', pin_signal: GPIOA2/QDEC0_A/SCT0_OUT2/CTIMER0_MAT0/FC2_SCL_SSEL1/RFE_RX_EN, label: BAL1}
+- {pin_num: '25', pin_signal: GPIOA20/QDEC1_A/SCT0_OUT1/CTIMER2_MAT0/SWO/FC1_RTS_SCL/SPIFI_CLK, label: BAL2}
+- {pin_num: '27', pin_signal: GPIOA18/CS4/SCT0_OUT3/CTIMER2_MAT2/FC0_SCK/FC3_SSEL2/BLE_SYNC, label: BAL3}
+- {pin_num: '30', pin_signal: GPIOA15/CS1/SCT0_OUT0/CTIMER2_CAP1/FC0_CTS/FC3_SCK/QDEC1_B, label: BAL4}
  * BE CAREFUL MODIFYING THIS COMMENT - IT IS YAML SETTINGS FOR TOOLS ***********
  */
 /* clang-format on */
@@ -39,6 +52,16 @@ BOARD_InitPins:
 - pin_list:
   - {pin_num: '28', peripheral: FLEXCOMM0, signal: RXD, pin_signal: GPIOA17/CS3/SD_DAC/CTIMER2_MAT1/FC0_RXD/FC3_MISO/QDEC0_B}
   - {pin_num: '29', peripheral: FLEXCOMM0, signal: TXD, pin_signal: GPIOA16/CS2/SCT0_OUT1/CTIMER2_MAT0/FC0_TXD/FC3_MOSI/QDEC0_A}
+  - {pin_num: '11', peripheral: ADC, signal: 'CH, 0', pin_signal: GPIOA0/ADC0/SCT0_OUT0/CTIMER0_CAP0/FC0_RTS/FC2_SSEL3/WLAN_TX}
+  - {pin_num: '46', peripheral: ADC, signal: 'CH, 4', pin_signal: GPIOA8/ADC4/SCT0_IN0/CTIMER1_CAP1/FC1_TXD_SCL/BLE_PTI2/SPIFI_IO2}
+  - {pin_num: '45', peripheral: ADC, signal: 'CH, 5', pin_signal: GPIOA9/ADC5/SCT0_IN1/CTIMER1_MAT0/FC1_RXD_SDA/BLE_PTI3/SPIFI_IO3}
+  - {pin_num: '42', peripheral: GPIOA, signal: 'GPIOA, 12', pin_signal: GPIOA12/SCT0_OUT5/ACMP0_OUT/FC1_TXD_SCL/SD_DAC/ANT_SW}
+  - {pin_num: '44', peripheral: GPIOA, signal: 'GPIOA, 10', pin_signal: GPIOA10/ADC6/SCT0_IN2/CTIMER1_MAT1/FC1_SCK/ACMP0_OUT/BLE_TX}
+  - {pin_num: '9', peripheral: GPIOA, signal: 'GPIOA, 2', pin_signal: GPIOA2/QDEC0_A/SCT0_OUT2/CTIMER0_MAT0/FC2_SCL_SSEL1/RFE_RX_EN}
+  - {pin_num: '25', peripheral: GPIOA, signal: 'GPIOA, 20', pin_signal: GPIOA20/QDEC1_A/SCT0_OUT1/CTIMER2_MAT0/SWO/FC1_RTS_SCL/SPIFI_CLK}
+  - {pin_num: '27', peripheral: GPIOA, signal: 'GPIOA, 18', pin_signal: GPIOA18/CS4/SCT0_OUT3/CTIMER2_MAT2/FC0_SCK/FC3_SSEL2/BLE_SYNC}
+  - {pin_num: '30', peripheral: GPIOA, signal: 'GPIOA, 15', pin_signal: GPIOA15/CS1/SCT0_OUT0/CTIMER2_CAP1/FC0_CTS/FC3_SCK/QDEC1_B}
+  - {pin_num: '10', peripheral: ADC, signal: 'CH, 1', pin_signal: GPIOA1/ADC1/SCT0_OUT1/CTIMER0_CAP1/FC0_CTS/FC2_SSEL2/WLAN_RX}
  * BE CAREFUL MODIFYING THIS COMMENT - IT IS YAML SETTINGS FOR TOOLS ***********
  */
 /* clang-format on */
@@ -52,15 +75,56 @@ BOARD_InitPins:
 void BOARD_InitPins(void)
 {
 
-    SYSCON->PIO_FUNC_CFG[2] = ((SYSCON->PIO_FUNC_CFG[2] &
-                                /* Mask bits to zero which are setting */
-                                (~(SYSCON_PIO_FUNC_CFG_PA16_FUNC_MASK | SYSCON_PIO_FUNC_CFG_PA17_FUNC_MASK)))
+    SYSCON->PIO_FUNC_CFG[0] =
+        ((SYSCON->PIO_FUNC_CFG[0] &
+          /* Mask bits to zero which are setting */
+          (~(SYSCON_PIO_FUNC_CFG_PA00_FUNC_MASK | SYSCON_PIO_FUNC_CFG_PA01_FUNC_MASK | SYSCON_PIO_FUNC_CFG_PA02_FUNC_MASK)))
 
-                               /* PORTA PIN16 (coords: 29) is configured as FC0_TXD. */
-                               | SYSCON_PIO_FUNC_CFG_PA16_FUNC(PIO_FUNC_ALT4)
+         /* PORTA PIN0 (coords: 11) is configured as ADC0. */
+         | SYSCON_PIO_FUNC_CFG_PA00_FUNC(PIO_FUNC_ALT1)
 
-                               /* PORTA PIN17 (coords: 28) is configured as FC0_RXD. */
-                               | SYSCON_PIO_FUNC_CFG_PA17_FUNC(PIO_FUNC_ALT4));
+         /* PORTA PIN1 (coords: 10) is configured as ADC1. */
+         | SYSCON_PIO_FUNC_CFG_PA01_FUNC(PIO_FUNC_ALT1)
+
+         /* PORTA PIN2 (coords: 9) is configured as GPIOA2. */
+         | SYSCON_PIO_FUNC_CFG_PA02_FUNC(PIO_FUNC_ALT0));
+
+    SYSCON->PIO_FUNC_CFG[1] =
+        ((SYSCON->PIO_FUNC_CFG[1] &
+          /* Mask bits to zero which are setting */
+          (~(SYSCON_PIO_FUNC_CFG_PA08_FUNC_MASK | SYSCON_PIO_FUNC_CFG_PA09_FUNC_MASK | SYSCON_PIO_FUNC_CFG_PA10_FUNC_MASK | SYSCON_PIO_FUNC_CFG_PA12_FUNC_MASK | SYSCON_PIO_FUNC_CFG_PA15_FUNC_MASK)))
+
+         /* PORTA PIN8 (coords: 46) is configured as ADC4. */
+         | SYSCON_PIO_FUNC_CFG_PA08_FUNC(PIO_FUNC_ALT1)
+
+         /* PORTA PIN9 (coords: 45) is configured as ADC5. */
+         | SYSCON_PIO_FUNC_CFG_PA09_FUNC(PIO_FUNC_ALT1)
+
+         /* PORTA PIN10 (coords: 44) is configured as GPIOA10. */
+         | SYSCON_PIO_FUNC_CFG_PA10_FUNC(PIO_FUNC_ALT0)
+
+         /* PORTA PIN12 (coords: 42) is configured as GPIOA12. */
+         | SYSCON_PIO_FUNC_CFG_PA12_FUNC(PIO_FUNC_ALT0)
+
+         /* PORTA PIN15 (coords: 30) is configured as GPIOA15. */
+         | SYSCON_PIO_FUNC_CFG_PA15_FUNC(PIO_FUNC_ALT0));
+
+    SYSCON->PIO_FUNC_CFG[2] =
+        ((SYSCON->PIO_FUNC_CFG[2] &
+          /* Mask bits to zero which are setting */
+          (~(SYSCON_PIO_FUNC_CFG_PA16_FUNC_MASK | SYSCON_PIO_FUNC_CFG_PA17_FUNC_MASK | SYSCON_PIO_FUNC_CFG_PA18_FUNC_MASK | SYSCON_PIO_FUNC_CFG_PA20_FUNC_MASK)))
+
+         /* PORTA PIN16 (coords: 29) is configured as FC0_TXD. */
+         | SYSCON_PIO_FUNC_CFG_PA16_FUNC(PIO_FUNC_ALT4)
+
+         /* PORTA PIN17 (coords: 28) is configured as FC0_RXD. */
+         | SYSCON_PIO_FUNC_CFG_PA17_FUNC(PIO_FUNC_ALT4)
+
+         /* PORTA PIN18 (coords: 27) is configured as GPIOA18. */
+         | SYSCON_PIO_FUNC_CFG_PA18_FUNC(PIO_FUNC_ALT0)
+
+         /* PORTA PIN20 (coords: 25) is configured as GPIOA20. */
+         | SYSCON_PIO_FUNC_CFG_PA20_FUNC(PIO_FUNC_ALT0));
 }
 
 /* clang-format off */
