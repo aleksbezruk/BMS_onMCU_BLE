@@ -36,7 +36,17 @@
 			"led.h": "c",
 			"hal_led.h": "c",
 			"fsl_gpio.h": "c",
-			"fsl_common.h": "c"
+			"fsl_common.h": "c",
+			"hal.h": "c",
+			"hal_uart.h": "c",
+			"fsl_os_abstraction.h": "c",
+			"qpc.h": "c",
+			"qs_port.h": "c",
+			"qp_port.h": "c",
+			"qn908xc.h": "c",
+			"qs_pkg.h": "c",
+			"main.h": "c",
+			"ble.h": "c"
 		}
 	}
 }

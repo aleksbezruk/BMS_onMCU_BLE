@@ -221,7 +221,7 @@ static void adcTask_(cy_thread_arg_t arg)
         );
         adcEvt.bank1_mv = b1_v;
 
-        QS_BEGIN_ID(ADC, 0 /*prio/ID for local Filters*/)
+        QS_BEGIN_ID(ADC_RCD, 0 /*prio/ID for local Filters*/)
             QS_STR("Cell1_raw = ");
             QS_I16(0, bankAdcIn); 
         QS_END()
@@ -234,7 +234,7 @@ static void adcTask_(cy_thread_arg_t arg)
         );
         adcEvt.bank2_mv = ADC_BANK_VOLT_CALC(b1_v, b2_v);
 
-        QS_BEGIN_ID(ADC, 0 /*prio/ID for local Filters*/)
+        QS_BEGIN_ID(ADC_RCD, 0 /*prio/ID for local Filters*/)
             QS_STR("Cell2_raw = ");
             QS_I16(0, bankAdcIn); 
         QS_END()
@@ -247,7 +247,7 @@ static void adcTask_(cy_thread_arg_t arg)
         );
         adcEvt.bank3_mv = ADC_BANK_VOLT_CALC(b2_v, b3_v);
 
-        QS_BEGIN_ID(ADC, 0 /*prio/ID for local Filters*/)
+        QS_BEGIN_ID(ADC_RCD, 0 /*prio/ID for local Filters*/)
             QS_STR("Cell3_raw = ");
             QS_I16(0, bankAdcIn); 
         QS_END()
@@ -261,7 +261,7 @@ static void adcTask_(cy_thread_arg_t arg)
         adcEvt.full_mv = b4_v;
         adcEvt.bank4_mv = ADC_BANK_VOLT_CALC(b3_v, b4_v);
 
-        QS_BEGIN_ID(ADC, 0 /*prio/ID for local Filters*/)
+        QS_BEGIN_ID(ADC_RCD, 0 /*prio/ID for local Filters*/)
             QS_STR("Cell4_raw = ");
             QS_I16(0, bankAdcIn); 
         QS_END()

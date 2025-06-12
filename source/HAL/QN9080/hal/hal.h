@@ -12,10 +12,12 @@
 #define HAL_GENERIC_MODULE_H
 
 #include <stdbool.h>
+#include "QN908XC.h"
 
 ///////////////////////
 // Defines
 ///////////////////////
+#define HAL_TICKS_PER_SEC 1000U
 
 /*! Define HAL generic status type */
 typedef enum {

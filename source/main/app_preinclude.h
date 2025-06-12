@@ -13,6 +13,20 @@
 #define _APP_PREINCLUDE_H_
 
 /*! *********************************************************************************
+ * 	BMS specific Configuration
+ ********************************************************************************** */
+/** 
+ *  @note Disable RTOS and/or BLE - temporary solution
+ *  @todo Comment out when RTOS port will be ready for QN908x
+ */
+#define BMS_DISABLE_RTOS
+
+#define BMS_DISABLE_BLE
+
+/*! Enable QSPY */
+#define Q_SPY
+
+/*! *********************************************************************************
  * 	Board Configuration
  ********************************************************************************** */
 #define gLEDSupported_d         1

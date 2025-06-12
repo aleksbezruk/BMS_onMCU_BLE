@@ -118,5 +118,5 @@ Build project for QN9080: <br>
 
 _________________________________________________________________________________________________
 
-## X1I. NRF52840 port details
-TBD.
+## X1I. Nordic NRF52840 port details
+For now NRF52840 port is suspended, this option is reserved for future.

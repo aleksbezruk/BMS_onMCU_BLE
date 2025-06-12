@@ -27,7 +27,7 @@ enum AppRecords {
     MAIN = QS_USER,
     UTEST,
     BSP,
-    ADC,
+    ADC_RCD,
     BLE_TRACE,
     BLE_BAS,
     BLE_AIOS

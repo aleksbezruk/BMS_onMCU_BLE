@@ -14,6 +14,7 @@
 ///////////////////////
 // Defines
 ///////////////////////
+#define HAL_TICKS_PER_SEC 1000U
 
 /*! Define HAL generic status type */
 typedef enum {

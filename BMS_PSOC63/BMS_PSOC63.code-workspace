@@ -85,7 +85,11 @@
             "bms_events.h": "c",
             "cyhal_drivers.h": "c",
             "hal_gpio.h": "c",
-            "cy_device_headers.h": "c"
+            "cy_device_headers.h": "c",
+            "stdio.h": "c",
+            "qequeue.h": "c",
+            "qmpool.h": "c",
+            "qp.h": "c"
         },
         "clangd.arguments": [
             "--query-driver=${config:modustoolbox.toolsPath}/gcc/bin/arm-none-eabi-gcc",

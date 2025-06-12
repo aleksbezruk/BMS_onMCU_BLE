@@ -4,6 +4,8 @@
 #include "hal.h"
 #include "hal_led.h"
 #include "hal_gpio.h"
+// QSPY
+#include "qspyHelper.h"
 
 // LED stuff
 volatile bool test_green_led;
@@ -12,7 +14,7 @@ volatile uint8_t led_test;
 
 // LED tests
 #define LED_NUM_TESTS   3U
-#define SMALL_DELAY 1000000u
+#define SMALL_DELAY 100000u
 #define BIG_DELAY 2*SMALL_DELAY
 #define GREEN_ON_INTERVAL SMALL_DELAY
 #define GREEN_OFF_INTERVAL 2*SMALL_DELAY
@@ -30,11 +32,18 @@ volatile bool hal_gpio_test_bal2;
 volatile bool hal_gpio_test_bal3;
 volatile bool hal_gpio_test_bal4;
 
+// UART test
+volatile bool isSentPacket;
+
 ///////////////////////////////////
 /// Fuc Prototypes
 ///////////////////////////////////
 static void TEST_gpio(void);
+static void _IdleTask(void);
 
+//////////////////////////////////
+/// Tests code ...
+//////////////////////////////////
 int main(void)
 {
     unsigned int i = 0;
@@ -46,6 +55,17 @@ int main(void)
 
     HAL_LED_init_green();
     HAL_LED_init_red();
+
+    /** Init QSPY */
+    QS_onStartup(NULL);
+
+    /** Init QSPY dictionary & filters */
+    QS_addUsrRecToDic(MAIN);
+    QS_addUsrRecToDic(ADC_RCD);
+    QS_initGlbFilters();
+
+    /** dictionaries... */
+    QS_FUN_DICTIONARY(&_IdleTask);
 
     test_green_led = true;
     while(1) {
@@ -67,6 +87,7 @@ int main(void)
                     i = 0;
                 } else {
                     // nothing todo, continue test
+                    _IdleTask();
                 }
             }
             // Red
@@ -86,6 +107,7 @@ int main(void)
                     led_test++;
                 } else {
                     // nothing todo, continue test
+                    _IdleTask();
                 }
             }
         }
@@ -94,7 +116,14 @@ int main(void)
         TEST_gpio();
 
         /** Next tests */
+        if (!isSentPacket) {
+            QS_BEGIN_ID(MAIN, 0 /*prio/ID for local Filters*/)
+                QS_STR("Tests completed.");
+            QS_END()
+            isSentPacket = true;
+        }
 
+        _IdleTask();
     }
     return 0;
 }
@@ -263,5 +292,12 @@ static void TEST_gpio(void)
         }
     }
 }
+
+static void _IdleTask(void)
+{
+     /** Handle QSPY communication */
+     QS_onIdle();
+}
+
 
 /* End of FILE */

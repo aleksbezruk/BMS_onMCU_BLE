@@ -132,7 +132,7 @@ int main(void)
 
     /** Init QSPY dictionary & filters */
     QS_addUsrRecToDic(MAIN);
-    QS_addUsrRecToDic(ADC);
+    QS_addUsrRecToDic(ADC_RCD);
     QS_addUsrRecToDic(BLE_TRACE);
     QS_addUsrRecToDic(BLE_BAS);
     QS_addUsrRecToDic(BLE_AIOS);

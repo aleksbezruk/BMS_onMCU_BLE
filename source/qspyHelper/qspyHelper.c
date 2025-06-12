@@ -10,20 +10,33 @@
 #include "qspyHelper.h"
 #include "qutestHelper.h"
 
+#ifndef BMS_DISABLE_RTOS
 #include "FreeRTOS.h"
 #include "task.h"
-
 #include "MAIN.h"
+#else
+#include "MAIN.h"
+// Stub
+void MAIN_post_evt(Main_evt_t* evt, Evt_types_t eventType)
+{
+    (void) evt;
+    (void) eventType;
+}
+#endif  // BMS_DISABLE_RTOS
+
+#ifndef BMS_DISABLE_BLE
 #include "BLE.h"
+#endif  // BMS_DISABLE_BLE
 
 // HAL
+#include "hal.h"
 #include "hal_led.h"
 #include "hal_uart.h"
 
 ///////////////////
 // Defines
 ///////////////////
-#define QS_TICKS_IN_1MS (SystemCoreClock / BSP_TICKS_PER_SEC)
+#define QS_TICKS_IN_1MS (SystemCoreClock / HAL_TICKS_PER_SEC)
 
 /** Code undet test */
 typedef void (*cut)(void);
@@ -47,18 +60,21 @@ void QUTEST_init(void);
 static QSTimeCtr QS_tickTime_;       /**< ms */
 static QSTimeCtr QS_tickPeriod_;     /**< ms */
 
+#ifndef BMS_DISABLE_RTOS
 static volatile TickType_t _prevTicks;
 static volatile TickType_t _currTicks;
+#endif  // BMS_DISABLE_RTOS
 
 ///////////////////
 // Private functions
 ///////////////////
 static void QS_initTimer_(void) 
 {
-    (void)SysTick_Config(SystemCoreClock / BSP_TICKS_PER_SEC);
+    (void)SysTick_Config(SystemCoreClock / HAL_TICKS_PER_SEC);
     NVIC_SetPriority(SysTick_IRQn, 1U);
 }
 
+#ifndef BMS_DISABLE_RTOS
 void vApplicationTickHook(void) 
 {
     volatile uint32_t tmp;
@@ -71,6 +87,16 @@ void vApplicationTickHook(void)
     QS_tickTime_ +=  (_currTicks - _prevTicks);
     _prevTicks = _currTicks;
 }
+#else
+void SysTick_Handler(void)
+{
+    volatile uint32_t tmp;
+
+    tmp = SysTick->CTRL; // clear CTRL_COUNTFLAG
+    (void) tmp;
+    QS_tickTime_ += QS_tickPeriod_;
+}
+#endif  // BMS_DISABLE_RTOS
 
 /**
  * @brief Callback for received data via UART
@@ -217,6 +243,7 @@ void QS_onCommand(uint8_t cmdId,
             MAIN_post_evt((Main_evt_t*) &evt, EVT_SYSTEM);
             break;
         }
+#ifndef BMS_DISABLE_BLE
         case QS_CMD_BLE_START_ADV:
         {
             Ble_evt_t evt;
@@ -232,6 +259,7 @@ void QS_onCommand(uint8_t cmdId,
             BLE_post_evt(&evt, EVT_BLE_ADV_OFF);
             break;
         }
+#endif  // BMS_DISABLE_BLE
         default:
         {
             break;  // just igmore if cmd isn't defined
@@ -331,8 +359,8 @@ void QS_addUsrRecToDic(enum_t const rec)
         case BSP:
             QS_USR_DICTIONARY(BSP);
             break;
-        case ADC:
-            QS_USR_DICTIONARY(ADC);
+        case ADC_RCD:
+            QS_USR_DICTIONARY(ADC_RCD);
             break;
         case BLE_TRACE:
             QS_USR_DICTIONARY(BLE_TRACE);

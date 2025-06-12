@@ -57,6 +57,16 @@ HAL_status_t HAL_init_hardware(void)
     /** Init DC-DC mode */
     POWER_EnableDCDC(gDCDC_Mode);
 
+    /** Relocate VTOR and copy Vector Table to RAM */
+    extern uint32_t __VECTOR_TABLE[];
+    extern uint32_t __VECTOR_RAM[];
+    extern uint32_t __RAM_VECTOR_TABLE_SIZE_BYTES[];
+    uint32_t __RAM_VECTOR_TABLE_SIZE = (uint32_t)(__RAM_VECTOR_TABLE_SIZE_BYTES);
+    for (uint32_t n = 0; n < ((uint32_t)__RAM_VECTOR_TABLE_SIZE) / sizeof(uint32_t); n++) {
+        __VECTOR_RAM[n] = __VECTOR_TABLE[n];
+    }
+    SCB->VTOR = (uint32_t)__VECTOR_RAM;
+
     /** Init clocks at boot-up */
 #if gBleUseHSClock2MbpsPhy_c
     BOARD_BootClockHSRUN();
