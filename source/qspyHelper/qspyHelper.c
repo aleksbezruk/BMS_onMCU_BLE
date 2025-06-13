@@ -68,12 +68,7 @@ static volatile TickType_t _currTicks;
 ///////////////////
 // Private functions
 ///////////////////
-static void QS_initTimer_(void) 
-{
-    (void)SysTick_Config(SystemCoreClock / HAL_TICKS_PER_SEC);
-    NVIC_SetPriority(SysTick_IRQn, 1U);
-}
-
+/** @todo: move timer related funcs into separate module / OS Layer */
 #ifndef BMS_DISABLE_RTOS
 void vApplicationTickHook(void) 
 {
@@ -285,7 +280,8 @@ uint8_t QS_onStartup(void const *arg)
     QUTEST_init();
 
     /** Configure QSPY timer */
-    QS_initTimer_();
+    /** @todo: register callback for QSPY about tick */
+    // QS_initTimer_();
 
     /** Configure QSPY TX, RX buffers */
     QS_initBuf(qsTxBuf, sizeof(qsTxBuf));

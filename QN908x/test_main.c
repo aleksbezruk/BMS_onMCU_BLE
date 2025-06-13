@@ -44,6 +44,12 @@ static void _IdleTask(void);
 //////////////////////////////////
 /// Tests code ...
 //////////////////////////////////
+static void OS_initTimer_(void)
+{
+    (void)SysTick_Config(SystemCoreClock / HAL_TICKS_PER_SEC);
+    NVIC_SetPriority(SysTick_IRQn, 1U);
+}
+
 int main(void)
 {
     unsigned int i = 0;
@@ -66,6 +72,9 @@ int main(void)
 
     /** dictionaries... */
     QS_FUN_DICTIONARY(&_IdleTask);
+
+    /** Start OS timer */
+    OS_initTimer_();
 
     test_green_led = true;
     while(1) {
