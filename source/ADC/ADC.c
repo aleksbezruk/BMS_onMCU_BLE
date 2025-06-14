@@ -5,25 +5,23 @@
  * 
  * @details ## **Details** 
  *           ### 1. Hardware details: <br>
- *               1.1 BAT cell4 -> P10_0 sarmux[0] <br>
- *               1.2 BAT cell3 -> P10_1 sarmux[1] <br>
- *               1.3 BAT cell2 -> P10_2 sarmux[2] <br>
- *               1.4 BAT cell1 -> P10_3 sarmux[3] <br>
- *               1.5 temperature sensor connected to ADC <br>
- *               1.6 One 12-bit SAR (successive approximation register) ADC <br>
- *               1.7 Reference voltage -> VDDA = 2.5V referenced form VDD <br>
- *           ### 2. Software details:
+ *               1.1 For PSOC63: BAT cell4 -> P10_0 sarmux[0] <br>
+ *               1.2 For PSOC63: BAT cell3 -> P10_1 sarmux[1] <br>
+ *               1.3 For PSOC63: BAT cell2 -> P10_2 sarmux[2] <br>
+ *               1.4 For PSOC63: BAT cell1 -> P10_3 sarmux[3] <br>
+ *               1.5 For PSOC63: temperature sensor connected to ADC <br>
+ *               1.6 For PSOC63: One 12-bit SAR (successive approximation register) ADC <br>
+ *               1.7 For PSOC63: Reference voltage -> VDDA = 2.5V referenced form VDD <br>
+ *           ### 2. Software details for PSOC63:
  *               2.1 Use Cypress HAL library: <br> 
  *                   - mtb-hal-cat1/release-v2.6.1/source/cyhal_adc_sar.c ;
  *                   - mtb-hal-cat1/release-v2.6.1/include/cyhal_adc.h ;
  *                   - mtb-hal-cat1/release-v2.6.1/include_pvt/cyhal_analog_common.h . <br>
  *               2.2 Cypress ModToolBox is used to config ADC peripheral (pins, clocks, etc) .
- * 
- * @version 0.4.0
+ *
+ * @version 0.5.0
  */
 
-#include "cyhal_adc.h"
-#include "cycfg.h"
 #include "ADC.h"
 #include "qspyHelper.h"
 #include "MAIN.h"
@@ -36,12 +34,11 @@
 
 // HAL
 #include "hal.h"
+#include "hal_adc.h"
 
-///////////////////////
+// =======================
 // Defines
-///////////////////////
-#define ADC_NUM_CHNLS   4U
-#define ADC_CONVERT_UV_TO_MV(uv)    (int16_t) (uv / 1000)
+// =======================
 /** 
  * ADC error in [%]. 
  * 1. Maybe variable from sample to sample
@@ -73,64 +70,63 @@
  * mV
  */
 #define ADC_BANK_VOLT_CALC(v_neg, v_pos)    (int16_t) ( v_pos - v_neg )
+
+/**
+ * Convert ADC value to mV using conversion ratio
+ * @note val is in [mV]
+ */
 #define ADC_CONV_BY_RATIO(val, ratio)   (int16_t) ( (float) val * ratio )
+
+/**
+ * Number of ADC measurements to average
+ * @note Averaging using 5 samples.
+ */
 #define ADC_NUM_MEAS 5U
 
+// RTOS task defines
 #define ADC_TASK_INTERVAL   30000U  /**< ms */
 #define ADC_TASK_STACK_SIZE 560U   /**< bytes, aligned to 8 bytes */
 
-///////////////////////
+// =======================
 // Private data
-///////////////////////
-static cyhal_adc_t adc_;               // allocate some memory for HAL ADC
-static cyhal_adc_channel_t channel0_;  // allocate memory for channel0 (BAT cell1)
-static cyhal_adc_channel_t channel1_;  // allocate memory for channel0 (BAT cell2)
-static cyhal_adc_channel_t channel2_;  // allocate memory for channel2 (BAT cell3)
-static cyhal_adc_channel_t channel3_;  // allocate memory for channel3 (BAT cell4)
-static cyhal_adc_channel_t* channels_[ADC_NUM_CHNLS] = {
-    &channel0_,
-    &channel1_,
-    &channel2_,
-    &channel3_
-};
-static uint8_t num_channels_ = ADC_NUM_CHNLS;  // allocate memory to keep count
-
+// =======================
+/** ADC task handle */
 static cy_thread_t adcTaskHandle_;
+
 /** 
  *  In stack words because stack pointer should be aligned to 
- *  8 bytes boundaru per the RTOS requirements.
+ *  8 bytes boundary per the RTOS requirements.
  */
 static uint64_t adcTaskStack_[ADC_TASK_STACK_SIZE/8U];
 
 static volatile bool _adcEnabled = true;
 
-///////////////////////
+// =======================
 // Functions prototype
-///////////////////////
+// =======================
 static void adcTask_(cy_thread_arg_t arg);
-static int16_t calcBankAvgVolt_(cyhal_adc_channel_t* chnl, float convRatio, int16_t* pAdcInVolt);
+static int16_t calcBankAvgVolt_(HAL_ADC_channel_t chnl, float convRatio, int16_t* pAdcInVolt);
+static ADC_status_t ADC_init_periph(void);
 
-///////////////////////
+// =======================
 // Code
-///////////////////////
+// =======================
 /**
  * @brief Init ADC peripheral
  * 
  * @param None
  * 
- * @retval See \ref cy_rslt_t
- * 
+ * @retval See \ref ADC_status_t
  */
-cy_rslt_t ADC_init_periph(void)
+ADC_status_t ADC_init_periph(void)
 {
-    cy_rslt_t result = cyhal_adc_init_cfg(
-        &adc_, 
-        channels_, 
-        &num_channels_,
-        &pass_0_sar_0_hal_config
-    );
+    ADC_status_t status = ADC_STATUS_OK;
 
-    return result;
+    if (HAL_ADC_init() != HAL_ADC_SUCCESS) {
+        status = ADC_STATUS_FAIL;
+    }
+
+    return status;
 }
 
 /**
@@ -143,7 +139,7 @@ cy_rslt_t ADC_init_periph(void)
  */
 void ADC_deinit(void)
 {
-    cyhal_adc_free(&adc_);
+    HAL_ADC_deinit();
 }
 
 /**
@@ -157,15 +153,10 @@ void ADC_deinit(void)
 ADC_status_t ADC_init(void)
 {
     ADC_status_t status = ADC_STATUS_OK;
-    cy_rslt_t result;
+    cy_rslt_t result = CY_RSLT_SUCCESS;
 
     /** Init ADC periph */
-    result = ADC_init_periph();
-
-    /** Check operation status */
-    if (result != CY_RSLT_SUCCESS) {
-        status = ADC_STATUS_FAIL;
-    }
+    status = ADC_init_periph();
 
     /** Create RTOS task */
     if (status == ADC_STATUS_OK) {
@@ -199,23 +190,23 @@ static void adcTask_(cy_thread_arg_t arg)
     (void) arg;
     Evt_adc_data_t adcEvt;
     int16_t b1_v, b2_v, b3_v, b4_v, bankAdcIn;
-    cy_rslt_t result;
+    ADC_status_t status;
 
     while(1) {
-        (void)cy_rtos_delay_milliseconds(ADC_TASK_INTERVAL);    // the API always returns SUCCESS becaause of hardcode
+        (void)cy_rtos_delay_milliseconds(ADC_TASK_INTERVAL);    // the API always returns SUCCESS because of hardcode
 
         /** Enable ADC if disabled (during Deep Sleep) */
         if (!_adcEnabled) {
-            result = ADC_init_periph();
+            status = ADC_init_periph();
             _adcEnabled = true;
-            if (result != CY_RSLT_SUCCESS) {
+            if (status != ADC_STATUS_OK) {
                 HAL_ASSERT(0);
             }
         }
 
         /** Measure Bat Cell1 */
         b1_v = calcBankAvgVolt_(
-            &channel0_,
+            HAL_ADC_CHANNEL_0,
             ADC_BANK1_CONV_RATIO,
             &bankAdcIn
         );
@@ -228,7 +219,7 @@ static void adcTask_(cy_thread_arg_t arg)
 
         /** Measure Bat Cell2 */
         b2_v = calcBankAvgVolt_(
-            &channel1_,
+            HAL_ADC_CHANNEL_1,
             ADC_BANK2_CONV_RATIO,
             &bankAdcIn
         );
@@ -241,7 +232,7 @@ static void adcTask_(cy_thread_arg_t arg)
 
         /** Measure Bat Cell3 */
         b3_v = calcBankAvgVolt_(
-            &channel2_,
+            HAL_ADC_CHANNEL_2,
             ADC_BANK3_CONV_RATIO,
             &bankAdcIn
         );
@@ -254,7 +245,7 @@ static void adcTask_(cy_thread_arg_t arg)
 
         /** Measure Bat Cell4 */
         b4_v = calcBankAvgVolt_(
-            &channel3_,
+            HAL_ADC_CHANNEL_3,
             ADC_BANK4_CONV_RATIO,
             &bankAdcIn
         );
@@ -273,29 +264,28 @@ static void adcTask_(cy_thread_arg_t arg)
 /**
  * @brief Calculate average Bank voltage
  * 
- * @note Avearging using 10 samples.
+ * @note Averaging using 5 samples.
  * 
  * @param[in] chnl - ADC chnl
  *
- * @param[in] convRatio - ADC conertion ratio
+ * @param[in] convRatio - ADC conversion ratio
  * 
  * @param[out] pAdcInVolt - ADC measured input/raw voltage
  * 
  * @retval Bank voltage in mV
- * 
+ *
  */
-static int16_t calcBankAvgVolt_(cyhal_adc_channel_t* chnl, float convRatio, int16_t* pAdcInVolt)
+static int16_t calcBankAvgVolt_(HAL_ADC_channel_t chnl, float convRatio, int16_t* pAdcInVolt)
 {
-    int32_t uv;
     int16_t mv;
-    float adcMeasSum = 0, avgAdcIn = 0;
+    float avgAdcIn = 0;
     uint8_t i;
     int16_t retVal;
+    float adcMeasSum = 0;
 
     /** ADC measurements */
     for(i = 0; i < ADC_NUM_MEAS; i++) {
-        uv = cyhal_adc_read_uv(chnl);
-        mv = ADC_CONVERT_UV_TO_MV(uv);
+        mv = HAL_ADC_read(chnl);
         avgAdcIn += mv;
         mv = ADC_MEAS_COMPENSATE_ERR(mv);
         mv = ADC_CONV_BY_RATIO(mv, convRatio);
@@ -308,6 +298,13 @@ static int16_t calcBankAvgVolt_(cyhal_adc_channel_t* chnl, float convRatio, int1
     return retVal;
 }
 
+/**
+ * @brief Set ADC state
+ * 
+ * @param[in] on_off - true to enable ADC, false to disable
+ * 
+ * @retval None
+ */
 void ADC_setState(bool on_off)
 {
     _adcEnabled = on_off;
