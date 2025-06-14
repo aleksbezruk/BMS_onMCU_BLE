@@ -54,11 +54,11 @@ static const cy_stc_gpio_pin_config_t default_config =
 /**
  * @brief Initialize a pin with settings listed below. 
  * 
- * @param[in]   port    pointer to pin's Port dat structure
+ * @param[in]   port    pointer to pin's Port data structure
  * 
  * @param[in]   pin     pin to init
  * 
- * @param[in]   func    pim function
+ * @param[in]   func    pin function
  * 
  * @param[in]   pullRes pull resistor config
  * 
@@ -95,7 +95,7 @@ void HAL_GPIO_init_pin(
     cy_stc_gpio_pin_config_t pin_config;
     pin_config.outVal = initialState;
 
-    /** Cinfigure pin output/input buffer */
+    /** Configure pin output/input buffer */
     if (driveMode == HAL_GPIO_DRIVE_HIGH) {
         // 'Strong Drive' output mode, without Pull resistors
         pin_config.driveMode = CY_GPIO_DM_STRONG_IN_OFF;
@@ -108,7 +108,7 @@ void HAL_GPIO_init_pin(
         pin_config.driveMode = _get_inputBuf_config(func, pullRes);
     }
 
-    /** Cinfigure pin function (HSIOM) */
+    /** Configure pin function (HSIOM) */
     pin_config.hsiom = _get_pinFunc_config(func);
 
     /** Configure other properties */
@@ -130,9 +130,9 @@ void HAL_GPIO_init_pin(
 /**
  * @brief De-init a pin. 
  * 
- * @param[in]   port    pointer to pin's Port dat structure
+ * @param[in]   port    pointer to pin's Port data structure
  * 
- * @param[in]   pin     pin to init
+ * @param[in]   pin     pin to de-init
  * 
  * @details Set pin to High-Z mode but doesn't disable clock.
  * 
@@ -149,9 +149,9 @@ void HAL_GPIO_deinit_pin(Hal_gpio_port_t* port, Hal_gpio_pin_t pin)
 /**
  * @brief Read a digital pin state.
  * 
- * @param[in]   port    pointer to pin's Port dat structure
+ * @param[in]   port    pointer to pin's Port data structure
  * 
- * @param[in]   pin     pin to init
+ * @param[in]   pin     pin to read
  * 
  * @retval HAL_GPIO_LOW_LEVEL or HAL_GPIO_HIGH_LEVEL
  * 
@@ -168,9 +168,9 @@ Hal_gpio_pin_state_t HAL_GPIO_read_pin(Hal_gpio_port_t* port, Hal_gpio_pin_t pin
 /**
  * @brief Set a digital pin state. 
  * 
- * @param[in]   port    pointer to pin's Port dat structure
+ * @param[in]   port    pointer to pin's Port data structure
  * 
- * @param[in]   pin     pin to init
+ * @param[in]   pin     pin to set
  * 
  * @param[in]   level   LOW or HIGH
  * 
@@ -191,7 +191,7 @@ void HAL_GPIO_set_pin(Hal_gpio_port_t* port, Hal_gpio_pin_t pin, Hal_gpio_pin_st
 /**
  * @brief Determine input buffer configuration based on pin function (DIGITAL / ANALOG).
  * 
- * @param[in]   func    pim function
+ * @param[in]   func    pin function
  * 
  * @param[in]   pullRes pull resistor config
  * 
@@ -220,8 +220,9 @@ static uint32_t _get_inputBuf_config(Hal_gpio_function_t func, Hal_gpio_pullRes_
             } else if (pullRes == HAL_GPIO_PULL_DOWN) {
                 bufConfig = CY_GPIO_DM_PULLDOWN;
             } else {
-                // smth. went wrong ...
+                // Invalid pull resistor configuration encountered in _get_inputBuf_config
                 HAL_ASSERT(false);
+                return CY_GPIO_DM_HIGHZ; // Return a safe default value
             }
             break;
         }
@@ -233,7 +234,7 @@ static uint32_t _get_inputBuf_config(Hal_gpio_function_t func, Hal_gpio_pullRes_
 /**
  * @brief Determine Pin Function configuration (HSIOM) based on pin function.
  * 
- * @param[in]   func    pim function
+ * @param[in]   func    pin function
  * 
  * @retval Pin function Config, \ref P10_0_GPIO, P10_0_SCB1_UART_RX etc.
  * 
@@ -267,6 +268,7 @@ static en_hsiom_sel_t _get_pinFunc_config(Hal_gpio_function_t func)
         default:
         {
             HAL_ASSERT(false);
+            hsiom_config = HSIOM_SEL_GPIO; // Assign a safe default value
             break;
         }
     }

@@ -46,7 +46,8 @@
 			"qn908xc.h": "c",
 			"qs_pkg.h": "c",
 			"main.h": "c",
-			"ble.h": "c"
+			"ble.h": "c",
+			"stdint.h": "c"
 		}
 	}
 }

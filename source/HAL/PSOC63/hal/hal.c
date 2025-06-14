@@ -1,31 +1,17 @@
 /**
  * @file  hal.c
- *
  * @brief Implementation of generic HAL functions like init board/hardware, generic utils
- *
  * @note PSOC63
- * 
  * @version 0.5.0
  */
 
 #include "hal.h"
 #include "cybsp.h"
 
-///////////////////////
-// Defines
-///////////////////////
 
-///////////////////////
-// Functions prototype
-///////////////////////
-
-///////////////////////
-// Private data
-///////////////////////
-
-///////////////////////
+// =======================
 // Code
-///////////////////////
+// =======================
 /**
  * @brief Generic API to init underlying hardware. Purpose is
  *        to configure all hardware (power, clocks, peripheral) to be ready for
@@ -41,7 +27,6 @@
  * @param   None
  * 
  * @retval See \ref HAL_status_t. HAL_STATUS_OK - if success.
- * 
  */
 HAL_status_t HAL_init_hardware(void)
 {

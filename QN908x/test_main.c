@@ -15,13 +15,13 @@ volatile uint8_t led_test;
 // LED tests
 #define LED_NUM_TESTS   3U
 #define SMALL_DELAY 100000u
-#define BIG_DELAY 2*SMALL_DELAY
+#define BIG_DELAY (2 * SMALL_DELAY)
 #define GREEN_ON_INTERVAL SMALL_DELAY
-#define GREEN_OFF_INTERVAL 2*SMALL_DELAY
-#define GREEN_TOGGLE_INTERVAL 3*SMALL_DELAY
+#define GREEN_OFF_INTERVAL (2 * SMALL_DELAY)
+#define GREEN_TOGGLE_INTERVAL (3 * SMALL_DELAY)
 #define RED_ON_INTERVAL SMALL_DELAY
-#define RED_OFF_INTERVAL 2*SMALL_DELAY
-#define RED_TOGGLE_INTERVAL 3*SMALL_DELAY
+#define RED_OFF_INTERVAL (2 * SMALL_DELAY)
+#define RED_TOGGLE_INTERVAL (3 * SMALL_DELAY)
 
 // GPIO test
 volatile bool hal_gpio_test_en;
@@ -44,6 +44,9 @@ static void _IdleTask(void);
 //////////////////////////////////
 /// Tests code ...
 //////////////////////////////////
+
+#define NOP() __asm("nop")
+
 static void OS_initTimer_(void)
 {
     (void)SysTick_Config(SystemCoreClock / HAL_TICKS_PER_SEC);
@@ -211,13 +214,13 @@ static void TEST_gpio(void)
                 HAL_DISCHARGE_PIN,
                 HAL_DISCHARGE_ON
             );
-            __asm("nop");
+            NOP();
             HAL_GPIO_set_pin(
                 HAL_DISCHARGE_PORT,
                 HAL_DISCHARGE_PIN,
                 HAL_DISCHARGE_OFF
             );
-            __asm("nop");
+            NOP();
         }
 
         /** Charge test */
@@ -227,13 +230,13 @@ static void TEST_gpio(void)
                 HAL_CHARGE_PIN,
                 HAL_CHARGE_ON
             );
-            __asm("nop");
+            NOP();
             HAL_GPIO_set_pin(
                 HAL_CHARGE_PORT,
                 HAL_CHARGE_PIN,
                 HAL_CHARGE_OFF
             );
-            __asm("nop");
+            NOP();
         }
 
         /** BAL1 test */
@@ -243,13 +246,13 @@ static void TEST_gpio(void)
                 HAL_BAL_BANK1_PIN,
                 HAL_BAL_BANK1_ON
             );
-            __asm("nop");
+            NOP();
             HAL_GPIO_set_pin(
                 HAL_BAL_BANK1_PORT,
                 HAL_BAL_BANK1_PIN,
                 HAL_BAL_BANK1_OFF
             );
-            __asm("nop");
+            NOP();
         }
 
         /** BAL2 test */
@@ -259,13 +262,13 @@ static void TEST_gpio(void)
                 HAL_BAL_BANK2_PIN,
                 HAL_BAL_BANK2_ON
             );
-            __asm("nop");
+            NOP();
             HAL_GPIO_set_pin(
                 HAL_BAL_BANK2_PORT,
                 HAL_BAL_BANK2_PIN,
                 HAL_BAL_BANK2_OFF
             );
-            __asm("nop");
+            NOP();
         }
 
         /** BAL3 test */
@@ -275,13 +278,13 @@ static void TEST_gpio(void)
                 HAL_BAL_BANK3_PIN,
                 HAL_BAL_BANK3_ON
             );
-            __asm("nop");
+            NOP();
             HAL_GPIO_set_pin(
                 HAL_BAL_BANK3_PORT,
                 HAL_BAL_BANK3_PIN,
                 HAL_BAL_BANK3_OFF
             );
-            __asm("nop");
+            NOP();
         }
 
         /** BAL4 test */
@@ -291,13 +294,13 @@ static void TEST_gpio(void)
                 HAL_BAL_BANK4_PIN,
                 HAL_BAL_BANK4_ON
             );
-            __asm("nop");
+            NOP();
             HAL_GPIO_set_pin(
                 HAL_BAL_BANK4_PORT,
                 HAL_BAL_BANK4_PIN,
                 HAL_BAL_BANK4_OFF
             );
-            __asm("nop");
+            NOP();
         }
     }
 }

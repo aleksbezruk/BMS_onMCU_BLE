@@ -14,9 +14,9 @@
 #include <stdbool.h>
 #include "QN908XC.h"
 
-///////////////////////
-// Defines
-///////////////////////
+/* =========================
+ * Defines
+ * ========================= */
 #define HAL_TICKS_PER_SEC 1000U
 
 /*! Define HAL generic status type */
@@ -36,12 +36,11 @@ typedef enum {
     }                                   \
 } while (false)
 
-///////////////////////
-// API
-///////////////////////
-
+/* =========================
+ * API
+ * ========================= */
 HAL_status_t HAL_init_hardware(void);
 
-#endif // HAL_GENERIC_MODULE_H
+#endif /* HAL_GENERIC_MODULE_H */
 
 /* [] END OF FILE */

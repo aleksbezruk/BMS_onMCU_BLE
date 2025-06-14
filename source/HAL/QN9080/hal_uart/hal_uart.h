@@ -21,18 +21,18 @@
 #include <stdint.h>
 #include <stdbool.h>
 
-///////////////////////
+// ===================
 // Defines
-///////////////////////
+// ===================
 /*! RX callback type */
 typedef void (*HAL_UART_rxCallback_t)(uint8_t *data, uint16_t len);
 
 /*! UART config data structure  */
 typedef struct {
-    uint32_t baudRate;      /*< 115200, 230400, ... , 921600 */
-    uint8_t numStartBits;   /*< 1, 2, ... */
-    uint8_t numStopBits;    /*< 1, 2, ... */
-    bool enParityCheck;     /*< RFU */
+    uint32_t baudRate;      /*!< 115200, 230400, ... , 921600 */
+    uint8_t numStartBits;   /*!< 1, 2, ... */
+    uint8_t numStopBits;    /*!< 1, 2, ... */
+    bool enParityCheck;     /*!< Reserved for Future Use */
 } HAL_UART_config_t;
 
 /*! UART status */
@@ -41,14 +41,21 @@ typedef enum {
     HAL_UART_FAIL
 } HAL_UART_status_t;
 
-///////////////////////
+// ===================
 // API
-///////////////////////
+// ===================
+/**
+ * @brief Transmit raw data over UART.
+ * @param data Pointer to the data buffer to transmit.
+ * @param len Number of bytes to transmit.
+ */
+void HAL_UART_txData(uint8_t *data, uint16_t len);
+
 HAL_UART_status_t HAL_UART_init(HAL_UART_config_t *config, HAL_UART_rxCallback_t callback);
 bool HAL_UART_isTxReady(void);
 void HAL_UART_txData(uint8_t *data, uint16_t len);
 bool HAL_UART_isTxActive(void);
 
-#endif  //HAL_UART_MODULE
+#endif  // HAL_UART_MODULE
 
 /* [] END OF FILE */

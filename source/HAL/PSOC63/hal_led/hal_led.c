@@ -11,28 +11,16 @@
 #include "BSP.h"
 #include "hal_led.h"
 
-///////////////////////
-// Defines
-///////////////////////
-
-///////////////////////
-// Functions prototype
-///////////////////////
-
-///////////////////////
-// Private data
-///////////////////////
-
-///////////////////////
+// ===================
 // Code
-///////////////////////
+// ===================
 
 /**
  * @brief Generic API to init green LED
  * 
  * @param   None
  * 
- * @retval  Nonw
+ * @retval  None
  * 
  */
 void HAL_LED_init_green(void)
@@ -45,7 +33,7 @@ void HAL_LED_init_green(void)
  * 
  * @param   None
  * 
- * @retval  Nonw
+ * @retval  None
  * 
  */
 void HAL_LED_init_red(void)
@@ -58,7 +46,7 @@ void HAL_LED_init_red(void)
  * 
  * @param   None
  * 
- * @retval  Nonw
+ * @retval  None
  * 
  */
 void HAL_LED_red_toggle(void)
@@ -71,7 +59,7 @@ void HAL_LED_red_toggle(void)
  * 
  * @param   None
  * 
- * @retval  Nonw
+ * @retval  None
  * 
  */
 void HAL_LED_red_On(void)
@@ -84,7 +72,7 @@ void HAL_LED_red_On(void)
  * 
  * @param   None
  * 
- * @retval  Nonw
+ * @retval  None
  * 
  */
 void HAL_LED_red_Off(void)
@@ -97,7 +85,7 @@ void HAL_LED_red_Off(void)
  * 
  * @param   None
  * 
- * @retval  Nonw
+ * @retval  None
  * 
  */
 void HAL_LED_green_toggle(void)
@@ -106,11 +94,11 @@ void HAL_LED_green_toggle(void)
 }
 
 /**
- * @brief Generic API to turm green LED on
+ * @brief Generic API to turn green LED on
  * 
  * @param   None
  * 
- * @retval  Nonw
+ * @retval  None
  * 
  */
 void HAL_LED_green_on(void)
@@ -119,11 +107,11 @@ void HAL_LED_green_on(void)
 }
 
 /**
- * @brief Generic API to turm green LED off
+ * @brief Generic API to turn green LED off
  * 
  * @param   None
  * 
- * @retval  Nonw
+ * @retval  None
  * 
  */
 void HAL_LED_green_off(void)

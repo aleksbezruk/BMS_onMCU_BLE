@@ -19,22 +19,22 @@
 #include "hal.h"
 #include "hal_gpio.h"
 
-///////////////////////
-// Defines
-///////////////////////
+/* =========================
+ * Defines
+ * ========================= */
 
-///////////////////////
-// Functions prototype
-///////////////////////
+/* =========================
+ * Functions prototype
+ * ========================= */
 static void _initLed(void);
 
-///////////////////////
-// Private data
-///////////////////////
+/* =========================
+ * Private data
+ * ========================= */
 
-///////////////////////
-// Code
-///////////////////////
+/* =========================
+ * Code
+ * ========================= */
 /**
  * @brief Generic API to init underlying hardware. Purpose is
  *        to configure all hardware (power, clocks, peripheral) to be ready for
@@ -50,6 +50,7 @@ static void _initLed(void);
  * @param   None
  * 
  * @retval See \ref HAL_status_t. HAL_STATUS_OK - if success.
+ *         Other values from \ref HAL_status_t may be returned in the future to indicate error conditions.
  * 
  */
 HAL_status_t HAL_init_hardware(void)

@@ -16,30 +16,37 @@
 #include "hal.h"
 #include "hal_uart.h"
 
-///////////////////////
+// ===================
 // Defines
-///////////////////////
+// ===================
 #define RX_BUF_LEN  16u
 
-///////////////////////
+/** 
+ * @brief Configurable UART baud rate limits.
+ * @note  Adjust these macros if different baud rates are required.
+ */
+#define HAL_UART_MIN_BAUDRATE 115200u
+#define HAL_UART_MAX_BAUDRATE 921600u
+
+// ===================
 // Functions prototype
-///////////////////////
+// ====================
 static uint32_t _getUsartClock(void);
 static inline usart_stop_bit_count_t _getNumStopBits(uint8_t numStopBits);
 static void USART_ISR(void);
 
-///////////////////////
+// ===================
 // Private data
-///////////////////////
+// ===================
 static HAL_UART_rxCallback_t rxCallback;
 
-///////////////////////
+// ===================
 // Code
-///////////////////////
+// ====================
 /**
  * @brief  Initialize UART
  * 
- * @details Configrure & enable UART; Setup RX callback
+ * @details Configure & enable UART; Setup RX callback
  * 
  * @param[in] config - UART settings
  * 
@@ -54,18 +61,19 @@ static HAL_UART_rxCallback_t rxCallback;
  *             See InstallIRQHandler() in fsl_common.c for reference.
  *             __ram_vector_table__ shall be provided to linker script (--defsym=__ram_vector_table__=1).
  *          3. NXP SDK for QN908x contains the module UART_Adapter.c as part of manufacturer's framework.
- *             The module has exaples: \ref USART_Initialize(), USART_ISR().
+ *             The module has examples: \ref USART_Initialize(), USART_ISR().
  * 
- * @attention   'numStartBits' option isn't supported by QN908x port.
+ * @attention   The 'numStartBits' option is not supported by the QN908x hardware.
  *              Also 'enParityCheck' is RFU: for now Parity check is disabled by default.
- * 
+    HAL_ASSERT((config->numStopBits == 1u) || (config->numStopBits == 2u)); // Only 1 or 2 stop bits supported
  * @retval 0 - success, otherwise - fail status
  */
 HAL_UART_status_t HAL_UART_init(HAL_UART_config_t *config, HAL_UART_rxCallback_t callback)
 {
     HAL_ASSERT(config != NULL);
-    HAL_ASSERT((config->baudRate >= 115200u) && (config->baudRate <= 921600u));
-    HAL_ASSERT(config->numStopBits <= 2u);
+    /* Baud rate assertion: limits are configurable via HAL_UART_MIN_BAUDRATE and HAL_UART_MAX_BAUDRATE macros above. */
+    HAL_ASSERT((config->baudRate >= HAL_UART_MIN_BAUDRATE) && (config->baudRate <= HAL_UART_MAX_BAUDRATE));
+    HAL_ASSERT((config->numStopBits == 1u) || (config->numStopBits == 2u));
 
     USART_Type *base = USART0;
     usart_config_t configPer;
@@ -138,6 +146,7 @@ void HAL_UART_txData(uint8_t *data, uint16_t len)
  */
 bool HAL_UART_isTxActive(void)
 {
+    // Transmission is active if TX FIFO is not empty or TX is not idle
     if (((kUSART_TxFifoEmptyFlag) & USART_GetStatusFlags(USART0)) && 
          (USART0->STAT & USART_STAT_TXIDLE_MASK))
     {
@@ -147,9 +156,9 @@ bool HAL_UART_isTxActive(void)
     }
 }
 
-/////////////////////////////////////
+// ===================
 /// ISR code
-/////////////////////////////////////
+// ====================
 static void USART_ISR(void)
 {
     uint32_t fifoStatus;
@@ -168,9 +177,10 @@ static void USART_ISR(void)
             __ISB();
             fifoStatus = USART_GetStatusFlags(base);
             __DSB();
-            __ISB();
         } while(kUSART_RxFifoNotEmptyFlag & fifoStatus);
-        rxCallback(rxBuf, cnt);
+        if (rxCallback != NULL) {
+            rxCallback(rxBuf, cnt);
+        }
     }
 
     /** Check errors */
@@ -179,9 +189,9 @@ static void USART_ISR(void)
     }
 }
 
-////////////////////////////////////
+// ===================
 /// Auxiliary functions
-////////////////////////////////////
+// ====================
 /**
  * @brief  Get UART clock frequency in [Hz].
  * 
@@ -198,11 +208,12 @@ static uint32_t _getUsartClock(void)
  * @brief  Get UART stop bits configuration.
  * 
  * @param[in] numStopBits -  Requested number of stop bits: 1, 2.
- * 
+ *
  * @retval Stop bits config for UART periph.
  */
 static inline usart_stop_bit_count_t _getNumStopBits(uint8_t numStopBits)
 {
+    HAL_ASSERT((numStopBits == 1u) || (numStopBits == 2u));
     return (usart_stop_bit_count_t) (numStopBits - 1u);
 }
 

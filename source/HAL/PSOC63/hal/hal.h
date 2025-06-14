@@ -1,10 +1,7 @@
 /**
  * @file  hal.h
- *
  * @brief Definition of generic HAL functions like init board/hardware, generic utils
- *
- * @note PSOC63
- * 
+ * @note PSOC63 
  * @version 0.5.0
  */
 
@@ -14,6 +11,12 @@
 ///////////////////////
 // Defines
 ///////////////////////
+/**
+ * @brief Number of system ticks per second used for timing operations.
+ * 
+ * This macro defines the frequency of the system tick timer, which is used for
+ * timekeeping and delay functions throughout the HAL.
+ */
 #define HAL_TICKS_PER_SEC 1000U
 
 /*! Define HAL generic status type */
@@ -33,12 +36,11 @@ typedef enum {
     }                                   \
 } while (false)
 
-///////////////////////
+// =======================
 // API
-///////////////////////
-
+// =======================
 HAL_status_t HAL_init_hardware(void);
 
-#endif // HAL_GENERIC_MODULE_H
+#endif /* HAL_GENERIC_MODULE_H */
 
 /* [] END OF FILE */

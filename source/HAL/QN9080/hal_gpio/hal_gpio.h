@@ -3,9 +3,9 @@
  *
  * @brief Definition of GPIO functions (the list may be extended if needed):
  *          1. Init pin: 
- *              - Pin type config:  Diigtal Input/Output; Analog input; Alternative Func (UART, SPI etc.);
+ *              - Pin type config:  Digital Input/Output; Analog input; Alternative Func (UART, SPI etc.);
  *              - Pull-Up/Down resistor connection;
- *              - Otput buffer strenrth.
+ *              - Output buffer strength.
  *          2. Read Digital Input state
  *          3. Set Digital Output state
  *
@@ -22,9 +22,9 @@
 #include "fsl_iocon.h"
 #include "fsl_gpio.h"
 
-///////////////////////
+// ===================
 // Defines
-///////////////////////
+// ===================
 /*! BMS discharge switch state */
 typedef enum {
     HAL_BMS_DISCHARGE_OFF,
@@ -110,12 +110,12 @@ typedef enum {
     HAL_GPIO_PULL_DOWN
 } Hal_gpio_pullRes_t;
 
-/*! HAL GPIO pin Pull resistor definition 
+/*! HAL GPIO pin "driver current mode" definition 
  * @note Setup current drive mode (Normal current / High current draw) 
  *        over an output pin
  */
 typedef enum {
-    HAL_GPIO_DRIVE_NONE,    /** < Means that it's Input */
+    HAL_GPIO_DRIVE_NONE,    ///< Means that it's Input
     HAL_GPIO_DRIVE_NORMAL,
     HAL_GPIO_DRIVE_HIGH
 } Hal_gpio_driveMode_t;
@@ -142,9 +142,9 @@ typedef enum {
 #define HAL_GPIO_ADC4_PORT  GPIOA
 #define HAL_GPIO_ADC4_PIN   9u
 
-///////////////////////
+// ===================
 // API
-///////////////////////
+// ===================
 void HAL_GPIO_init_pin(
     Hal_gpio_port_t* port, 
     Hal_gpio_pin_t pin,
@@ -170,6 +170,6 @@ void HAL_GPIO_set_pin(
     Hal_gpio_pin_state_t level
 );
 
-#endif  //HAL_GPIO_MODULE
+#endif  // HAL_GPIO_MODULE
 
 /* [] END OF FILE */

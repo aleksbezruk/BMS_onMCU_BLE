@@ -11,13 +11,13 @@
 #ifndef HAL_LED_MODULE
 #define HAL_LED_MODULE
 
-///////////////////////
+// ===================
 // Defines
-///////////////////////
+// ===================
 
-///////////////////////
+// ===================
 // API
-///////////////////////
+// ===================
 void HAL_LED_init_green(void);
 void HAL_LED_init_red(void);
 void HAL_LED_red_toggle(void);
