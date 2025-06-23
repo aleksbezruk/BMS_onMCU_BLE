@@ -16,11 +16,39 @@
 #include "MAIN.h"
 #else
 #include "MAIN.h"
-// Stub
+#include "hal_gpio.h"
+// Stub, test Discharge switch only for QN9080DK
 void MAIN_post_evt(Main_evt_t* evt, Evt_types_t eventType)
 {
-    (void) evt;
     (void) eventType;
+    static bool dischSwInit = false;
+
+    if (evt->sysEvtData.swStates == 0x01) {
+        if (!dischSwInit) {
+            dischSwInit = true;
+            HAL_GPIO_init_pin(
+                HAL_DISCHARGE_PORT,
+                HAL_DISCHARGE_PIN,
+                HAL_GPIO_DIGITAL_OUTPUT,
+                HAL_GPIO_PULL_DISABLED,
+                HAL_GPIO_DRIVE_HIGH,
+                HAL_DISCHARGE_OFF
+            );
+        }
+        // Set discharge switch ON
+        HAL_GPIO_set_pin(
+            HAL_DISCHARGE_PORT,
+            HAL_DISCHARGE_PIN,
+            HAL_DISCHARGE_ON
+        );
+    } else {
+        // Set discharge switch OFF
+        HAL_GPIO_set_pin(
+            HAL_DISCHARGE_PORT,
+            HAL_DISCHARGE_PIN,
+            HAL_DISCHARGE_OFF
+        );
+    }
 }
 #endif  // BMS_DISABLE_RTOS
 

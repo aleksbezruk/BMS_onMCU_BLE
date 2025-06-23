@@ -5,6 +5,19 @@
     "tasks": [
         {
             "type": "shell",
+            "label": "call CMake to generate the make files",
+            "command": "cmake -DCMAKE_MAKE_PROGRAM=\"make\" -G \"Unix Makefiles\" ..",
+            "options": {
+                "cwd": "./build"
+            },
+            "group": "build",
+            "problemMatcher": {
+                "base": "$gcc",
+                "fileLocation": ["relative", "./build"]
+            }
+        },
+        {
+            "type": "shell",
             "label": "Build Project",
             "command": "cmake --build .",
             "options": {
@@ -21,7 +34,7 @@
         },
         {
             "type": "shell",
-            "label": "clean & build",
+            "label": "Clean and Build Project",
             "command": "cmake --build . --clean-first",
             "options": {
                 "cwd": "./build"
@@ -30,6 +43,19 @@
             "problemMatcher": {
                 "base": "$gcc", 
                 "fileLocation": ["relative", "./build"]
+            }
+        },
+        {
+            "type": "shell",
+            "label": "Rebuild All",
+            "dependsOrder": "sequence",
+            "dependsOn": [
+                "call CMake to generate the make files",
+                "Clean and Build Project"
+            ],
+            "group": {
+                "kind": "build",
+                "isDefault": true
             }
         }
     ]

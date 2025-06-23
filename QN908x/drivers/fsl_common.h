@@ -419,6 +419,15 @@ static inline void EnableGlobalIRQ(uint32_t primask)
 #endif
 }
 
+static inline void SDK_DelayAtLeastUs(uint32_t microseconds, uint32_t coreClockHz)
+{
+    uint64_t cycles = USEC_TO_COUNT(microseconds, coreClockHz);
+    while (cycles--)
+    {
+        __NOP();
+    }
+}
+
 /*!
  * @brief install IRQ handler
  *
