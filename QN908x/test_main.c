@@ -75,6 +75,8 @@ volatile uint8_t adc_test_num;
  */
 #define ADC__TEST_CONV_BY_RATIO(val, ratio)   (int32_t) ( (float) val * ratio )
 
+/** ADC offset voltage in mV */
+#define ADC_OFFSET 60u
 
 // Test completion flag
 volatile bool isTestsCompleted = false;
@@ -420,6 +422,8 @@ void TEST_adc(void)
         QS_FLUSH(); // Flush QSPY output
         bank1_pot_mv = ADC__TEST_CONV_BY_RATIO(bank1_raw_mv, ADC_BANK1_CONV_RATIO);
         bank1_mv = ADC_BANK_VOLT_CALC(0, bank1_pot_mv); // Calculate voltage in mV
+        /** Compensate for offset */
+        bank1_mv -= ADC_OFFSET;
         SDK_DelayAtLeastUs(1000u, SystemCoreClock); 
 
         /** Read ADC value, Bank2 */
@@ -431,6 +435,7 @@ void TEST_adc(void)
         QS_FLUSH(); // Flush QSPY output
         bank2_pot_mv = ADC__TEST_CONV_BY_RATIO(bank2_raw_mv, ADC_BANK2_CONV_RATIO);
         bank2_mv = ADC_BANK_VOLT_CALC(bank1_pot_mv, bank2_pot_mv); // Calculate voltage in mV
+        bank2_mv -= ADC_OFFSET;
         SDK_DelayAtLeastUs(1000u, SystemCoreClock); 
 
         /** Read ADC value, Bank3 */
@@ -442,6 +447,7 @@ void TEST_adc(void)
         QS_FLUSH(); // Flush QSPY output
         bank3_pot_mv = ADC__TEST_CONV_BY_RATIO(bank3_raw_mv, ADC_BANK3_CONV_RATIO);
         bank3_mv = ADC_BANK_VOLT_CALC(bank2_pot_mv, bank3_pot_mv); // Calculate voltage in mV
+        bank3_mv -= ADC_OFFSET;
         SDK_DelayAtLeastUs(1000u, SystemCoreClock); 
 
         /** Read ADC value, Bank4 */
@@ -452,7 +458,9 @@ void TEST_adc(void)
         QS_END()
         QS_FLUSH(); // Flush QSPY output
         full_mv = bank4_pot_mv = ADC__TEST_CONV_BY_RATIO(bank4_raw_mv, ADC_BANK4_CONV_RATIO);
+        full_mv -= ADC_OFFSET; // Calculate full voltage in mV 
         bank4_mv = ADC_BANK_VOLT_CALC(bank3_pot_mv, bank4_pot_mv); // Calculate voltage in mV
+        bank4_mv -= ADC_OFFSET;
 
         QS_BEGIN_ID(MAIN, 0 /*prio/ID for local Filters*/)
             QS_STR("Banks volt: ");
