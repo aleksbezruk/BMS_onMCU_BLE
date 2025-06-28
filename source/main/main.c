@@ -30,6 +30,7 @@
 #include "hal.h"
 #include "hal_led.h"
 #include "hal_gpio.h"
+#include "hal_time.h"
 
 ///////////////////
 // Functions prototypes
@@ -174,12 +175,6 @@ int main(void)
     while(true) {}
 }
 
-static void OS_initTimer_(void)
-{
-    (void)SysTick_Config(SystemCoreClock / HAL_TICKS_PER_SEC);
-    NVIC_SetPriority(SysTick_IRQn, 1U);
-}
-
 /**
  * @brief Main task's handler
  * 
@@ -193,8 +188,8 @@ static void mainTask_(cy_thread_arg_t arg)
     cy_rslt_t result;
     Main_queue_data_t queueItem;
 
-    /** Start OS timer */
-    OS_initTimer_();
+    /** Start hardware timer for ticks count */
+    hal_time_init();
 
     /** Init ADC peripheral & create ADC task */
     ADC_status_t adcStatus = ADC_init();

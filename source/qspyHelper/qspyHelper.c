@@ -11,8 +11,6 @@
 #include "qutestHelper.h"
 
 #ifndef BMS_DISABLE_RTOS
-#include "FreeRTOS.h"
-#include "task.h"
 #include "MAIN.h"
 #else
 #include "MAIN.h"
@@ -60,18 +58,17 @@ void MAIN_post_evt(Main_evt_t* evt, Evt_types_t eventType)
 #include "hal.h"
 #include "hal_led.h"
 #include "hal_uart.h"
+#include "hal_time.h"
 
-///////////////////
+// ===================
 // Defines
-///////////////////
-#define QS_TICKS_IN_1MS (SystemCoreClock / HAL_TICKS_PER_SEC)
-
-/** Code undet test */
+// ===================
+/*! Code under test */
 typedef void (*cut)(void);
 
-///////////////////
+// ===================
 // Private data
-///////////////////
+// ===================
 static uint8_t qsTxBuf[2048];   /**< buffer for QS-TX channel */
 static uint8_t qsRxBuf[100];     /**<  buffer for QS-RX channel */
 #if defined(Q_UTEST)
@@ -85,42 +82,9 @@ void QUTEST_injectError(uint32_t err);
 void QUTEST_init(void);
 #endif //Q_UTEST
 
-static QSTimeCtr QS_tickTime_;       /**< ms */
-static QSTimeCtr QS_tickPeriod_;     /**< ms */
-
-#ifndef BMS_DISABLE_RTOS
-static volatile TickType_t _prevTicks;
-static volatile TickType_t _currTicks;
-#endif  // BMS_DISABLE_RTOS
-
-///////////////////
-// Private functions
-///////////////////
-/** @todo: move timer related funcs into separate module / OS Layer */
-#ifndef BMS_DISABLE_RTOS
-void vApplicationTickHook(void) 
-{
-    volatile uint32_t tmp;
-
-    tmp = SysTick->CTRL; // clear CTRL_COUNTFLAG
-    (void) tmp;
-    // QS_tickTime_ += QS_tickPeriod_; // account for the clock rollover
-    /** @todo account for the clock rollover */
-    _currTicks = xTaskGetTickCount();
-    QS_tickTime_ +=  (_currTicks - _prevTicks);
-    _prevTicks = _currTicks;
-}
-#else
-void SysTick_Handler(void)
-{
-    volatile uint32_t tmp;
-
-    tmp = SysTick->CTRL; // clear CTRL_COUNTFLAG
-    (void) tmp;
-    QS_tickTime_ += QS_tickPeriod_;
-}
-#endif  // BMS_DISABLE_RTOS
-
+// ===================
+// Code
+// ===================
 /**
  * @brief Callback for received data via UART
  * 
@@ -139,9 +103,6 @@ void QS_rxCallback(uint8_t *data, uint16_t len)
     }
 }
 
-////////////////////////////
-// Helper functions
-////////////////////////////
 /**
  * @brief Resets MCU
  * 
@@ -172,7 +133,7 @@ void QS_onReset(void)
  */
 QSTimeCtr QS_onGetTime(void)
 {
-    return QS_tickTime_;
+    return hal_time_get(); // get current time in ms
 }
 #endif //Q_UTEST
 
@@ -305,11 +266,8 @@ uint8_t QS_onStartup(void const *arg)
     Q_UNUSED_PAR(arg);
     uint8_t status = QSPY_STATUS_SUCCESS;
 
+    /** Initialize QUTEST */
     QUTEST_init();
-
-    /** Configure QSPY timer */
-    /** @todo: register callback for QSPY about tick */
-    // QS_initTimer_();
 
     /** Configure QSPY TX, RX buffers */
     QS_initBuf(qsTxBuf, sizeof(qsTxBuf));
@@ -334,10 +292,6 @@ uint8_t QS_onStartup(void const *arg)
     if (status != QSPY_STATUS_SUCCESS) {
         QUTEST_printError((uint32_t) status);
     }
-
-    /** Configure QSPY tick */
-    QS_tickPeriod_ = 1;
-    QS_tickTime_ = 0; // to start the timestamp at zero
 
     return status;
 }
@@ -447,4 +401,4 @@ QSPY_tx_status_t QS_get_txStatus(void)
     }
 }
 
-/******************************** END OF FILE **********************************************************************/
+/* [] END OF FILE */

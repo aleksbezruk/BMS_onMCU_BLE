@@ -18,9 +18,13 @@
 #ifndef HAL_UART_H
 #define HAL_UART_H
 
-#include "BSP.h"
 #include <stdint.h>
 #include <stdbool.h>
+
+#include "cy_pdl.h"
+#include "cyhal.h"
+
+#include "BSP.h"
 
 // ===================
 // Defines
