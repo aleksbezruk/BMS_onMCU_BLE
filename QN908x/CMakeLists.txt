@@ -65,6 +65,7 @@ set(SRC_FILES
         ../source/HAL/QN9080/hal_gpio/hal_gpio.c
         ../source/HAL/QN9080/hal_uart/hal_uart.c
         ../source/HAL/QN9080/hal_adc/hal_adc.c
+        ../source/HAL/QN9080/hal_time/hal_time.c
         ../source/qspy/qs_64bit.c
         ../source/qspy/qs_fp.c
         ../source/qspy/qs_rx.c
@@ -101,6 +102,7 @@ target_include_directories(${EXECUTABLE} PRIVATE
         ../source/HAL/QN9080/hal_gpio
         ../source/HAL/QN9080/hal_uart
         ../source/HAL/QN9080/hal_adc
+        ../source/HAL/QN9080/hal_time
         ../source/main
         ../source/qspy
         ../source/qspyHelper

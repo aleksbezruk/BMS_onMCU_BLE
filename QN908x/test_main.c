@@ -9,6 +9,8 @@
 #include "hal_led.h"
 #include "hal_gpio.h"
 #include "hal_adc.h"
+#include "hal_time.h"
+
 // QSPY
 #include "qspyHelper.h"
 #include "qs.h"
@@ -97,12 +99,9 @@ static void _IdleTask(void);
 
 #define NOP() __asm("nop")
 
-static void OS_initTimer_(void)
-{
-    (void)SysTick_Config(SystemCoreClock / HAL_TICKS_PER_SEC);
-    NVIC_SetPriority(SysTick_IRQn, 1U);
-}
-
+/**
+ * @brief Main function for the test application.
+ */
 int main(void)
 {
     HAL_status_t hwStatus = HAL_init_hardware();
@@ -124,8 +123,8 @@ int main(void)
     /** dictionaries... */
     QS_FUN_DICTIONARY(&_IdleTask);
 
-    /** Start OS timer */
-    OS_initTimer_();
+    /** Start HW timer to count milliseconds */
+    hal_time_init();
 
     test_green_led = true;
     while(1) {
