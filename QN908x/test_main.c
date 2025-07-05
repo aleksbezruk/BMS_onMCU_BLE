@@ -48,6 +48,7 @@ static void _IdleTask(void);
 static void _runTests_noRTOS(void);
 #else
 static void Led_Test_Task(osaTaskParam_t argument);
+static void Adc_Test_Task(osaTaskParam_t argument);
 #endif // BMS_DISABLE_RTOS
 
 // UART tests
@@ -94,6 +95,12 @@ static void Led_Test_Task(osaTaskParam_t argument);
 #ifndef BMS_DISABLE_RTOS
 #define LED_TEST_TASK_STACK_SIZE  (560U)
 #define LED_TEST_TASK_PRIORITY   (configMAX_PRIORITIES - 5U)
+#define LED_TEST_TASK_INTERVAL   (1000U)    // in milliseconds
+
+#define ADC_TEST_TASK_STACK_SIZE  (560U)
+#define ADC_TEST_TASK_PRIORITY   (configMAX_PRIORITIES - 6U)
+#define ADC_TEST_TASK_INTERVAL   (10000U)    // in milliseconds
+
 #endif // BMS_DISABLE_RTOS
 
 // ===================
@@ -132,6 +139,10 @@ static volatile uint8_t adc_test_num;
 #ifndef BMS_DISABLE_RTOS
 static OSA_TASK_DEFINE(Led_Test_Task, LED_TEST_TASK_PRIORITY, 1, LED_TEST_TASK_STACK_SIZE, FALSE );
 static osaTaskId_t ledTaskId = NULL;
+
+static OSA_TASK_DEFINE(Adc_Test_Task, ADC_TEST_TASK_PRIORITY, 1, ADC_TEST_TASK_STACK_SIZE, FALSE );
+static osaTaskId_t adcTaskId = NULL;
+
 #endif // BMS_DISABLE_RTOS
 
 // ========================
@@ -176,6 +187,11 @@ int main(void)
         /** LED task creation */
         ledTaskId = OSA_TaskCreate(OSA_TASK(Led_Test_Task), NULL);
         if( NULL == ledTaskId ) {
+            HAL_ASSERT(0); // Task creation failed
+        }
+        /** ADC task creation */
+        adcTaskId = OSA_TaskCreate(OSA_TASK(Adc_Test_Task), NULL);
+        if( NULL == adcTaskId ) {
             HAL_ASSERT(0); // Task creation failed
         }
         /** Start RTOS scheduler */
@@ -279,6 +295,9 @@ static void Led_Test_Task(osaTaskParam_t argument)
     (void)argument; // Unused parameter
     static uint8_t iter = 0;
 
+    /** Start HW timer to count milliseconds */
+    hal_time_init();
+
     while (true) {
         if (iter == 0) {
             // Green LED on
@@ -292,16 +311,32 @@ static void Led_Test_Task(osaTaskParam_t argument)
         } else if (iter == 3) {
             // Green LED toggle
             HAL_LED_green_toggle();
+        } else if (iter == 4) {
+            // Red LED on
+            HAL_LED_red_On();
+        } else if (iter == 5) {
+            // Red LED off
+            HAL_LED_red_Off();
+        } else if (iter == 6) {
+            // Red LED toggle
+            HAL_LED_red_toggle();
+        } else if (iter == 7) {
+            // Red LED toggle
+            HAL_LED_red_toggle();
         }
 
         iter++;
-        if (iter == 4U) {
+        if (iter == 8U) {
             // Reset iteration counter
             iter = 0;
+
+            QS_BEGIN_ID(MAIN, 0 /*prio/ID for local Filters*/)
+                QS_STR("LED test is running");
+            QS_END()
         }
 
         // OSA task delay
-        OSA_TimeDelay(1000U); // 1 second delay
+        OSA_TimeDelay(LED_TEST_TASK_INTERVAL);
     }
 }
 #endif // BMS_DISABLE_RTOS
@@ -562,6 +597,92 @@ void TEST_adc(void)
         QS_STR("ADC tests completed successfully");
     QS_END()
     QS_FLUSH(); // Flush QSPY output
+}
+#else
+static void Adc_Test_Task(osaTaskParam_t argument)
+{
+    (void)argument; // Unused parameter
+
+    int32_t full_mv = 0;
+    int32_t bank1_mv = 0;
+    int32_t bank1_pot_mv = 0;
+    int32_t bank2_mv = 0;
+    int32_t bank2_pot_mv = 0;
+    int32_t bank3_mv = 0;
+    int32_t bank3_pot_mv = 0;
+    int32_t bank4_mv = 0;
+    int32_t bank4_pot_mv = 0;
+
+    /** Initialize ADC */
+    HAL_ADC_init();
+
+    while (true) {
+        QS_BEGIN_ID(MAIN, 0 /*prio/ID for local Filters*/)
+            QS_STR("ADC test is running");
+        QS_END()
+
+        /** Read ADC value, Bank1 */
+        int32_t bank1_raw_mv = HAL_ADC_read(HAL_ADC_CHANNEL_0);
+        QS_BEGIN_ID(MAIN, 0 /*prio/ID for local Filters*/)
+            QS_STR("Bank1_raw_mV = ");
+            QS_I32(0, bank1_raw_mv);
+        QS_END()
+        QS_FLUSH(); // Flush QSPY output
+        bank1_pot_mv = ADC__TEST_CONV_BY_RATIO(bank1_raw_mv, ADC_BANK1_CONV_RATIO);
+        bank1_mv = ADC_BANK_VOLT_CALC(0, bank1_pot_mv); // Calculate voltage in mV
+        /** Compensate for offset */
+        bank1_mv -= ADC_OFFSET;
+        hal_time_delay(10u); // 10 ms delay
+
+        /** Read ADC value, Bank2 */
+        int32_t bank2_raw_mv = HAL_ADC_read(HAL_ADC_CHANNEL_1);
+        QS_BEGIN_ID(MAIN, 0 /*prio/ID for local Filters*/)
+            QS_STR("Bank2_raw_mV = ");
+            QS_I32(0, bank2_raw_mv);
+        QS_END()
+        QS_FLUSH(); // Flush QSPY output
+        bank2_pot_mv = ADC__TEST_CONV_BY_RATIO(bank2_raw_mv, ADC_BANK2_CONV_RATIO);
+        bank2_mv = ADC_BANK_VOLT_CALC(bank1_pot_mv, bank2_pot_mv); // Calculate voltage in mV
+        /** Compensate for offset */
+        bank2_mv -= ADC_OFFSET;
+        hal_time_delay(10u); // 10 ms delay
+
+        /** Read ADC value, Bank3 */
+        int32_t bank3_raw_mv = HAL_ADC_read(HAL_ADC_CHANNEL_2);
+        QS_BEGIN_ID(MAIN, 0 /*prio/ID for local Filters*/)
+            QS_STR("Bank3_raw_mV = ");
+            QS_I32(0, bank3_raw_mv);
+        QS_END()
+        QS_FLUSH(); // Flush QSPY output
+        bank3_pot_mv = ADC__TEST_CONV_BY_RATIO(bank3_raw_mv, ADC_BANK3_CONV_RATIO);
+        bank3_mv = ADC_BANK_VOLT_CALC(bank2_pot_mv, bank3_pot_mv); // Calculate voltage in mV
+        /** Compensate for offset */
+        bank3_mv -= ADC_OFFSET;
+        hal_time_delay(10u); // 10 ms delay
+
+        /** Read ADC value, Bank4 */
+        int32_t bank4_raw_mv = HAL_ADC_read(HAL_ADC_CHANNEL_3);
+        QS_BEGIN_ID(MAIN, 0 /*prio/ID for local Filters*/)
+            QS_STR("Bank4_raw_mV = ");
+            QS_I32(0, bank4_raw_mv);
+        QS_END()
+        QS_FLUSH(); // Flush QSPY output
+        full_mv = bank4_pot_mv = ADC__TEST_CONV_BY_RATIO(bank4_raw_mv, ADC_BANK4_CONV_RATIO);
+        full_mv -= ADC_OFFSET; // Calculate full voltage in mV 
+        bank4_mv = ADC_BANK_VOLT_CALC(bank3_pot_mv, bank4_pot_mv); // Calculate voltage in mV
+        bank4_mv -= ADC_OFFSET;
+
+        QS_BEGIN_ID(MAIN, 0 /*prio/ID for local Filters*/)
+            QS_STR("Banks volt: ");
+            QS_I16(0, (int16_t) bank1_mv);
+            QS_I16(0, (int16_t) bank2_mv);
+            QS_I16(0, (int16_t) bank3_mv);
+            QS_I16(0, (int16_t) bank4_mv);
+            QS_I16(0, (int16_t) full_mv);
+        QS_END()
+
+        OSA_TimeDelay(ADC_TEST_TASK_INTERVAL);
+    }
 }
 #endif // BMS_DISABLE_RTOS
 

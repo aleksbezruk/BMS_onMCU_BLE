@@ -11,8 +11,9 @@
 #include "fsl_common.h"
 
 #ifndef BMS_DISABLE_RTOS
-#include "FreeRTOS.h"
-#include "task.h"
+// OSA
+#include "fsl_os_abstraction.h"
+#include "fsl_os_abstraction_free_rtos.h"
 #endif
 
 // ===================
@@ -20,6 +21,9 @@
 // ===================
 #define SYSTICK_INTERRUPT_PRIORITY    (1U)
 #define TICK_COUNT_MAX    (0xFFFFFFFFU) // Helper macro for rollover calculation
+
+/** Debug on QSPY port */
+#define HAL_TIME_DEBUG_EN   (false)
 
 // ===================
 // Private data
@@ -71,7 +75,7 @@ void hal_time_delay(uint32_t ms)
 {
 #ifndef BMS_DISABLE_RTOS
     /* Delay for the specified milliseconds using FreeRTOS */
-    vTaskDelay(pdMS_TO_TICKS(ms));
+    OSA_TimeDelay(ms);
 #else
     /* If FreeRTOS is not used, implement a busy-wait loop for delay */
     uint32_t start_time = hal_time_get();
@@ -101,13 +105,12 @@ void hal_time_delay(uint32_t ms)
 void vApplicationTickHook(void)
 {
     // Get the current tick count from FreeRTOS
-    _current_ticks = xTaskGetTickCount();
+    _current_ticks = OSA_TimeGetMsec();
 
     // Update time & check for tick overflow and handle it
     if (_current_ticks >= _previous_ticks) {
         _current_time_ms += (_current_ticks - _previous_ticks);
-        // If the hook is not called every tick (e.g., due to interrupt latency), this will accumulate the correct number of missed ticks.
-        _current_time_ms += (_current_ticks - _previous_ticks);
+    } else {
         // Rollover occurred: add the remaining ticks before rollover plus the new ticks
         _current_time_ms += (TICK_COUNT_MAX - _previous_ticks + 1U) + _current_ticks;
     }

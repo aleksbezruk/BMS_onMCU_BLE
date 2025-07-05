@@ -133,7 +133,11 @@ void QS_onReset(void)
  */
 QSTimeCtr QS_onGetTime(void)
 {
-    return hal_time_get(); // get current time in ms
+    __disable_irq();
+    QSTimeCtr ts = hal_time_get(); // get current time in ms
+    __enable_irq();
+
+    return ts;
 }
 #endif //Q_UTEST
 
