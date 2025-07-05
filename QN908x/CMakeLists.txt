@@ -60,6 +60,18 @@ set(SRC_FILES
         utilities/fsl_debug_console.c
         framework/LED/Source/LED.c
         framework/GPIO/GPIO_Adapter.c
+        freertos/croutine.c
+        freertos/event_groups.c
+        freertos/fsl_tickless_systick.c
+        freertos/heap_4.c
+        freertos/list.c
+        freertos/port.c
+        freertos/queue.c
+        freertos/tasks.c
+        freertos/timers.c
+        framework/OSAbstraction/Source/fsl_os_abstraction_free_rtos.c
+        framework/Lists/GenericList.c
+        framework/Panic/Source/Panic.c
         ../source/HAL/QN9080/hal/hal.c
         ../source/HAL/QN9080/hal_led/hal_led.c
         ../source/HAL/QN9080/hal_gpio/hal_gpio.c
@@ -86,6 +98,7 @@ target_compile_definitions(${EXECUTABLE} PRIVATE
 
 # List of includ directories
 target_include_directories(${EXECUTABLE} PRIVATE
+        .
         startup
         CMSIS
         drivers
@@ -107,6 +120,10 @@ target_include_directories(${EXECUTABLE} PRIVATE
         ../source/qspy
         ../source/qspyHelper
         ../source/qutestHelper
+        freertos
+        framework/OSAbstraction/Interface
+        framework/Lists
+        framework/Panic/Interface
         )
 
 # Compiler options

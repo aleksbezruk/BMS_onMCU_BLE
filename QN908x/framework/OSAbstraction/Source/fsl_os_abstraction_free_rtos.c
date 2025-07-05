@@ -81,10 +81,12 @@ static void* osObjectAlloc(const osObjectInfo_t* pOsObjectInfo);
 static bool_t osObjectIsAllocated(const osObjectInfo_t* pOsObjectInfo, void* pObjectStruct);
 static void osObjectFree(const osObjectInfo_t* pOsObjectInfo, void* pObjectStruct);
 #endif
+
+#if 0
 extern void main_task(void const *argument);
 extern void hardware_init(void);
 void startup_task(void* argument);
-
+#endif // This code is not used in the project, so it is disabled intentionally
 
 /*! *********************************************************************************
 *************************************************************************************
@@ -113,6 +115,7 @@ const osObjectInfo_t osEventInfo = {osEventHeap, sizeof(osEventStruct_t),osNumbe
 *************************************************************************************
 ********************************************************************************** */
 
+#if 0
 /*FUNCTION**********************************************************************
  *
  * Function Name : startup_task
@@ -124,6 +127,7 @@ void startup_task(void* argument)
     main_task(argument);
     while(1);
 }
+#endif // This code is not used in the project, so it is disabled intentionally
 
 /*FUNCTION**********************************************************************
  *
@@ -1006,6 +1010,10 @@ void OSA_InstallIntHandler(uint32_t IRQNumber, void (*handler)(void))
 * Private functions
 *************************************************************************************
 ********************************************************************************** */
+/**
+ * @attention This code is not used in the project, so it is disabled intentionally.
+ */
+#if 0 // This code is not used in the project, so it is disabled intentionally
 OSA_TASK_DEFINE(startup_task, gMainThreadPriority_c, 1, gMainThreadStackSize_c, 0)  ;
 int main (void)
 {
@@ -1016,6 +1024,7 @@ int main (void)
 
     return 0;
 }
+#endif  // Disable this code, it is not used in the project
 
 /*! *********************************************************************************
 * \brief     Allocates a osObjectStruct_t block in the osObjectHeap array.

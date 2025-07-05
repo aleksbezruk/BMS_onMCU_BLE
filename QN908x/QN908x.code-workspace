@@ -26,6 +26,9 @@
 		},
 		{
 			"path": "board"
+		},
+		{
+			"path": "freertos"
 		}
 	],
 	"settings": {
@@ -48,7 +51,13 @@
 			"main.h": "c",
 			"ble.h": "c",
 			"stdint.h": "c",
-			"type_traits": "c"
+			"type_traits": "c",
+			"fsl_os_abstraction_config.h": "c",
+			"embeddedtypes.h": "c",
+			"fsl_os_abstraction_free_rtos.h": "c",
+			"hal_time.h": "c",
+			"string.h": "c",
+			"qspyhelper.h": "c"
 		}
 	}
 }

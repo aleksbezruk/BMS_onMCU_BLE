@@ -19,7 +19,7 @@
  *  @note Disable RTOS and/or BLE - temporary solution
  *  @todo Comment out when RTOS port will be ready for QN908x
  */
-#define BMS_DISABLE_RTOS
+// #define BMS_DISABLE_RTOS // uncomment to disable RTOS
 
 #define BMS_DISABLE_BLE
 
