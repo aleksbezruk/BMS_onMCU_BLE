@@ -120,6 +120,7 @@ target_include_directories(${EXECUTABLE} PRIVATE
         ../source/qspy
         ../source/qspyHelper
         ../source/qutestHelper
+        ../source/OSAL/QN9080
         freertos
         framework/OSAbstraction/Interface
         framework/Lists

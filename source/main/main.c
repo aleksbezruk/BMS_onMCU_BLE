@@ -7,24 +7,8 @@
  */
 
 #include <string.h>
-
-#include "cy_pdl.h"
-#include "cyhal.h"
-#include "BSP.h"
-#include "qspyHelper.h"
-#if defined(Q_UTEST)
-#include <stdio.h>
-#include <gcov.h>
-#endif // Q_UTEST
-#include "ADC.h"
-#include "BLE.h"
-#include "MAIN.h"
-#include "LP.h"
-
-// RTOS includes
-#include "FreeRTOS.h"
-#include "task.h"
-#include "cyabs_rtos.h"
+#include <stdbool.h>
+#include <stdint.h>
 
 // HAL
 #include "hal.h"
@@ -32,10 +16,28 @@
 #include "hal_gpio.h"
 #include "hal_time.h"
 
-///////////////////
-// Functions prototypes
-///////////////////
-static void mainTask_(cy_thread_arg_t arg);
+// BMS Application includes
+#include "BSP.h"
+#include "qspyHelper.h"
+
+#include "ADC.h"
+#include "BLE.h"
+#include "MAIN.h"
+#include "LP.h"
+
+// Q_UTEST / Unit tests includes
+#if defined(Q_UTEST)
+#include <stdio.h>
+#include <gcov.h>
+#endif // Q_UTEST
+
+// RTOS includes
+#include "OSAL.h"
+
+// ========================
+// Functions prototype
+// ========================
+static void mainTask_(OSAL_arg_t arg);
 static void parseQueueItem_(Main_queue_data_t* queueItem);
 static void handleAdcEvt_(Evt_adc_data_t* evt);
 static void handleSystemEvt_(Evt_sys_data_t* evt);
@@ -44,12 +46,6 @@ static void MAIN_SM_handleSysEvt(Evt_sys_data_t* evt);
 static void MAIN_SM_charge_setBal(Evt_sys_data_t* evt);
 static void MAIN_SM_print_onStateChange(void);
 static void MAIN_SM_handleAdcEvt(Evt_adc_data_t* evt);
-
-#if defined(Q_UTEST)
-/** internal gcov library function to write data */
-void __gcov_dump(void);
-#endif //Q_UTEST
-void vApplicationIdleHook(void);
 
 static void MAIN_initDischargeSw(void);
 static void MAIN_initChargeSw(void);
@@ -62,36 +58,65 @@ static void MAIN_disableBalancerSw(uint8_t balBanksDisMask);
 static void ble_update_vbat_(Evt_adc_data_t* adcEvt);
 
 static void led_blink_alive_(void);
-static void blinkTimerCallback_(cy_timer_callback_arg_t arg);
+static void blinkTimerCallback_(OSAL_TimerArg_t arg);
 
-///////////////////
+// Q_UTEST / Unit tests specific functions
+#if defined(Q_UTEST)
+/** internal gcov library function to write data */
+void __gcov_dump(void);
+#endif //Q_UTEST
+
+// FreeRTOS hooks
+void vApplicationIdleHook(void);
+
+// ================
 // Definitions
-///////////////////
+// ================
 #define MAIN_TASK_STACK_SIZE 560U   /**< size in bytes, aligned to 8 bytes */
 #define MAIN_QUEUE_SIZE 5U
 
-///////////////////
+// ================
 // Private data
-///////////////////
-static cy_thread_t mainTaskHandle_;
-/** 
- *  In stack words because stack pointer should be aligned to 
- *  8 bytes boundary per the RTOS requirements.
+// ================
+OSAL_TASK_DEFINE(mainTask);
+
+/**
+ * @brief Main task stack
+ *
+ * @note Defined in stack words because stack pointer should be aligned to
+ *       8 bytes boundary per the RTOS requirements.
+ * This is required by the ARM Procedure Call Standard (AAPCS) and the Cortex-M4 hardware. 
+ * The ARM Cortex-M4 expects the stack pointer to be 8-byte aligned at all times, 
+ * especially on exception entry/exit and for correct operation of floating-point instructions (if enabled).
+ * FreeRTOS also assumes this alignment when creating tasks and managing context switches. 
+ * Misalignment can lead to hard faults or unpredictable behavior.
+ *
+ * So, always ensure your stack memory and stack pointer are 8-byte aligned for Cortex-M4 with FreeRTOS.
  */
 static uint64_t mainTaskStack_[MAIN_TASK_STACK_SIZE/8U];
-static StaticQueue_t staticQueueHandle;
-static cy_queue_t mainTaskQueueHandle;
+
+/**
+ * @brief Queue handle for the main task
+ */
+OSAL_QUEUE_DEFINE(mainTaskQueueHandle);
 static Main_queue_data_t mainQueueSto[MAIN_QUEUE_SIZE];
 
+/**
+ * @brief State of the BMS and switches
+ */
 static BMS_state_t bmsState_ = BMS_STATE_IDLE;
 static uint8_t swState_;
 
-static cy_timer_t blinkTimer;
+/**
+ * @brief Timer for LED blinking
+ */
+OSAL_TIMER_DEFINE(blinkTimer);
 static volatile uint8_t ledBlinkCntr_;
 
-///////////////////
+// =======================
 // Code
-///////////////////
+// =======================
+/*! Q_UTEST / Unit tests specific functions */
 #if defined(Q_UTEST)
 extern void initialise_monitor_handles(void);
 static void initSemihosting(void)
@@ -119,6 +144,7 @@ int main(void)
     /** Enable global interrupts */
     __enable_irq();
 
+    /** Init semihosting for Q_UTEST */
 #if defined(Q_UTEST)
     initSemihosting();
     printf("Semihosting started\n");
@@ -154,16 +180,18 @@ int main(void)
     LP_setMode(LP_DISABLED_MODE);
 
     /** Create main task */
-    cy_rslt_t result = cy_rtos_thread_create(
-        &mainTaskHandle_, 
+    OSAL_Status_t status = OSAL_SUCCESS;
+    OSAL_TASK_CREATE(
+        OSAL_TASK_GET_HANDLE(mainTask),
         mainTask_,
-        "mainTask", 
+        "mainTask",
         mainTaskStack_,         // should be aligned to 8 bytes
         MAIN_TASK_STACK_SIZE,   // in bytes
-        CY_RTOS_PRIORITY_HIGH,  // prio
-        NULL                    // no args
+        OSAL_MAIN_TASK_PRIORITY,  // prio
+        NULL,                    // no args
+        status
     );
-    if (result != CY_RSLT_SUCCESS) {
+    if (status != OSAL_SUCCESS) {
         HAL_ASSERT(0);
     }
 
@@ -182,10 +210,10 @@ int main(void)
  * 
  * @retval None
  */
-static void mainTask_(cy_thread_arg_t arg)
+static void mainTask_(OSAL_arg_t arg)
 {
     (void) arg;
-    cy_rslt_t result;
+    OSAL_Status_t status = OSAL_SUCCESS;
     Main_queue_data_t queueItem;
 
     /** Start hardware timer for ticks count */
@@ -222,23 +250,31 @@ static void mainTask_(cy_thread_arg_t arg)
     MAIN_disableBalancerSw(HAL_BMS_ALL_BANKS);
 
     /** Init LED blink timer */
-    result = cy_rtos_timer_init(
-        &blinkTimer,
-        CY_TIMER_TYPE_ONCE,
+    OSAL_TIMER_CREATE(
+        OSAL_TIMER_GET_HANDLE(blinkTimer),
+        OSAL_TIMER_TYPE_ONE_SHOT, // One-shot timer for LED blinking
         blinkTimerCallback_,
-        0U // arg
+        0U, // arg
+        status
     );
+    if (status != OSAL_SUCCESS) {
+        HAL_ASSERT(0);
+    }
 
     /** Init timeout timers 
      * @todo timeout timers definition
      */
 
     /** Create an event Queue */
-    mainTaskQueueHandle = xQueueCreateStatic(MAIN_QUEUE_SIZE, 
-                                     sizeof(Main_queue_data_t),
-                                     (uint8_t *) mainQueueSto,
-                                     &staticQueueHandle);
-    if (mainTaskQueueHandle == NULL) {
+    OSAL_QUEUE_CREATE(
+        mainTaskQueueHandle,    // handle name
+        "mainTaskQueue",
+        MAIN_QUEUE_SIZE,
+        sizeof(Main_queue_data_t),
+        mainQueueSto,
+        status
+    );
+    if (status != OSAL_SUCCESS) {
         HAL_ASSERT(0);
     }
 
@@ -251,10 +287,13 @@ static void mainTask_(cy_thread_arg_t arg)
      */
     while(1) {
         /** Wait for event */
-        result = cy_rtos_queue_get(&mainTaskQueueHandle, 
-                                   &queueItem,
-                                   CY_RTOS_NEVER_TIMEOUT);
-        if (result != CY_RSLT_SUCCESS) {
+        OSAL_QUEUE_GET(
+            OSAL_QUEUE_GET_HANDLE(mainTaskQueueHandle),
+            &queueItem,
+            OSAL_QUEUE_TIMEOUT_NEVER, // wait forever
+            status
+        );
+        if (status != OSAL_SUCCESS) {
             HAL_ASSERT(0);
         }
 
@@ -375,9 +414,9 @@ void vApplicationIdleHook(void)
      QS_onIdle();
 }
 
-/////////////////////////
-/// Queue functions/APIs
-/////////////////////////
+// ========================
+// Queue functions/APIs
+// ========================
 /** 
  * @brief Posts an event into Main task event queue
  * 
@@ -392,22 +431,26 @@ void MAIN_post_evt(Main_evt_t* evt, Evt_types_t eventType)
 {
     HAL_ASSERT((evt != NULL) && (eventType < EVT_TYPE_MAX));
 
+    OSAL_Status_t status = OSAL_SUCCESS;
     Main_queue_data_t queueItem;
 
     queueItem.evtType = eventType;
     memcpy((uint8_t*) &queueItem.evtData, (uint8_t*) evt, sizeof(Main_evt_t));
 
-    cy_rslt_t result = cy_rtos_queue_put(&mainTaskQueueHandle,
-                                         &queueItem,
-                                         CY_RTOS_NEVER_TIMEOUT);
-    if (result != CY_RSLT_SUCCESS) {
+    OSAL_QUEUE_PUT(
+        OSAL_QUEUE_GET_HANDLE(mainTaskQueueHandle),
+        &queueItem,
+        OSAL_QUEUE_TIMEOUT_NEVER,
+        status
+    );
+    if (status != OSAL_SUCCESS) {
         HAL_ASSERT(0);
     }
 }
 
-//////////////////////////////////
-/// Switches control functions
-//////////////////////////////////
+// ===============================
+// Switches control functions
+// ===============================
 /** 
  * @brief Init MCU pin for discharge switch
  * 
@@ -510,9 +553,9 @@ static void MAIN_setChargeSw(HAL_chargeSw_state_t state)
     }
 }
 
-//////////////////////////////////
-/// Banks balancing functions
-//////////////////////////////////
+// ==================================
+// Banks balancing functions
+// ==================================
 /** 
  * @brief Init MCU pins for balancer circuits
  * 
@@ -634,9 +677,16 @@ static void MAIN_disableBalancerSw(uint8_t balBanksDisMask)
  * @todo Implement banks balancing algorithm based on banks' voltage
  */
 
-//////////////////////////////////
-/// State machine functions
-//////////////////////////////////
+// ===========================
+// State machine functions
+// ===========================
+/**
+ * @brief Handles system events in the BMS state machine
+ * 
+ * @param[in] evt Pointer to incoming event
+ * 
+ * @retval None
+ */
 static void MAIN_SM_handleSysEvt(Evt_sys_data_t* evt)
 {
     switch (bmsState_)
@@ -698,6 +748,13 @@ static void MAIN_SM_handleSysEvt(Evt_sys_data_t* evt)
     }
 }
 
+/**
+ * @brief Sets balancing switches based on the event data
+ * 
+ * @param[in] evt Pointer to incoming event
+ * 
+ * @retval None
+ */
 static void MAIN_SM_charge_setBal(Evt_sys_data_t* evt)
 {
     if (evt->setBank1Balancer == 1U) {
@@ -722,6 +779,13 @@ static void MAIN_SM_charge_setBal(Evt_sys_data_t* evt)
     }
 }
 
+/**
+ * @brief Handles ADC events in the BMS state machine
+ * 
+ * @param[in] evt Pointer to incoming ADC event
+ * 
+ * @retval None
+ */
 static void MAIN_SM_handleAdcEvt(Evt_adc_data_t* evt)
 {
     /** Handling specific to BMS state */
@@ -784,6 +848,11 @@ static void MAIN_SM_handleAdcEvt(Evt_adc_data_t* evt)
     }
 }
 
+/**
+ * @brief Prints BMS state on state change
+ * 
+ * @retval None
+ */
 static void MAIN_SM_print_onStateChange(void)
 {
     QS_BEGIN_ID(MAIN, 0 /*prio/ID for local Filters*/)
@@ -792,9 +861,16 @@ static void MAIN_SM_print_onStateChange(void)
     QS_END()
 }
 
-//////////////////////////////////
+// ===========================
 /// BLE commands
-//////////////////////////////////
+// ===========================
+/**
+ * @brief Updates battery voltage level via BLE
+ * 
+ * @param[in] adcEvt Pointer to ADC event data
+ * 
+ * @retval None
+ */
 static void ble_update_vbat_(Evt_adc_data_t* adcEvt)
 {
     Ble_evt_t btEvt;
@@ -809,10 +885,15 @@ static void ble_update_vbat_(Evt_adc_data_t* adcEvt)
     BLE_post_evt(&btEvt, EVT_BLE_VBAT);
 }
 
-//////////////////////////////////
+// ==========================
 /// Spare, debug functions
-//////////////////////////////////
+// ==========================
 /**
+ * @brief Blinks the alive LED
+ * @details This function starts a timer that will blink the green LED
+ * @param None
+ * @retval None
+ * 
  * @attention Should be non-blocking call
  *            to avoid starvation of other threads especiaaly BLE stack
  */
@@ -820,17 +901,33 @@ static void led_blink_alive_(void)
 {
     ledBlinkCntr_ = 0;
     // start timer
-    cy_rslt_t result = cy_rtos_timer_start(&blinkTimer, 100U); // 100 ms
-    if (result != CY_RSLT_SUCCESS) {
+    OSAL_Status_t status = OSAL_SUCCESS;
+    OSAL_TIMER_START(
+        OSAL_TIMER_GET_HANDLE(blinkTimer),
+        100U, // 100 ms
+        status
+    );
+    if (status != OSAL_SUCCESS) {
         HAL_ASSERT(0);
     }
 }
 
 /**
+ * @brief Callback for the LED blink timer
+ * @details This function is called by the OSAL timer when it expires.
+ *          It toggles the green LED state to create a blink effect.
+ *
+ * @param[in] arg Timer argument (unused)
+ * @retval None
  * @note 3 "on-off" blinks
  */
-static void blinkTimerCallback_(cy_timer_callback_arg_t arg)
+static void blinkTimerCallback_(OSAL_TimerArg_t arg)
 {
+    (void) arg; // unused argument
+
+    // Blink green LED
+    // 3 blinks, 100 ms each
+    // 100 ms on, 100 ms off
     if (ledBlinkCntr_%2 == 0) {
         HAL_LED_green_on();
     } else {
@@ -840,8 +937,13 @@ static void blinkTimerCallback_(cy_timer_callback_arg_t arg)
     ledBlinkCntr_++;
     if (ledBlinkCntr_ < 6U) {
         // re-start timer to continue blink
-        cy_rslt_t result = cy_rtos_timer_start(&blinkTimer, 100U); // 100 ms
-        if (result != CY_RSLT_SUCCESS) {
+        OSAL_Status_t status = OSAL_SUCCESS;
+        OSAL_TIMER_START(
+            OSAL_TIMER_GET_HANDLE(blinkTimer),
+            100U, // 100 ms
+            status
+        );
+        if (status != OSAL_SUCCESS) {
             HAL_ASSERT(0);
         }
     }

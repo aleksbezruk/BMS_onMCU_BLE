@@ -17,9 +17,16 @@
 #ifndef HAL_GPIO_MODULE
 #define HAL_GPIO_MODULE
 
-///////////////////////
+// =======================
+// Includes
+// =======================
+#include "cy_pdl.h"
+#include "cyhal.h"
+#include "cyhal_gpio.h"
+
+// =======================
 // Defines
-///////////////////////
+// =======================
 /*! BMS discharge switch state */
 typedef enum {
     HAL_BMS_DISCHARGE_OFF,
@@ -137,9 +144,9 @@ typedef enum {
 #define HAL_GPIO_ADC4_PORT  GPIO_PRT10
 #define HAL_GPIO_ADC4_PIN   0U
 
-///////////////////////
+// =======================
 // API
-///////////////////////
+// =======================
 void HAL_GPIO_init_pin(
     Hal_gpio_port_t* port, 
     Hal_gpio_pin_t pin,

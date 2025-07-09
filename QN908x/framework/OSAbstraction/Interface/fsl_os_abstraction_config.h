@@ -19,7 +19,7 @@
 #define osNumberOfMutexes    5
 #endif
 #ifndef osNumberOfMessageQs
-#define osNumberOfMessageQs  0
+#define osNumberOfMessageQs  10
 #endif
 #ifndef osNumberOfMessages
 #define osNumberOfMessages   10

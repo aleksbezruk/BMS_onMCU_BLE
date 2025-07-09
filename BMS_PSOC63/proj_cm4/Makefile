@@ -132,7 +132,8 @@ INCLUDES=SOURCES= ../BSP/ \
 				  ../../source/HAL/PSOC63/hal_gpio	\
 				  ../../source/HAL/PSOC63/hal_uart	\
 				  ../../source/HAL/PSOC63/hal_adc	\
-				  ../../source/HAL/PSOC63/hal_time
+				  ../../source/HAL/PSOC63/hal_time	\
+				  ../../source/OSAL/PSOC63
 
 # Add additional defines to the build process (without a leading -D).
 ifeq ($(BUILD_CONFIG), Debug)
