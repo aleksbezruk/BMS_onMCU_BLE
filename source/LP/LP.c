@@ -105,6 +105,8 @@ uint32_t cyabs_rtos_get_deepsleep_latency(void);
 // =========================
 #define pdTICKS_TO_MS(xTicks)    ( ( ( TickType_t ) ( xTicks ) * 1000u ) / configTICK_RATE_HZ )
 
+// #define ENABLE_DEBUG_PRINTS  // uncomment to enable debug prints
+
 // =========================
 // Private data
 // =========================
@@ -304,6 +306,12 @@ static cy_en_syspm_status_t _afterDeepSleepCallback(cy_stc_syspm_callback_params
     /** Check if wakeup is due to QSPY */
     if (Cy_GPIO_GetInterruptStatusMasked(CYBSP_UART_RX_PORT, CYBSP_UART_RX_PIN) == 1U) {
         _qspyWakeup = true;
+#if defined(ENABLE_DEBUG_PRINTS)
+        QS_BEGIN_ID(HAL, 0 /*prio/ID for local Filters*/)
+            QS_STR("Wakeup on QSPY");
+        QS_END()
+        QS_FLUSH();
+#endif
     }
 
     /** Reconfigure QSPY RX line to enable UART receiver back, Disable GPIO IRQ
@@ -314,20 +322,6 @@ static cy_en_syspm_status_t _afterDeepSleepCallback(cy_stc_syspm_callback_params
     Cy_GPIO_ClearInterrupt(CYBSP_UART_RX_PORT, CYBSP_UART_RX_PIN);
     NVIC_DisableIRQ(ioss_interrupts_gpio_5_IRQn);
     NVIC_ClearPendingIRQ(ioss_interrupts_gpio_5_IRQn);
-
-    /** Start DPSLP blocking timer if QSPY cmd is received */
-    if (_qspyWakeup) {
-        _blockSleep = true;
-        OSAL_Status_t status = OSAL_SUCCESS;
-        OSAL_TIMER_START(
-            OSAL_TIMER_GET_HANDLE(blockSleepTimer),
-            2000U, // 2000 ms
-            status
-        );
-        if (status != OSAL_SUCCESS) {
-            HAL_ASSERT(0, __FILE__, __LINE__);
-        }
-    }
 
     return CY_SYSPM_SUCCESS;
 }
@@ -360,6 +354,13 @@ void ioss_interrupts_gpio_5_IRQHandler(void)
 static void blockSleepTimerCallback_(cy_timer_callback_arg_t arg)
 {
     _blockSleep = false;
+
+#if defined(ENABLE_DEBUG_PRINTS)
+    QS_BEGIN_ID(HAL, 0 /*prio/ID for local Filters*/)
+        QS_STR("SLP blcock end");
+    QS_END()
+    QS_FLUSH();
+#endif
 }
 
 /**
@@ -482,6 +483,20 @@ void LP_enterSleep(TickType_t xExpectedIdleTime)
         // defining the variable in cybsp.h for the TARGET platform.
         HAL_ASSERT(actual_sleep_ms <= pdTICKS_TO_MS(xExpectedIdleTime), __FILE__, __LINE__);
         vTaskStepTick(convert_ms_to_ticks(actual_sleep_ms));
+
+        /** Start DPSLP blocking timer if QSPY cmd is received */
+        if (_qspyWakeup) {
+            _blockSleep = true;
+            OSAL_Status_t status = OSAL_SUCCESS;
+            OSAL_TIMER_START(
+                OSAL_TIMER_GET_HANDLE(blockSleepTimer),
+                2000U, // 2000 ms
+                status
+            );
+            if (status != OSAL_SUCCESS) {
+                HAL_ASSERT(0, __FILE__, __LINE__);
+            }
+        }
     }
 }
 
