@@ -155,7 +155,7 @@ int main(void)
 {
     HAL_status_t hwStatus = HAL_init_hardware();
     if (hwStatus != HAL_STATUS_OK) {
-        HAL_ASSERT(0);
+        HAL_ASSERT(0, __FILE__, __LINE__); // Hardware initialization failed
     }
 
     HAL_LED_init_green();
@@ -187,12 +187,12 @@ int main(void)
         /** LED task creation */
         ledTaskId = OSA_TaskCreate(OSA_TASK(Led_Test_Task), NULL);
         if( NULL == ledTaskId ) {
-            HAL_ASSERT(0); // Task creation failed
+            HAL_ASSERT(0, __FILE__, __LINE__); // Task creation failed
         }
         /** ADC task creation */
         adcTaskId = OSA_TaskCreate(OSA_TASK(Adc_Test_Task), NULL);
         if( NULL == adcTaskId ) {
-            HAL_ASSERT(0); // Task creation failed
+            HAL_ASSERT(0, __FILE__, __LINE__); // Task creation failed
         }
         /** Start RTOS scheduler */
         vTaskStartScheduler();

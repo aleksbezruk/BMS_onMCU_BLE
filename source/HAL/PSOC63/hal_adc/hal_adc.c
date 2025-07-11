@@ -84,12 +84,12 @@ void HAL_ADC_deinit(void)
 int32_t HAL_ADC_read(HAL_ADC_channel_t channel)
 {
     // Validate channel index
-    HAL_ASSERT((uint8_t)channel < HAL_ADC_NUM_CHNLS);
+    HAL_ASSERT(((uint8_t)channel < HAL_ADC_NUM_CHNLS), __FILE__, __LINE__);
 
     int32_t uv = cyhal_adc_read_uv(channels_[channel]);
     if (uv < 0) {
         // Error occurred during ADC read, handle as needed (e.g., return error code or 0)
-        HAL_ASSERT(false);
+        HAL_ASSERT(false, __FILE__, __LINE__);
         return 0;  // Return 0 or an error code as appropriate
     }
 

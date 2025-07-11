@@ -72,7 +72,7 @@ void vApplicationIdleHook(void);
 // ================
 // Definitions
 // ================
-#define MAIN_TASK_STACK_SIZE 560U   /**< size in bytes, aligned to 8 bytes */
+#define MAIN_TASK_STACK_SIZE 1024U   /**< size in bytes, aligned to 8 bytes */
 #define MAIN_QUEUE_SIZE 5U
 
 // ================
@@ -138,7 +138,7 @@ int main(void)
     /** Initialize the device and board peripherals */
     HAL_status_t initStatus = HAL_init_hardware();
     if (initStatus != HAL_STATUS_OK) {
-        HAL_ASSERT(0);
+        HAL_ASSERT(0, __FILE__, __LINE__);
     }
 
     /** Enable global interrupts */
@@ -163,6 +163,7 @@ int main(void)
     QS_addUsrRecToDic(BLE_TRACE);
     QS_addUsrRecToDic(BLE_BAS);
     QS_addUsrRecToDic(BLE_AIOS);
+    QS_addUsrRecToDic(HAL);
 #if defined(Q_UTEST)
     QS_addUsrRecToDic(UTEST);
     QS_addUsrRecToDic(BSP);
@@ -192,14 +193,14 @@ int main(void)
         status
     );
     if (status != OSAL_SUCCESS) {
-        HAL_ASSERT(0);
+        HAL_ASSERT(0, __FILE__, __LINE__);
     }
 
     /** Start FreeRTOS scheduler */
     vTaskStartScheduler();
 
     /** Never reach the point unless error conditions */
-    HAL_ASSERT(0);
+    HAL_ASSERT(0, __FILE__, __LINE__);
     while(true) {}
 }
 
@@ -222,19 +223,19 @@ static void mainTask_(OSAL_arg_t arg)
     /** Init ADC peripheral & create ADC task */
     ADC_status_t adcStatus = ADC_init();
     if (adcStatus != ADC_STATUS_OK) {
-        HAL_ASSERT(0);
+        HAL_ASSERT(0, __FILE__, __LINE__);
     }
 
     /** Init BLE peripheral & create BLE tasks */
     BLE_status_t bleStatus = BLE_init();
     if (bleStatus != BLE_STATUS_OK) {
-        HAL_ASSERT(0);
+        HAL_ASSERT(0, __FILE__, __LINE__);
     }
 
     /** Init Low Power modes */
     LP_status_t lpStatus = LP_init();
     if (lpStatus != LP_INIT_STATUS_OK) {
-        HAL_ASSERT(0);
+        HAL_ASSERT(0, __FILE__, __LINE__);
     }
 
     /** Set default state (OFF) for discharge control switch */
@@ -258,7 +259,7 @@ static void mainTask_(OSAL_arg_t arg)
         status
     );
     if (status != OSAL_SUCCESS) {
-        HAL_ASSERT(0);
+        HAL_ASSERT(0, __FILE__, __LINE__);
     }
 
     /** Init timeout timers 
@@ -275,7 +276,7 @@ static void mainTask_(OSAL_arg_t arg)
         status
     );
     if (status != OSAL_SUCCESS) {
-        HAL_ASSERT(0);
+        HAL_ASSERT(0, __FILE__, __LINE__);
     }
 
     /** 
@@ -294,7 +295,7 @@ static void mainTask_(OSAL_arg_t arg)
             status
         );
         if (status != OSAL_SUCCESS) {
-            HAL_ASSERT(0);
+            HAL_ASSERT(0, __FILE__, __LINE__);
         }
 
         /** Errors handling 
@@ -345,7 +346,7 @@ static void parseQueueItem_(Main_queue_data_t* queueItem)
             break;
         
         default:
-            HAL_ASSERT(0);
+            HAL_ASSERT(0, __FILE__, __LINE__);
             break;
     }
 }
@@ -429,7 +430,7 @@ void vApplicationIdleHook(void)
  */
 void MAIN_post_evt(Main_evt_t* evt, Evt_types_t eventType)
 {
-    HAL_ASSERT((evt != NULL) && (eventType < EVT_TYPE_MAX));
+    HAL_ASSERT((evt != NULL) && (eventType < EVT_TYPE_MAX), __FILE__, __LINE__);
 
     OSAL_Status_t status = OSAL_SUCCESS;
     Main_queue_data_t queueItem;
@@ -444,7 +445,7 @@ void MAIN_post_evt(Main_evt_t* evt, Evt_types_t eventType)
         status
     );
     if (status != OSAL_SUCCESS) {
-        HAL_ASSERT(0);
+        HAL_ASSERT(0, __FILE__, __LINE__);
     }
 }
 
@@ -517,7 +518,7 @@ static void MAIN_setDischargeSw(HAL_dischargeSw_state_t state)
             break;
         }
         default:
-            HAL_ASSERT(0);
+            HAL_ASSERT(0, __FILE__, __LINE__);
             break;
     }
 }
@@ -548,7 +549,7 @@ static void MAIN_setChargeSw(HAL_chargeSw_state_t state)
             break;
         }
         default:
-            HAL_ASSERT(0);
+            HAL_ASSERT(0, __FILE__, __LINE__);
             break;
     }
 }
@@ -619,7 +620,7 @@ static void MAIN_initBalancerSw(void)
  */
 static void MAIN_enableBalancerSw(uint8_t balBanksEnMask)
 {
-    HAL_ASSERT((balBanksEnMask > 0) && (balBanksEnMask <= HAL_BMS_ALL_BANKS));
+    HAL_ASSERT((balBanksEnMask > 0) && (balBanksEnMask <= HAL_BMS_ALL_BANKS), __FILE__, __LINE__);
 
     Switch_state_t* sw_state = (Switch_state_t *) &swState_;
 
@@ -651,7 +652,7 @@ static void MAIN_enableBalancerSw(uint8_t balBanksEnMask)
  */
 static void MAIN_disableBalancerSw(uint8_t balBanksDisMask)
 {
-    HAL_ASSERT((balBanksDisMask > 0) && (balBanksDisMask <= HAL_BMS_ALL_BANKS));
+    HAL_ASSERT((balBanksDisMask > 0) && (balBanksDisMask <= HAL_BMS_ALL_BANKS), __FILE__, __LINE__);
 
     Switch_state_t* sw_state = (Switch_state_t *) &swState_;
 
@@ -730,20 +731,20 @@ static void MAIN_SM_handleSysEvt(Evt_sys_data_t* evt)
         case BMS_STATE_ERROR:
         {
             /** @todo Implement */
-            HAL_ASSERT(0);
+            HAL_ASSERT(0, __FILE__, __LINE__);
             break;
         }
 
         case BMS_STATE_SHELF:
         {
              /** @todo Implement */
-            HAL_ASSERT(0);
+            HAL_ASSERT(0, __FILE__, __LINE__);
             break;
         }
 
         default:
         {
-            HAL_ASSERT(0);
+            HAL_ASSERT(0, __FILE__, __LINE__);
         }
     }
 }
@@ -830,20 +831,20 @@ static void MAIN_SM_handleAdcEvt(Evt_adc_data_t* evt)
         case BMS_STATE_ERROR:
         {
             /** @todo Implement */
-            HAL_ASSERT(0);
+            HAL_ASSERT(0, __FILE__, __LINE__);
             break;
         }
 
         case BMS_STATE_SHELF:
         {
              /** @todo Implement */
-            HAL_ASSERT(0);
+            HAL_ASSERT(0, __FILE__, __LINE__);
             break;
         }
 
         default:
         {
-            HAL_ASSERT(0);
+            HAL_ASSERT(0, __FILE__, __LINE__);
         }
     }
 }
@@ -908,7 +909,7 @@ static void led_blink_alive_(void)
         status
     );
     if (status != OSAL_SUCCESS) {
-        HAL_ASSERT(0);
+        HAL_ASSERT(0, __FILE__, __LINE__);
     }
 }
 
@@ -944,7 +945,7 @@ static void blinkTimerCallback_(OSAL_TimerArg_t arg)
             status
         );
         if (status != OSAL_SUCCESS) {
-            HAL_ASSERT(0);
+            HAL_ASSERT(0, __FILE__, __LINE__);
         }
     }
 }

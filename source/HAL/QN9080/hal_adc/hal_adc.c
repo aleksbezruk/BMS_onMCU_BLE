@@ -164,8 +164,8 @@ HAL_ADC_status_t HAL_ADC_init(void)
 int32_t HAL_ADC_read(HAL_ADC_channel_t channel) 
 {
     /** Check if the channel is valid */
-    HAL_ASSERT((uint8_t)channel < HAL_ADC_NUM_CHNLS);
- 
+    HAL_ASSERT(((uint8_t)channel < HAL_ADC_NUM_CHNLS), __FILE__, __LINE__);
+
     int32_t adc_value = 0;  // mV
     uint32_t adcConvResult = 0;
 
@@ -271,7 +271,7 @@ static uint8_t _get_adc_channel(HAL_ADC_channel_t channel)
         }
         default: 
         {
-            HAL_ASSERT(false); // Invalid channel
+            HAL_ASSERT(0, __FILE__, __LINE__); // Invalid channel
             return 0xFF; // Invalid channel
         }
     }

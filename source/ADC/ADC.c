@@ -28,9 +28,7 @@
 #include "bms_events.h"
 
 // RTOS includes
-#include "FreeRTOS.h"
-#include "task.h"
-#include "cyabs_rtos.h"
+#include "OSAL.h"
 
 // HAL
 #include "hal.h"
@@ -85,26 +83,27 @@
 
 // RTOS task defines
 #define ADC_TASK_INTERVAL   30000U  /**< ms */
-#define ADC_TASK_STACK_SIZE 560U   /**< bytes, aligned to 8 bytes */
+#define ADC_TASK_STACK_SIZE 1024U   /**< bytes, aligned to 8 bytes */
 
 // =======================
 // Private data
 // =======================
-/** ADC task handle */
-static cy_thread_t adcTaskHandle_;
+/** ADC task */
+OSAL_TASK_DEFINE(adcTask);
 
 /** 
- *  In stack words because stack pointer should be aligned to 
+ *  @note In stack words because stack pointer should be aligned to 
  *  8 bytes boundary per the RTOS requirements.
  */
 static uint64_t adcTaskStack_[ADC_TASK_STACK_SIZE/8U];
 
+/*! ADC peripheral status flag */
 static volatile bool _adcEnabled = true;
 
 // =======================
 // Functions prototype
 // =======================
-static void adcTask_(cy_thread_arg_t arg);
+static void adcTask_(OSAL_arg_t arg);
 static int16_t calcBankAvgVolt_(HAL_ADC_channel_t chnl, float convRatio, int16_t* pAdcInVolt);
 static ADC_status_t ADC_init_periph(void);
 
@@ -153,23 +152,24 @@ void ADC_deinit(void)
 ADC_status_t ADC_init(void)
 {
     ADC_status_t status = ADC_STATUS_OK;
-    cy_rslt_t result = CY_RSLT_SUCCESS;
 
     /** Init ADC periph */
     status = ADC_init_periph();
 
     /** Create RTOS task */
     if (status == ADC_STATUS_OK) {
-        result = cy_rtos_thread_create(
-            &adcTaskHandle_, 
+        OSAL_Status_t osal_status = OSAL_SUCCESS;
+        OSAL_TASK_CREATE(
+            OSAL_TASK_GET_HANDLE(adcTask),
             adcTask_,
-            "adcTask", 
+            "adcTask",
             adcTaskStack_,          // should be aligned to 8 bytes
             ADC_TASK_STACK_SIZE,    // in bytes
-            CY_RTOS_PRIORITY_LOW,   // prio
-            NULL                    // no args
+            OSAL_ADC_TASK_PRIORITY, // prio
+            NULL,                   // no args
+            osal_status
         );
-        if (result != CY_RSLT_SUCCESS) {
+        if (osal_status != OSAL_SUCCESS) {
             status = ADC_STATUS_FAIL;
         }
     }
@@ -185,7 +185,7 @@ ADC_status_t ADC_init(void)
  * @retval None (never returns because endless task)
  * 
  */
-static void adcTask_(cy_thread_arg_t arg)
+static void adcTask_(OSAL_arg_t arg)
 {
     (void) arg;
     Evt_adc_data_t adcEvt;
@@ -193,14 +193,14 @@ static void adcTask_(cy_thread_arg_t arg)
     ADC_status_t status;
 
     while(1) {
-        (void)cy_rtos_delay_milliseconds(ADC_TASK_INTERVAL);    // the API always returns SUCCESS because of hardcode
+        OSAL_TASK_DELAY(ADC_TASK_INTERVAL);
 
         /** Enable ADC if disabled (during Deep Sleep) */
         if (!_adcEnabled) {
             status = ADC_init_periph();
             _adcEnabled = true;
             if (status != ADC_STATUS_OK) {
-                HAL_ASSERT(0);
+                HAL_ASSERT(0, __FILE__, __LINE__);
             }
         }
 

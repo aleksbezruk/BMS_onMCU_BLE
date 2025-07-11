@@ -26,6 +26,8 @@
 #include "task.h"
 #include "cyabs_rtos.h"
 
+#include "osal_task_config.h"
+
 // =======================
 // Defines
 // =======================
@@ -44,17 +46,6 @@ typedef cy_thread_arg_t OSAL_arg_t;
 
 /*! OSAL thread function */
 typedef void (*OSAL_ThreadFunc_t)(OSAL_arg_t arg);
-
-/*! OSAL task priority enumeration */
-typedef enum {
-    OSAL_IDLE_TASK_PRIORITY = 0u, /**< Minimum priority for Idle task. Reserved by OSAL (FreeRTOS) */
-    OSAL_ADC_TASK_PRIORITY = CY_RTOS_PRIORITY_LOW,    /**< Low priority for ADC task */
-    OSAL_MAIN_TASK_PRIORITY = CY_RTOS_PRIORITY_BELOWNORMAL,  /**< BelowNormal priority for Main task */
-    OSAL_BLE_TASK_PRIORITY = CY_RTOS_PRIORITY_NORMAL,  /**< Normal priority for BLE task */
-    OSAL_TIMER_TASK_PRIORITY = CY_RTOS_PRIORITY_ABOVENORMAL, /**< AboveNormal priority for Timer task */
-    OSAL_BLE_HOST_TASK_PRIORITY = CY_RTOS_PRIORITY_HIGH, /**< High priority for BLE Host task. Reserved by BLE stack */
-    OSAL_BLE_LL_TASK_PRIORITY = CY_RTOS_PRIORITY_REALTIME, /**< RealTime priority for BLE Link Layer task. Reserved by BLE stack */
-} OSAL_TaskPriority_t;
 
 /*! 
  * @brief OSAL task define

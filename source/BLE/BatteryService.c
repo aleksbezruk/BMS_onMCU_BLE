@@ -79,7 +79,7 @@ void BAS_sendNotification(uint8_t batLvl, uint16_t conn_id)
                 QS_U16(0, status);
             QS_END()
             QS_FLUSH();
-            HAL_ASSERT(0);
+            HAL_ASSERT(0, __FILE__, __LINE__);
         }
     }
 }

@@ -86,11 +86,11 @@ void HAL_GPIO_init_pin(
     Hal_gpio_pin_state_t initialState
 )
 {
-    HAL_ASSERT(port != NULL);
-    HAL_ASSERT(func <= HAL_GPIO_UART_TX);
-    HAL_ASSERT(pullRes <= HAL_GPIO_PULL_DOWN);
-    HAL_ASSERT(driveMode <= HAL_GPIO_DRIVE_HIGH);
-    HAL_ASSERT(initialState <= HAL_GPIO_HIGH_LEVEL);
+    HAL_ASSERT((port != NULL), __FILE__, __LINE__);
+    HAL_ASSERT((func <= HAL_GPIO_UART_TX), __FILE__, __LINE__);
+    HAL_ASSERT((pullRes <= HAL_GPIO_PULL_DOWN), __FILE__, __LINE__);
+    HAL_ASSERT((driveMode <= HAL_GPIO_DRIVE_HIGH), __FILE__, __LINE__);
+    HAL_ASSERT((initialState <= HAL_GPIO_HIGH_LEVEL), __FILE__, __LINE__);
 
     cy_stc_gpio_pin_config_t pin_config;
     pin_config.outVal = initialState;
@@ -101,7 +101,7 @@ void HAL_GPIO_init_pin(
         pin_config.driveMode = CY_GPIO_DM_STRONG_IN_OFF;
     } else if (driveMode == HAL_GPIO_DRIVE_NORMAL){
         // Config Pull-Up/Down for Output
-        HAL_ASSERT(pullRes != HAL_GPIO_PULL_DISABLED);
+        HAL_ASSERT((pullRes != HAL_GPIO_PULL_DISABLED), __FILE__, __LINE__);
         pin_config.driveMode = (pullRes ==HAL_GPIO_PULL_UP)? CY_GPIO_DM_PULLUP_IN_OFF: CY_GPIO_DM_PULLDOWN_IN_OFF;
     } else {
         // No output drive -> Input
@@ -141,7 +141,7 @@ void HAL_GPIO_init_pin(
  */
 void HAL_GPIO_deinit_pin(Hal_gpio_port_t* port, Hal_gpio_pin_t pin)
 {
-    HAL_ASSERT(port != NULL);
+    HAL_ASSERT((port != NULL), __FILE__, __LINE__);
 
     Cy_GPIO_Pin_Init(port, pin, &default_config);
 }
@@ -158,7 +158,7 @@ void HAL_GPIO_deinit_pin(Hal_gpio_port_t* port, Hal_gpio_pin_t pin)
  */
 Hal_gpio_pin_state_t HAL_GPIO_read_pin(Hal_gpio_port_t* port, Hal_gpio_pin_t pin)
 {
-    HAL_ASSERT(port != NULL);
+    HAL_ASSERT((port != NULL), __FILE__, __LINE__);
 
     Hal_gpio_pin_state_t state = (Hal_gpio_pin_state_t) Cy_GPIO_Read(port, pin);
 
@@ -179,8 +179,8 @@ Hal_gpio_pin_state_t HAL_GPIO_read_pin(Hal_gpio_port_t* port, Hal_gpio_pin_t pin
  */
 void HAL_GPIO_set_pin(Hal_gpio_port_t* port, Hal_gpio_pin_t pin, Hal_gpio_pin_state_t level)
 {
-    HAL_ASSERT(port != NULL);
-    HAL_ASSERT(level <= HAL_GPIO_HIGH_LEVEL);
+    HAL_ASSERT((port != NULL), __FILE__, __LINE__);
+    HAL_ASSERT((level <= HAL_GPIO_HIGH_LEVEL), __FILE__, __LINE__);
 
     Cy_GPIO_Write(port, (uint32_t) pin, (uint32_t) level);
 }
@@ -221,7 +221,7 @@ static uint32_t _get_inputBuf_config(Hal_gpio_function_t func, Hal_gpio_pullRes_
                 bufConfig = CY_GPIO_DM_PULLDOWN;
             } else {
                 // Invalid pull resistor configuration encountered in _get_inputBuf_config
-                HAL_ASSERT(false);
+                HAL_ASSERT(0, __FILE__, __LINE__);
                 return CY_GPIO_DM_HIGHZ; // Return a safe default value
             }
             break;
@@ -267,7 +267,7 @@ static en_hsiom_sel_t _get_pinFunc_config(Hal_gpio_function_t func)
 
         default:
         {
-            HAL_ASSERT(false);
+            HAL_ASSERT(0, __FILE__, __LINE__);
             hsiom_config = HSIOM_SEL_GPIO; // Assign a safe default value
             break;
         }

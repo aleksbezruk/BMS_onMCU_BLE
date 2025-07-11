@@ -30,7 +30,8 @@ enum AppRecords {
     ADC_RCD,
     BLE_TRACE,
     BLE_BAS,
-    BLE_AIOS
+    BLE_AIOS,
+    HAL
 };
 
 /*! QSPY/Qview cmds */

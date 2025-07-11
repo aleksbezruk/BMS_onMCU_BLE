@@ -72,42 +72,42 @@
 
 #include <stdbool.h>
 
+// Cypress includes
 #include "cy_pdl.h"
 #include "cyhal.h"
 #include "cyhal_syspm.h"
+#include "cycfg.h"
 
+// BMS includes
 #include "LP.h"
 #include "qspyHelper.h"
 #include "ADC.h"
 
-#include "cycfg.h"
-
 // RTOS includes
-#include "FreeRTOS.h"
-#include "cyabs_rtos.h"
+#include "OSAL.h"
 
 // HAL
 #include "hal.h"
 
-///////////////////////
+// =========================
 // Functions prototype
-///////////////////////
+// =========================
 static cy_en_syspm_status_t _checkReadyDeepSleepCallback(cy_stc_syspm_callback_params_t *callbackParams, cy_en_syspm_callback_mode_t mode);
 static cy_en_syspm_status_t _beforeDeepSleepCallback(cy_stc_syspm_callback_params_t *callbackParams, cy_en_syspm_callback_mode_t mode);
 static cy_en_syspm_status_t _afterDeepSleepCallback(cy_stc_syspm_callback_params_t *callbackParams, cy_en_syspm_callback_mode_t mode);
-static void blockSleepTimerCallback_(cy_timer_callback_arg_t arg);
+static void blockSleepTimerCallback_(OSAL_TimerArg_t arg);
 void LP_enterSleep(TickType_t xExpectedIdleTime);
 
 uint32_t cyabs_rtos_get_deepsleep_latency(void);
 
-///////////////////////
+// =========================
 // Defines
-///////////////////////
+// =========================
 #define pdTICKS_TO_MS(xTicks)    ( ( ( TickType_t ) ( xTicks ) * 1000u ) / configTICK_RATE_HZ )
 
-///////////////////////
+// =========================
 // Private data
-///////////////////////
+// =========================
 static volatile LP_modes_t _mode;
 
 static cy_stc_syspm_callback_params_t _beforeDeepSleepCallbackParams;
@@ -161,19 +161,32 @@ static const cy_stc_gpio_pin_config_t QSPY_wakeup_config =
     .vohSel = 0UL,
 };
 
+/** Block Sleep flag */
 static volatile bool _blockSleep;
+
+/** QSPY Wakeup flag */
 static volatile bool _qspyWakeup;
-static cy_timer_t _blockSleepTimer;
+
+/** Block Sleep Timer */
+OSAL_TIMER_DEFINE(blockSleepTimer);
+
+/** Low Power Timer */
 static cyhal_lptimer_t* _lptimer = NULL;
 
-///////////////////////
+// =========================
 // Code
-///////////////////////
-
+// =========================
+/**
+ * @brief Initialize Low Power modes and tickless mode
+ * @details This function initializes the Low Power modes and tickless mode functionality.
+ *          It registers the necessary callbacks for deep sleep transitions and initializes the block sleep timer.
+ * @param None
+ * @retval \ref LP_status_t. Status of the initialization: LP_INIT_STATUS_OK if successful, LP_INIT_STATUS_FAIL otherwise.
+ */
 LP_status_t LP_init(void)
 {
     LP_status_t status = LP_INIT_STATUS_OK;
-    cy_rslt_t result;
+    OSAL_Status_t osal_status = OSAL_SUCCESS;
 
     if (!Cy_SysPm_RegisterCallback(&_pmBeforeDeepSlpCallback)) {
         status = LP_INIT_STATUS_FAIL;
@@ -191,20 +204,27 @@ LP_status_t LP_init(void)
         }
     }
 
-    result = cy_rtos_timer_init(
-        &_blockSleepTimer,
-        CY_TIMER_TYPE_ONCE,
+    OSAL_TIMER_CREATE(
+        OSAL_TIMER_GET_HANDLE(blockSleepTimer),
+        OSAL_TIMER_TYPE_ONE_SHOT, // One-shot timer for block sleep
         blockSleepTimerCallback_,
-        0U // arg
+        0U, // arg
+        osal_status
     );
-
-    if (result != CY_RSLT_SUCCESS) {
-        status = LP_INIT_STATUS_FAIL;
+    if (osal_status != OSAL_SUCCESS) {
+        HAL_ASSERT(0, __FILE__, __LINE__);
     }
 
     return status;
 }
 
+/**
+ * @brief Check if the system is ready for deep sleep
+ * @details This function checks if the system is ready for deep sleep by verifying the status of the peripherals.
+ *          It returns CY_SYSPM_SUCCESS if the system is ready, otherwise it returns CY_SYSPM_CANCELED.
+ * @param callbackParams Pointer to the callback parameters (unused in this implementation)
+ * @param mode The mode of the callback (unused in this implementation)
+ */
 static cy_en_syspm_status_t _checkReadyDeepSleepCallback(cy_stc_syspm_callback_params_t *callbackParams, cy_en_syspm_callback_mode_t mode)
 {
     (void) callbackParams;
@@ -217,6 +237,31 @@ static cy_en_syspm_status_t _checkReadyDeepSleepCallback(cy_stc_syspm_callback_p
     }
 }
 
+/**
+ * @brief Prepare the system for deep sleep
+ * @details This function prepares the system for deep sleep by de-initializing the ADC,
+ *          enabling the wake-up on QSPY command, and configuring the GPIO pin for QSPY RX line.
+ *          It also enables the NVIC IRQ for the GPIO interrupt.
+ * @param callbackParams Pointer to the callback parameters (unused in this implementation)
+ * @param mode The mode of the callback (unused in this implementation)
+ * @retval CY_SYSPM_SUCCESS if the preparation is successful, otherwise an error code.
+ * @note This function is called before entering deep sleep mode.
+ *       It de-initializes the ADC to save power and configures the GPIO pin for
+ *       QSPY RX line to wake up the system on a command.
+ *       It also enables the NVIC IRQ for the GPIO interrupt to handle wake-up events.
+ *       The QSPY RX line is configured to use a pull-up resistor and to trigger
+ *       an interrupt on a falling edge, which corresponds to the START bit of the QSPY command.
+ *       The interrupt is masked to ensure that it does not interfere with the deep sleep
+ *       operation, and the NVIC IRQ is enabled to allow the system to wake up on
+ *       a QSPY command.
+ *       After the system wakes up, the QSPY RX line is reconfigured to enable
+ *       the UART receiver back, and the GPIO interrupt is disabled to prevent further
+ *       interrupts until the next QSPY command.
+ *       The function also starts a blocking timer if a QSPY command is received,
+ *       which prevents the system from entering deep sleep until the timer expires.
+ *       This is useful for ensuring that the system does not enter deep sleep mode
+ *       while there are pending QSPY commands to be processed.
+ */
 static cy_en_syspm_status_t _beforeDeepSleepCallback(cy_stc_syspm_callback_params_t *callbackParams, cy_en_syspm_callback_mode_t mode)
 {
     (void) callbackParams;
@@ -236,6 +281,22 @@ static cy_en_syspm_status_t _beforeDeepSleepCallback(cy_stc_syspm_callback_param
     return CY_SYSPM_SUCCESS;
 }
 
+/**
+ * @brief Handle the system after deep sleep
+ * @details This function handles the system after deep sleep by reconfiguring the QSPY RX line,
+ *          disabling the GPIO interrupt, and starting a blocking timer if a QSPY command was received.
+ *          It also checks if the wake-up was due to a QSPY command and sets the appropriate flags.
+ * @param callbackParams Pointer to the callback parameters (unused in this implementation)
+ * @param mode The mode of the callback (unused in this implementation)
+ * @retval CY_SYSPM_SUCCESS if the handling is successful, otherwise an error code.
+ * @note This function is called after exiting deep sleep mode.
+ *       It checks if the wake-up was due to a QSPY command and sets the `_qspyWakeup` flag accordingly.
+ *       It then reconfigures the QSPY RX line to enable the UART receiver back and disables the GPIO interrupt
+ *       to prevent further interrupts until the next QSPY command.
+ *       If a QSPY command was received, it starts a blocking timer to prevent the system from entering deep sleep
+ *       until the timer expires. This is useful for ensuring that the system does not enter deep sleep mode
+ *       while there are pending QSPY commands to be processed.
+ */
 static cy_en_syspm_status_t _afterDeepSleepCallback(cy_stc_syspm_callback_params_t *callbackParams, cy_en_syspm_callback_mode_t mode)
 {
     (void) callbackParams;
@@ -257,15 +318,28 @@ static cy_en_syspm_status_t _afterDeepSleepCallback(cy_stc_syspm_callback_params
     /** Start DPSLP blocking timer if QSPY cmd is received */
     if (_qspyWakeup) {
         _blockSleep = true;
-        cy_rslt_t result = cy_rtos_timer_start(&_blockSleepTimer, 100U); // 100 ms
-        if (result != CY_RSLT_SUCCESS) {
-            HAL_ASSERT(0);
+        OSAL_Status_t status = OSAL_SUCCESS;
+        OSAL_TIMER_START(
+            OSAL_TIMER_GET_HANDLE(blockSleepTimer),
+            2000U, // 2000 ms
+            status
+        );
+        if (status != OSAL_SUCCESS) {
+            HAL_ASSERT(0, __FILE__, __LINE__);
         }
     }
 
     return CY_SYSPM_SUCCESS;
 }
 
+/**
+ * @brief Interrupt handler for GPIO 5 (QSPY RX line)
+ * @details This function handles the GPIO interrupt for the QSPY RX line.
+ *          It checks if the interrupt was triggered by a QSPY command and sets the `_qspyWakeup` flag accordingly.
+ *          It also clears the interrupt status for the QSPY RX line.
+ * @note This function is called when a falling edge is detected on the QSPY RX line,
+ *       which corresponds to the START bit of a QSPY command.
+ */
 void ioss_interrupts_gpio_5_IRQHandler(void)
 {
     /** Check if wakeup is due to QSPY */
@@ -275,6 +349,14 @@ void ioss_interrupts_gpio_5_IRQHandler(void)
     }
 }
 
+/**
+ * @brief Callback for the block sleep timer
+ * @details This function is called when the block sleep timer expires.
+ *          It sets the `_blockSleep` flag to false, allowing the system to enter low power mode.
+ * @param[in] arg Timer argument (unused)
+ * @retval None
+ * @note This function is used to unblock the system from entering low power mode after a certain period.
+ */
 static void blockSleepTimerCallback_(cy_timer_callback_arg_t arg)
 {
     _blockSleep = false;
@@ -315,7 +397,7 @@ LP_periph_ready_t LP_getPeriphStatus(void)
  */
 void LP_setMode(LP_modes_t mode)
 {
-    HAL_ASSERT((mode >= LP_DISABLED_MODE) && (mode <= LP_SHELF_MODE));
+    HAL_ASSERT((mode >= LP_DISABLED_MODE) && (mode <= LP_SHELF_MODE), __FILE__, __LINE__);
     _mode = mode;
 }
 
@@ -389,7 +471,7 @@ void LP_enterSleep(TickType_t xExpectedIdleTime)
 
         default:
         {
-            HAL_ASSERT(0);   // unexpected behavior
+            HAL_ASSERT(0, __FILE__, __LINE__);  // unexpected behavior
         }
     }
 
@@ -398,7 +480,7 @@ void LP_enterSleep(TickType_t xExpectedIdleTime)
         // If you hit this assert, the latency time (CY_CFG_PWR_DEEPSLEEP_LATENCY) should
         // be increased. This can be set though the Device Configurator, or by manually
         // defining the variable in cybsp.h for the TARGET platform.
-        HAL_ASSERT(actual_sleep_ms <= pdTICKS_TO_MS(xExpectedIdleTime));
+        HAL_ASSERT(actual_sleep_ms <= pdTICKS_TO_MS(xExpectedIdleTime), __FILE__, __LINE__);
         vTaskStepTick(convert_ms_to_ticks(actual_sleep_ms));
     }
 }
@@ -428,7 +510,7 @@ void vApplicationSleep(TickType_t xExpectedIdleTime)
         if (result == CY_RSLT_SUCCESS) {
             _lptimer = &timer;
         } else {
-            HAL_ASSERT(false);
+            HAL_ASSERT(0, __FILE__, __LINE__);
         }
     }
 
@@ -448,7 +530,7 @@ void vApplicationSleep(TickType_t xExpectedIdleTime)
 
         cyhal_system_critical_section_exit(status);
     } else {
-        HAL_ASSERT(false);   // timer should be allocated
+        HAL_ASSERT(0, __FILE__, __LINE__);   // timer should be allocated
     }
 }
 

@@ -63,11 +63,11 @@ void HAL_GPIO_init_pin(
     Hal_gpio_pin_state_t initialState
 )
 {
-    HAL_ASSERT(port != NULL);
-    HAL_ASSERT(func <= HAL_GPIO_UART_TX);
-    HAL_ASSERT(pullRes <= HAL_GPIO_PULL_DOWN);
-    HAL_ASSERT(driveMode <= HAL_GPIO_DRIVE_HIGH);
-    HAL_ASSERT(initialState <= HAL_GPIO_HIGH_LEVEL);
+    HAL_ASSERT((port != NULL), __FILE__, __LINE__);
+    HAL_ASSERT((func <= HAL_GPIO_UART_TX), __FILE__, __LINE__);
+    HAL_ASSERT((pullRes <= HAL_GPIO_PULL_DOWN), __FILE__, __LINE__);
+    HAL_ASSERT((driveMode <= HAL_GPIO_DRIVE_HIGH), __FILE__, __LINE__);
+    HAL_ASSERT((initialState <= HAL_GPIO_HIGH_LEVEL), __FILE__, __LINE__);
 
     gpio_pin_config_t gpioa_digitOut_config = {
         .pinDirection = kGPIO_DigitalOutput,
@@ -90,7 +90,7 @@ void HAL_GPIO_init_pin(
         driveStrength = IOCON_DRIVE_HIGH;
     } else if (driveMode == HAL_GPIO_DRIVE_NORMAL){
         // Config Pull-Up/Down for Output
-        HAL_ASSERT(pullRes != HAL_GPIO_PULL_DISABLED);
+        HAL_ASSERT((pullRes != HAL_GPIO_PULL_DISABLED), __FILE__, __LINE__);
         GPIO_PinInit(port, pin, &gpioa_digitOut_config);
         bufMode = (pullRes == HAL_GPIO_PULL_UP)? IOCON_MODE_PULLUP : IOCON_MODE_PULLDOWN;
     } else {
@@ -130,7 +130,7 @@ void HAL_GPIO_init_pin(
  */
 void HAL_GPIO_deinit_pin(Hal_gpio_port_t* port, Hal_gpio_pin_t pin)
 {
-    HAL_ASSERT(port != NULL);
+    HAL_ASSERT((port != NULL), __FILE__, __LINE__);
 
     /** Configure pin as Input to minimize current consumption */
     GPIO_PinInit(port, pin, &gpio_deinitPin_config);
@@ -159,7 +159,7 @@ void HAL_GPIO_deinit_pin(Hal_gpio_port_t* port, Hal_gpio_pin_t pin)
  */
 Hal_gpio_pin_state_t HAL_GPIO_read_pin(Hal_gpio_port_t* port, Hal_gpio_pin_t pin)
 {
-    HAL_ASSERT(port != NULL);
+    HAL_ASSERT((port != NULL), __FILE__, __LINE__);
 
     Hal_gpio_pin_state_t state = (Hal_gpio_pin_state_t) GPIO_ReadPinInput(port, pin);
 
@@ -180,8 +180,8 @@ Hal_gpio_pin_state_t HAL_GPIO_read_pin(Hal_gpio_port_t* port, Hal_gpio_pin_t pin
  */
 void HAL_GPIO_set_pin(Hal_gpio_port_t* port, Hal_gpio_pin_t pin, Hal_gpio_pin_state_t level)
 {
-    HAL_ASSERT(port != NULL);
-    HAL_ASSERT(level <= HAL_GPIO_HIGH_LEVEL);
+    HAL_ASSERT((port != NULL), __FILE__, __LINE__);
+    HAL_ASSERT((level <= HAL_GPIO_HIGH_LEVEL), __FILE__, __LINE__);
 
     GPIO_WritePinOutput(port, pin, level);
 }
@@ -222,7 +222,7 @@ static uint32_t _get_inputBuf_config(Hal_gpio_function_t func, Hal_gpio_pullRes_
                 bufConfig = IOCON_MODE_PULLDOWN;
             } else {
                 // smth. went wrong ...
-                HAL_ASSERT(false);
+                HAL_ASSERT(0, __FILE__, __LINE__);
             }
             break;
         }
@@ -272,7 +272,7 @@ static uint32_t _get_pinFunc_config(Hal_gpio_function_t func)
 
         default:
         {
-            HAL_ASSERT(false);
+            HAL_ASSERT(0, __FILE__, __LINE__);
             break;
         }
     }
@@ -297,7 +297,7 @@ static uint8_t _get_portNum(Hal_gpio_port_t* port)
     } else if (port == GPIOB) {
         portNum = 1u;
     } else {
-        HAL_ASSERT(false);  // smth. went wrong
+        HAL_ASSERT(0, __FILE__, __LINE__);  // smth. went wrong
         // Optionally handle error, e.g., return default or error value
     }
 

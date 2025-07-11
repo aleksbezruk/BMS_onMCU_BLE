@@ -70,10 +70,10 @@ static HAL_UART_rxCallback_t rxCallback;
  */
 HAL_UART_status_t HAL_UART_init(HAL_UART_config_t *config, HAL_UART_rxCallback_t callback)
 {
-    HAL_ASSERT(config != NULL);
+    HAL_ASSERT((config != NULL), __FILE__, __LINE__);
     /* Baud rate assertion: limits are configurable via HAL_UART_MIN_BAUDRATE and HAL_UART_MAX_BAUDRATE macros above. */
-    HAL_ASSERT((config->baudRate >= HAL_UART_MIN_BAUDRATE) && (config->baudRate <= HAL_UART_MAX_BAUDRATE));
-    HAL_ASSERT((config->numStopBits == 1u) || (config->numStopBits == 2u));
+    HAL_ASSERT((config->baudRate >= HAL_UART_MIN_BAUDRATE) && (config->baudRate <= HAL_UART_MAX_BAUDRATE), __FILE__, __LINE__);
+    HAL_ASSERT((config->numStopBits == 1u) || (config->numStopBits == 2u), __FILE__, __LINE__);
 
     USART_Type *base = USART0;
     usart_config_t configPer;
@@ -170,7 +170,7 @@ static void USART_ISR(void)
     if ((kUSART_RxFifoNotEmptyFlag)& USART_GetStatusFlags(base)) {
         uint8_t cnt = 0;
         do {
-            HAL_ASSERT(cnt < RX_BUF_LEN);
+            HAL_ASSERT((cnt < RX_BUF_LEN), __FILE__, __LINE__);
             rxBuf[i++] = USART_ReadByte(base);
             cnt++;
             __DSB();
@@ -213,7 +213,7 @@ static uint32_t _getUsartClock(void)
  */
 static inline usart_stop_bit_count_t _getNumStopBits(uint8_t numStopBits)
 {
-    HAL_ASSERT((numStopBits == 1u) || (numStopBits == 2u));
+    HAL_ASSERT((numStopBits == 1u) || (numStopBits == 2u), __FILE__, __LINE__);
     return (usart_stop_bit_count_t) (numStopBits - 1u);
 }
 

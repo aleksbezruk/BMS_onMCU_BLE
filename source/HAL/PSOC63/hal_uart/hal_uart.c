@@ -32,7 +32,7 @@
  */
 HAL_UART_status_t HAL_UART_init(HAL_UART_config_t *config, HAL_UART_rxCallback_t callback)
 {
-    HAL_ASSERT(config != NULL);
+    HAL_ASSERT((config != NULL), __FILE__, __LINE__);
 
     HAL_UART_status_t status = HAL_UART_SUCCESS;
     bsp_status_init_t bsp_status = BSP_initUart(callback);
@@ -66,8 +66,8 @@ bool HAL_UART_isTxReady(void)
  */
 void HAL_UART_txData(uint8_t *data, uint16_t len)
 {
-    HAL_ASSERT(data != NULL);
-    HAL_ASSERT(len > 0);
+    HAL_ASSERT((data != NULL), __FILE__, __LINE__);
+    HAL_ASSERT((len > 0), __FILE__, __LINE__);
 
     BSP_uartTxData(data, len); 
 }

@@ -333,28 +333,52 @@ void QS_addUsrRecToDic(enum_t const rec)
 {
     switch(rec) {
         case MAIN:
+        {
             QS_USR_DICTIONARY(MAIN);
             break;
+        }
         case UTEST:
+        {
             QS_USR_DICTIONARY(UTEST);
             break;
+        }
         case BSP:
+        {
             QS_USR_DICTIONARY(BSP);
             break;
+        }
         case ADC_RCD:
+        {
             QS_USR_DICTIONARY(ADC_RCD);
             break;
+        }
         case BLE_TRACE:
+        {
+            // BLE trace records
             QS_USR_DICTIONARY(BLE_TRACE);
             break;
+        }
         case BLE_BAS:
+        {
             QS_USR_DICTIONARY(BLE_BAS);
             break;
+        }
         case BLE_AIOS:
+        {
             QS_USR_DICTIONARY(BLE_AIOS);
             break;
-        default:
+        }
+        case HAL:
+        {
+            // HAL records
+            QS_USR_DICTIONARY(HAL);
             break;
+        }
+        default:
+        {
+            // do nothing if record is not defined
+            break;
+        }
     }
 }
 

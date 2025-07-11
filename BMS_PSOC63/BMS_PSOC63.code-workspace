@@ -92,7 +92,10 @@
             "qp.h": "c",
             "hal_adc.h": "c",
             "hal_uart.h": "c",
-            "random": "cpp"
+            "random": "cpp",
+            "adc.h": "c",
+            "osal.h": "c",
+            "osal_task_config.h": "c"
         },
         "clangd.arguments": [
             "--query-driver=${config:modustoolbox.toolsPath}/gcc/bin/arm-none-eabi-gcc",

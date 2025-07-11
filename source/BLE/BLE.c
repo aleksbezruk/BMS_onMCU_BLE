@@ -94,6 +94,7 @@
  * @version 0.4.0
  */
 
+// BLE includes
 #include "BLE.h"
 #include "cybsp.h"
 #include "qspyHelper.h"
@@ -101,9 +102,7 @@
 #include "cycfg_gap.h"
 
 // RTOS includes
-#include "FreeRTOS.h"
-#include "task.h"
-#include "cyabs_rtos.h"
+#include "OSAL.h"
 
 // Services
 #include "BatteryService.h"
@@ -112,22 +111,25 @@
 // HAL
 #include "hal.h"
 
-///////////////////////
+// =======================
 // Defines
-///////////////////////
-#define BLE_TASK_STACK_SIZE 560U   /**< bytes, aligned to 8 bytes */
+// =======================
+/**
+ * BLE task stack size
+ */
+#define BLE_TASK_STACK_SIZE 1600U   /**< bytes, aligned to 8 bytes */
 #define BLE_QUEUE_SIZE 8U
 
-///////////////////////
+// =======================
 // Functions prototype
-///////////////////////
+// =======================
 static wiced_result_t app_bt_management_callback_(
     wiced_bt_management_evt_t event,
     wiced_bt_management_evt_data_t *p_event_data
 );
 static void print_bd_address(uint8_t* bda);
 static void le_app_init(void);
-static void bleTask_(cy_thread_arg_t arg);
+static void bleTask_(OSAL_arg_t arg);
 static void parseQueueItem_(Ble_queue_data_t* queueItem);
 static wiced_bt_gatt_status_t le_app_connect_handler(wiced_bt_gatt_connection_status_t *p_conn_status);
 static wiced_bt_gatt_status_t le_app_gatt_event_callback(wiced_bt_gatt_evt_t event,
@@ -152,27 +154,37 @@ static wiced_bt_gatt_status_t le_app_set_value( uint16_t conn_id,
                                                 uint8_t *p_val,
                                                 uint16_t len);
 
-///////////////////////
+// =======================  
 // Private data
-///////////////////////
-static cy_thread_t bleTaskHandle_;
-static StaticQueue_t staticQueueHandle;
-static cy_queue_t bleTaskQueueHandle;
-static Ble_queue_data_t bleQueueSto[BLE_QUEUE_SIZE];
+// =======================
+/** BLE task */
+OSAL_TASK_DEFINE(bleTask);
 /** 
- *  In stack words because stack pointer should be aligned to 
- *  8 bytes boundaru per the RTOS requirements.
+ *  @note In stack words because stack pointer should be aligned to 
+ *  8 bytes boundary per the RTOS requirements.
  */
 static uint64_t bleTaskStack_[BLE_TASK_STACK_SIZE/8U];
 
-static uint8_t adv_battery_service_data[3] = { 0x0F, 0x18, 0x64 };
+/** Event queue */
+OSAL_QUEUE_DEFINE(bleTaskQueueHandle);
+/** 
+ *  Queue for BLE events, see \ref Ble_queue_data_t
+ *  @note The queue size should be enough to handle all BLE events
+ *        in the worst case scenario.
+ */
+#define BLE_QUEUE_SIZE 8U
+static Ble_queue_data_t bleQueueSto[BLE_QUEUE_SIZE];
 
+// BLE advertisement data
+static volatile uint8_t adv_battery_service_data[3] = { 0x0F, 0x18, 0x64 };
+
+// BLE state variables
 static volatile uint16_t conn_id;
 static volatile BLE_adv_conn_mode_t ble_adv_conn_state = BLE_ADV_OFF_CONN_OFF;
 
-///////////////////////
+// =======================
 // Code
-///////////////////////
+// =======================
 
 /**
  * @brief Init BLE peripheral, BLE stack
@@ -186,7 +198,6 @@ BLE_status_t BLE_init(void)
 {
     BLE_status_t status = BLE_STATUS_OK;
     wiced_result_t wiced_result;
-    cy_rslt_t result;
 
     /** Configure platform specific settings for the BT device */
     cybt_platform_config_init(&cybsp_bt_platform_cfg);
@@ -212,16 +223,22 @@ BLE_status_t BLE_init(void)
 
     /** Create RTOS task */
     if (status == BLE_STATUS_OK) {
-        result = cy_rtos_thread_create(
-            &bleTaskHandle_,
+        OSAL_Status_t osal_status = OSAL_SUCCESS;
+        OSAL_TASK_CREATE(
+            OSAL_TASK_GET_HANDLE(bleTask),
             bleTask_,
             "bleTask",
             bleTaskStack_,             // should be aligned to 8 bytes
             BLE_TASK_STACK_SIZE,       // in bytes
-            CY_RTOS_PRIORITY_NORMAL,   // prio
-            NULL                       // no args
+            OSAL_BLE_TASK_PRIORITY,    // prio
+            NULL,                      // no args
+            osal_status
         );
-        if (result != CY_RSLT_SUCCESS) {
+        if (osal_status != OSAL_SUCCESS) {
+            QS_BEGIN_ID(BLE_TRACE, 0 /*prio/ID for local Filters*/)
+                QS_STR("BLE Task Creation failed:");
+                QS_U8(0, osal_status);
+            QS_END()
             status = BLE_STATUS_FAIL;
         }
     }
@@ -256,7 +273,7 @@ wiced_bt_dev_status_t BLE_startAdvertisement(
 {
     wiced_bt_dev_status_t status = WICED_BT_SUCCESS;
 
-    /** The AOI isn't supported, because BLE stack returns 'WICED_BT_UNSUPPORTED' */
+    /** The API isn't supported, because BLE stack returns 'WICED_BT_UNSUPPORTED' */
     // status = wiced_bt_ble_set_periodic_adv_params(
     //     0xFF, //adv_handle -> Not used
     //     periodic_adv_int_min,
@@ -600,7 +617,7 @@ static void le_app_init(void)
         QS_END()
         QS_FLUSH();
 
-        HAL_ASSERT(0);
+        HAL_ASSERT(0, __FILE__, __LINE__);
     }
 }
 
@@ -611,29 +628,46 @@ static void le_app_init(void)
  * 
  * @retval None
  */
-static void bleTask_(cy_thread_arg_t arg)
+static void bleTask_(OSAL_arg_t arg)
 {
     (void) arg;
-    cy_rslt_t result;
+    OSAL_Status_t osal_status = OSAL_SUCCESS;
     Ble_queue_data_t queueItem;
 
     /** Create an event Queue */
-    bleTaskQueueHandle = xQueueCreateStatic(BLE_QUEUE_SIZE,
-                                     sizeof(Ble_queue_data_t),
-                                     (uint8_t *) bleQueueSto,
-                                     &staticQueueHandle);
-    if (bleTaskQueueHandle == NULL) {
-        HAL_ASSERT(0);
+    OSAL_QUEUE_CREATE(
+        bleTaskQueueHandle, // handle name
+        "bleTaskQueue",
+        BLE_QUEUE_SIZE, // queue size
+        sizeof(Ble_queue_data_t),
+        bleQueueSto,
+        osal_status
+    );
+    if (osal_status != OSAL_SUCCESS) {
+        QS_BEGIN_ID(BLE_TRACE, 0 /*prio/ID for local Filters*/)
+            QS_STR("BLE Task Queue Creation failed:");
+            QS_U8(0, osal_status);
+        QS_END()
+        HAL_ASSERT(0, __FILE__, __LINE__);
     }
 
     /** Events processing loop */
     while(1) {
-        /** Wait for event */
-        result = cy_rtos_queue_get(&bleTaskQueueHandle,
-                                   &queueItem,
-                                   CY_RTOS_NEVER_TIMEOUT);
-        if (result != CY_RSLT_SUCCESS) {
-            HAL_ASSERT(0);
+        /** Wait for event on OSAL */
+        OSAL_QUEUE_GET(
+            OSAL_QUEUE_GET_HANDLE(bleTaskQueueHandle), 
+            &queueItem, 
+            OSAL_QUEUE_TIMEOUT_NEVER,
+            osal_status
+        );
+        if (osal_status != OSAL_SUCCESS) {
+            QS_BEGIN_ID(BLE_TRACE, 0 /*prio/ID for local Filters*/)
+                QS_STR("BLE Task Queue Get failed:");
+                QS_U8(0, osal_status);
+            QS_END()
+            /** If failed to get an event from the queue, assert */
+            // Note: This is a fatal error, so we assert here.
+            HAL_ASSERT(0, __FILE__, __LINE__);
         }
 
         /** Handle an evt */
@@ -646,9 +680,9 @@ static void bleTask_(cy_thread_arg_t arg)
     }
 }
 
-/////////////////////////
+// =======================
 /// Queue functions/APIs
-/////////////////////////
+// =======================
 /**
  * @brief Posts an event into BLE task event queue
  *
@@ -661,18 +695,26 @@ static void bleTask_(cy_thread_arg_t arg)
  */
 void BLE_post_evt(Ble_evt_t* evt, Evt_types_t eventType)
 {
-    HAL_ASSERT((evt != NULL) && (eventType < EVT_TYPE_MAX));
+    HAL_ASSERT((evt != NULL) && (eventType < EVT_TYPE_MAX), __FILE__, __LINE__);
 
+    OSAL_Status_t status = OSAL_SUCCESS;
     Ble_queue_data_t queueItem;
 
     queueItem.evtType = eventType;
     memcpy((uint8_t*) &queueItem.evtData, (uint8_t*) evt, sizeof(Ble_evt_t));
 
-    cy_rslt_t result = cy_rtos_queue_put(&bleTaskQueueHandle,
-                                         &queueItem,
-                                         CY_RTOS_NEVER_TIMEOUT);
-    if (result != CY_RSLT_SUCCESS) {
-        HAL_ASSERT(0);
+    OSAL_QUEUE_PUT(
+        OSAL_QUEUE_GET_HANDLE(bleTaskQueueHandle), 
+        &queueItem, 
+        OSAL_QUEUE_TIMEOUT_NEVER,
+        status
+    );
+    if (status != OSAL_SUCCESS) {
+        QS_BEGIN_ID(BLE_TRACE, 0 /*prio/ID for local Filters*/)
+            QS_STR("BLE Task Queue Put failed:");
+            QS_U8(0, status);
+        QS_END()
+        HAL_ASSERT(0, __FILE__, __LINE__);
     }
 }
 
@@ -738,14 +780,22 @@ static void parseQueueItem_(Ble_queue_data_t* queueItem)
         }
 
         default:
-            HAL_ASSERT(0);   // unexpected evt
+        {
+            QS_BEGIN_ID(BLE_TRACE, 0 /*prio/ID for local Filters*/)
+                QS_STR("ERROR: Unhandled BLE Task Queue Item case:");
+                QS_U8(0, queueItem->evtType);
+            QS_END()
+            /** If the event type is not handled, assert */
+            // Note: This is a fatal error, so we assert here.
+            HAL_ASSERT(0, __FILE__, __LINE__);   // unexpected evt
             break;
+        }
     }
 }
 
-///////////////////////////////////
+// =================================
 /// GATT PROFILE, EVENTS callback
-///////////////////////////////////
+// =================================
 
 /**************************************************************************************************
 * Function Name: le_app_gatt_event_callback
@@ -1124,9 +1174,17 @@ static gatt_db_lookup_table_t  *le_app_find_by_handle(uint16_t handle)
     return NULL;
 }
 
-/////////////////////////
+// ============================
 /// Misc spare functions
-/////////////////////////
+// ============================
+/**
+ * Print the Bluetooth Device Address
+ * @param[in] bda Pointer to the Bluetooth Device Address
+ * @note This function is used to print the local Bluetooth address
+ *       in the debug output.
+ * 
+ * @return None
+ */
 static void print_bd_address(uint8_t* bda)
 {
     QS_BEGIN_ID(BLE_TRACE, 0 /*prio/ID for local Filters*/)
@@ -1135,6 +1193,13 @@ static void print_bd_address(uint8_t* bda)
     QS_END()
 }
 
+/**
+ * Print the Connection ID
+ * @param[in] id Connection ID to print
+ * @note This function is used to print the connection ID in the debug output.
+ * 
+ * @return None
+ */
 static void print_connection_id(uint16_t id)
 {
     QS_BEGIN_ID(BLE_TRACE, 0 /*prio/ID for local Filters*/)
