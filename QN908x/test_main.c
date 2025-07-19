@@ -16,12 +16,8 @@
 #include "qs.h"
 
 #ifndef BMS_DISABLE_RTOS
-// OSA
-#include "fsl_os_abstraction.h"
-#include "fsl_os_abstraction_free_rtos.h"
-
-// FreeRTOS
-#include "FreeRTOS.h"
+// OSAL
+#include "OSAL.h"
 #endif // BMS_DISABLE_RTOS
 
 // BMS Application
@@ -47,12 +43,9 @@ static void TEST_adc(void);
 static void _IdleTask(void);
 static void _runTests_noRTOS(void);
 #else
-static void Led_Test_Task(osaTaskParam_t argument);
-static void Adc_Test_Task(osaTaskParam_t argument);
+static void Led_Test_Task(OSAL_arg_t argument);
+static void Adc_Test_Task(OSAL_arg_t argument);
 #endif // BMS_DISABLE_RTOS
-
-// UART tests
-// TBD
 
 // ADC tests
 #define ADC_NUM_TESTS   3U
@@ -135,13 +128,13 @@ static volatile bool hal_adc_test_en = true;
 /** ADC test number of iterations */
 static volatile uint8_t adc_test_num;
 
-// OSA data
+// OSAL data
 #ifndef BMS_DISABLE_RTOS
-static OSA_TASK_DEFINE(Led_Test_Task, LED_TEST_TASK_PRIORITY, 1, LED_TEST_TASK_STACK_SIZE, FALSE );
-static osaTaskId_t ledTaskId = NULL;
+// LED task handle
+OSAL_TASK_DEFINE(LedTask);
 
-static OSA_TASK_DEFINE(Adc_Test_Task, ADC_TEST_TASK_PRIORITY, 1, ADC_TEST_TASK_STACK_SIZE, FALSE );
-static osaTaskId_t adcTaskId = NULL;
+// ADC task handle
+OSAL_TASK_DEFINE(AdcTask);
 
 #endif // BMS_DISABLE_RTOS
 
@@ -153,11 +146,13 @@ static osaTaskId_t adcTaskId = NULL;
  */
 int main(void)
 {
+    /** Initialize HAL */
     HAL_status_t hwStatus = HAL_init_hardware();
     if (hwStatus != HAL_STATUS_OK) {
         HAL_ASSERT(0, __FILE__, __LINE__); // Hardware initialization failed
     }
 
+    /** Initialize LED */
     HAL_LED_init_green();
     HAL_LED_init_red();
 
@@ -185,15 +180,38 @@ int main(void)
         _runTests_noRTOS();
 #else
         /** LED task creation */
-        ledTaskId = OSA_TaskCreate(OSA_TASK(Led_Test_Task), NULL);
-        if( NULL == ledTaskId ) {
+        OSAL_Status_t status = OSAL_SUCCESS;
+        OSAL_TASK_CREATE(
+            OSAL_TASK_GET_HANDLE(LedTask),
+             Led_Test_Task, 
+             "Led_Test_Task",
+             NULL,  // Stack pointer
+             LED_TEST_TASK_STACK_SIZE,
+             LED_TEST_TASK_PRIORITY, 
+             NULL, // Argument to pass to the task
+             status
+        );
+        if (status != OSAL_SUCCESS) {
             HAL_ASSERT(0, __FILE__, __LINE__); // Task creation failed
         }
+
         /** ADC task creation */
-        adcTaskId = OSA_TaskCreate(OSA_TASK(Adc_Test_Task), NULL);
-        if( NULL == adcTaskId ) {
+        status = OSAL_SUCCESS;
+        // ADC task creation
+        OSAL_TASK_CREATE(
+            OSAL_TASK_GET_HANDLE(AdcTask),
+            Adc_Test_Task,
+            "Adc_Test_Task",
+            NULL,  // Stack pointer
+            ADC_TEST_TASK_STACK_SIZE,
+            ADC_TEST_TASK_PRIORITY,
+            NULL, // Argument to pass to the task
+            status
+        );
+        if (status != OSAL_SUCCESS) {
             HAL_ASSERT(0, __FILE__, __LINE__); // Task creation failed
         }
+
         /** Start RTOS scheduler */
         vTaskStartScheduler();
 #endif  // BMS_DISABLE_RTOS
@@ -290,7 +308,7 @@ static void TEST_led(void)
     QS_FLUSH(); // Flush QSPY output
 }
 #else
-static void Led_Test_Task(osaTaskParam_t argument)
+static void Led_Test_Task(OSAL_arg_t argument)
 {
     (void)argument; // Unused parameter
     static uint8_t iter = 0;
@@ -336,7 +354,7 @@ static void Led_Test_Task(osaTaskParam_t argument)
         }
 
         // OSA task delay
-        OSA_TimeDelay(LED_TEST_TASK_INTERVAL);
+        OSAL_TASK_DELAY(LED_TEST_TASK_INTERVAL);
     }
 }
 #endif // BMS_DISABLE_RTOS
@@ -599,7 +617,7 @@ void TEST_adc(void)
     QS_FLUSH(); // Flush QSPY output
 }
 #else
-static void Adc_Test_Task(osaTaskParam_t argument)
+static void Adc_Test_Task(OSAL_arg_t argument)
 {
     (void)argument; // Unused parameter
 
@@ -681,7 +699,7 @@ static void Adc_Test_Task(osaTaskParam_t argument)
             QS_I16(0, (int16_t) full_mv);
         QS_END()
 
-        OSA_TimeDelay(ADC_TEST_TASK_INTERVAL);
+        OSAL_TASK_DELAY(ADC_TEST_TASK_INTERVAL);
     }
 }
 #endif // BMS_DISABLE_RTOS

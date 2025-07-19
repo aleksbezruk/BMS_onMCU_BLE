@@ -57,7 +57,9 @@
 			"fsl_os_abstraction_free_rtos.h": "c",
 			"hal_time.h": "c",
 			"string.h": "c",
-			"qspyhelper.h": "c"
+			"qspyhelper.h": "c",
+			"typeinfo": "c",
+			"cstdlib": "c"
 		}
 	}
 }

@@ -13,6 +13,8 @@
  *       avoids function calls overhead and allows for better optimization by the compiler 
  *       and reduce stack usage.
  * 
+ * @note PSOC63 OSAL implementation is based on FreeRTOS and uses the Cypress HAL/PSOC SDK.
+ * 
  * @version 0.1.0
  */
 

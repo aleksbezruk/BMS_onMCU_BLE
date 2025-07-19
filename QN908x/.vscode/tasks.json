@@ -19,7 +19,7 @@
         {
             "type": "shell",
             "label": "Build Project",
-            "command": "cmake --build .",
+            "command": "cmake --build . 2>&1 | tee build.log; echo 'Error count:'; grep -i 'error:' build.log | wc -l; echo 'Warning count:'; grep -i 'warning:' build.log | wc -l",
             "options": {
                 "cwd": "./build"
             },
@@ -35,7 +35,7 @@
         {
             "type": "shell",
             "label": "Clean and Build Project",
-            "command": "cmake --build . --clean-first",
+            "command": "cmake --build . --clean-first 2>&1 | tee build.log; echo 'Error count:'; grep -i 'error:' build.log | wc -l; echo 'Warning count:'; grep -i 'warning:' build.log | wc -l",
             "options": {
                 "cwd": "./build"
             },
