@@ -106,14 +106,13 @@ typedef void (*OSAL_ThreadFunc_t)(OSAL_arg_t arg);
 // Queue functionality
 // =======================
 /*! OSAL queue never timeout definition */
-#define OSAL_QUEUE_TIMEOUT_NEVER (void) 0   // todo: implement
+#define OSAL_QUEUE_TIMEOUT_NEVER osaWaitForever_c
 
 /*! 
  * @brief OSAL create queue handle
  * @details This macro defines a queue handle in the OSAL layer.
  *          It allocates memory for a static queue handle and a queue structure.
- * @note The queue handle is a static variable of type `QueueHandle_t` 
- *       and the queue structure is of type `cy_queue_t`.
+ * @note The queue handle is a static variable of type `osaMsgQId_t`.
  * 
  * @param[in] queueHandle Name of the queue handle to be defined.
  * @note The queue handle is used to manage the queue in the OSAL layer.
@@ -128,7 +127,8 @@ typedef void (*OSAL_ThreadFunc_t)(OSAL_arg_t arg);
  *
  * @return None
  */
-#define OSAL_QUEUE_DEFINE(queueHandle) (void) 0 // todo: implement
+#define OSAL_QUEUE_DEFINE(queueHandle) \
+    static osaMsgQId_t OSAL_##queueHandle = NULL
 
 /*! OSAL get queue handle
  * @details This macro retrieves the handle of a queue defined in the OSAL layer.
@@ -136,16 +136,20 @@ typedef void (*OSAL_ThreadFunc_t)(OSAL_arg_t arg);
  * @param[in] queueHandle Name of the queue handle to retrieve.
  * @return Pointer to the queue handle.
  */
-#define OSAL_QUEUE_GET_HANDLE(queueHandle) (void) 0 // todo: implement
+#define OSAL_QUEUE_GET_HANDLE(queueHandle) \
+    (osaMsgQId_t)OSAL_##queueHandle
 
 /*!
  * @brief OSAL queue get static handle
  * @details This macro retrieves the static handle of a queue defined in the OSAL layer.
  * @note The static handle is a pointer to the static variable defined by `OSAL_QUEUE_DEFINE`.
  * @param[in] queueHandle Name of the queue handle to retrieve.
+ *
+ * @attention Static queue isn't implemented in this OSAL layer for QN9080.
+ *
  * @return Pointer to the static queue handle.
  */
-#define OSAL_QUEUE_GET_STATIC_HANDLE(queueHandle) (void) 0 // todo: implement
+#define OSAL_QUEUE_GET_STATIC_HANDLE(queueHandle) (void) 0  // RFU, placeholder for future implementation
 
 /*! 
  * @brief OSAL queue create
@@ -159,7 +163,13 @@ typedef void (*OSAL_ThreadFunc_t)(OSAL_arg_t arg);
  * @param[in] queueStorage Storage for the queue items
  * @param[out] status Status of the queue creation
  */
-#define OSAL_QUEUE_CREATE(queueHandle, queueName, queueLength, queueItemSize, queueStorage, status) (void) 0 // todo: implement
+#define OSAL_QUEUE_CREATE(queueHandle, queueName, queueLength, queueItemSize, queueStorage, status) \
+    OSAL_##queueHandle = OSA_MsgQ_CopyOfData_Create(queueLength, queueItemSize); \
+    if (OSAL_##queueHandle == NULL) { \
+        status = OSAL_FAILURE; \
+    } else { \
+        status = OSAL_SUCCESS; \
+    }
 
 /*! 
  * @brief OSAL queue put
@@ -167,10 +177,17 @@ typedef void (*OSAL_ThreadFunc_t)(OSAL_arg_t arg);
  *
  * @param[in] queueHandle Handle of the queue
  * @param[in] pItem Pointer to the item to be put into the queue
- * @param[in] timeout Timeout for the queue operation (typically waits forever)
+ * @param[in] timeout Timeout for the queue operation (typically waits forever.
+ *            Isn't used in this implementation, but can be useful for future extensions)
  * @param[out] status Status of the queue operation
  */
-#define OSAL_QUEUE_PUT(queueHandle, pItem, timeout, status) (void) 0 // todo: implement
+#define OSAL_QUEUE_PUT(queueHandle, pItem, timeout, status) \
+    if (queueHandle != NULL) { \
+        status = OSA_MsgQPut(queueHandle, pItem); \
+    } else { \
+        status = OSAL_FAILURE; \
+    }
+
 /*!
  * @brief OSAL queue get
  * @details This macro gets an item from a queue in the OSAL layer.
@@ -180,7 +197,12 @@ typedef void (*OSAL_ThreadFunc_t)(OSAL_arg_t arg);
  * @param[in] timeout Timeout for the queue operation (typically waits forever)
  * @param[out] status Status of the queue operation
  */
-#define OSAL_QUEUE_GET(queueHandle, pItem, timeout, status) (void) 0 // todo: implement
+#define OSAL_QUEUE_GET(queueHandle, pItem, timeout, status) \
+    if (queueHandle != NULL) { \
+        status = OSA_MsgQGet(queueHandle, pItem, timeout); \
+    } else { \
+        status = OSAL_FAILURE; \
+    }
 
 // =======================
 // Timers functionality

@@ -510,6 +510,21 @@ osaStatus_t OSA_EventDestroy(osaEventId_t eventId);
 osaMsgQId_t OSA_MsgQCreate(uint32_t  msgNo);
 
 /*!
+ * @brief Creates a message queue with a copy of data.
+ *
+ * This function creates a message queue with a copy of data. The number of messages in the queue should not exceed
+ * osNumberOfMessages defined in OSAbstractionConfig.h.
+ *
+ * @param msgNo :number of messages (items) the message queue should accommodate.
+ *               This parameter should not exceed osNumberOfMessages defined in OSAbstractionConfig.h.
+ * @param queueItemSize :size of each item in the queue.
+ *
+ * @return: Handler to access the queue for put and get operations. If message queue
+ *         creation failed, return NULL.
+ */
+osaMsgQId_t OSA_MsgQ_CopyOfData_Create(uint32_t  msgNo, uint32_t queueItemSize );
+
+/*!
  * @brief Puts a message at the end of the queue.
  *
  * This function puts a message to the end of the message queue. If the queue

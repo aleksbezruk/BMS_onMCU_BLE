@@ -763,6 +763,11 @@ osaStatus_t OSA_EventDestroy(osaEventId_t eventId)
  *
  * Function Name : OSA_MsgQCreate
  * Description   : This function is used to create a message queue.
+ * Note1          : that the number of messages in the queue should not exceed
+ * osNumberOfMessages defined in OSAbstractionConfig.h.
+ * Note2          : The message queue elements are hardcoded as void*.
+ * Param[in]     : msgNo - number of messages the message queue should accommodate.
+ *                 This parameter should not exceed osNumberOfMessages defined in OSAbstractionConfig.h.
  * Return        : the handle to the message queue if create successfully, otherwise
  * return NULL.
  *
@@ -781,12 +786,38 @@ osaMsgQId_t OSA_MsgQCreate( uint32_t  msgNo )
 #endif  
 }
 
+/*FUNCTION ********************************************************************
+ *
+ * Function Name : OSA_MsgQ_CopyOfData_Create
+ * DEscription   : This function is used to create a message queue with a copy of data.
+ * Note1          : that the number of messages in the queue should not exceed
+ * osNumberOfMessages defined in OSAbstractionConfig.h.
+ * Param[in]     : msgNo - number of messages (items) the message queue should accommodate.
+ *                 This parameter should not exceed osNumberOfMessages defined in OSAbstractionConfig.h.
+ * Param [in]     : queueItemSize - size of each item in the queue.
+ * Return        : the handle to the message queue if create successfully, otherwise
+ * return NULL.
+ */
+osaMsgQId_t OSA_MsgQ_CopyOfData_Create(uint32_t  msgNo, uint32_t queueItemSize )
+{
+#if osNumberOfMessageQs
+    msg_queue_handler_t msg_queue_handler;
+
+    /* Create the message queue where each element is a pointer to the message item. */
+    msg_queue_handler = xQueueCreate(msgNo, queueItemSize);
+    return (osaMsgQId_t)msg_queue_handler;
+#else
+    (void)msgNo;
+    (void)queueItemSize;
+    return NULL;
+#endif
+}
 
 /*FUNCTION**********************************************************************
  *
  * Function Name : OSA_MsgQPut
  * Description   : This function is used to put a message to a message queue.
-* Return         : osaStatus_Success if the message is put successfully, otherwise return osaStatus_Error.
+ * Return         : osaStatus_Success if the message is put successfully, otherwise return osaStatus_Error.
  *
  *END**************************************************************************/
 osaStatus_t OSA_MsgQPut(osaMsgQId_t msgQId, void* pMessage)

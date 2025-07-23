@@ -43,8 +43,12 @@ static void TEST_adc(void);
 static void _IdleTask(void);
 static void _runTests_noRTOS(void);
 #else
+static void Main_Test_Task(OSAL_arg_t argument);
 static void Led_Test_Task(OSAL_arg_t argument);
 static void Adc_Test_Task(OSAL_arg_t argument);
+
+static void parseQueueItem_(Main_queue_data_t* queueItem);
+static void handleSystemEvt_(Evt_sys_data_t* evt);
 #endif // BMS_DISABLE_RTOS
 
 // ADC tests
@@ -87,12 +91,17 @@ static void Adc_Test_Task(OSAL_arg_t argument);
 // OSA
 #ifndef BMS_DISABLE_RTOS
 #define LED_TEST_TASK_STACK_SIZE  (560U)
-#define LED_TEST_TASK_PRIORITY   (configMAX_PRIORITIES - 5U)
+#define LED_TEST_TASK_PRIORITY   (OSAL_BLE_TASK_PRIORITY)
 #define LED_TEST_TASK_INTERVAL   (1000U)    // in milliseconds
 
 #define ADC_TEST_TASK_STACK_SIZE  (560U)
-#define ADC_TEST_TASK_PRIORITY   (configMAX_PRIORITIES - 6U)
+#define ADC_TEST_TASK_PRIORITY   (OSAL_ADC_TASK_PRIORITY)
 #define ADC_TEST_TASK_INTERVAL   (10000U)    // in milliseconds
+
+#define MAIN_TEST_TASK_STACK_SIZE  (560U)
+#define MAIN_TEST_TASK_PRIORITY   (OSAL_MAIN_TASK_PRIORITY)
+#define MAIN_TEST_TASK_INTERVAL   (1000U)    // in milliseconds
+#define MAIN_TASK_QUEUE_SIZE      (5U)
 
 #endif // BMS_DISABLE_RTOS
 
@@ -135,6 +144,10 @@ OSAL_TASK_DEFINE(LedTask);
 
 // ADC task handle
 OSAL_TASK_DEFINE(AdcTask);
+
+// Main task and queue handles
+OSAL_TASK_DEFINE(MainTask);
+OSAL_QUEUE_DEFINE(mainTaskQueueHandle);
 
 #endif // BMS_DISABLE_RTOS
 
@@ -210,6 +223,34 @@ int main(void)
         );
         if (status != OSAL_SUCCESS) {
             HAL_ASSERT(0, __FILE__, __LINE__); // Task creation failed
+        }
+
+        /** Main task creation */
+        status = OSAL_SUCCESS;
+        OSAL_TASK_CREATE(
+            OSAL_TASK_GET_HANDLE(MainTask),
+            Main_Test_Task,
+            "Main_Test_Task",
+            NULL,  // Stack pointer
+            MAIN_TEST_TASK_STACK_SIZE,
+            MAIN_TEST_TASK_PRIORITY,
+            NULL, // Argument to pass to the task
+            status
+        );
+        if (status != OSAL_SUCCESS) {
+            HAL_ASSERT(0, __FILE__, __LINE__); // Task creation failed
+        }
+        /** Create an event Queue for main task */
+        OSAL_QUEUE_CREATE(
+            mainTaskQueueHandle,
+            "mainTaskQueue",
+            MAIN_TASK_QUEUE_SIZE,
+            sizeof(Main_queue_data_t),
+            NULL, // Queue storage (not used in this implementation)
+            status
+        );
+        if (status != OSAL_SUCCESS) {
+            HAL_ASSERT(0, __FILE__, __LINE__); // Queue creation failed
         }
 
         /** Start RTOS scheduler */
@@ -702,6 +743,113 @@ static void Adc_Test_Task(OSAL_arg_t argument)
         OSAL_TASK_DELAY(ADC_TEST_TASK_INTERVAL);
     }
 }
+
+/**
+ * @brief Main task function.
+ * This function is called when the RTOS is enabled.
+ * It runs the main task code in a loop.
+ * 
+ * @param argument Argument passed to the task (unused).
+ */
+static void Main_Test_Task(OSAL_arg_t argument)
+{
+    (void)argument; // Unused parameter
+
+    OSAL_Status_t status = OSAL_SUCCESS;
+    Main_queue_data_t queueItem;
+
+    while (true) {
+        /** Wait for event */
+        OSAL_QUEUE_GET(
+            OSAL_QUEUE_GET_HANDLE(mainTaskQueueHandle),
+            &queueItem,
+            OSAL_QUEUE_TIMEOUT_NEVER, // wait forever
+            status
+        );
+        if (status != OSAL_SUCCESS) {
+            HAL_ASSERT(0, __FILE__, __LINE__);
+        }
+
+        parseQueueItem_(&queueItem);
+    }
+}
+
+/**
+ * @brief Parses a queue item.
+ * 
+ * @param[in] queueItem Queue item to parse
+ * 
+ * @retval None
+ */
+static void parseQueueItem_(Main_queue_data_t* queueItem)
+{
+    switch (queueItem->evtType)
+    {
+        case EVT_SYSTEM:
+        {
+            handleSystemEvt_(&queueItem->evtData.sysEvtData);
+            break;
+        }
+
+        default:
+        {
+            QS_BEGIN_ID(MAIN, 0 /*prio/ID for local Filters*/)
+                QS_STR("Unknown event type received in Main task: ");
+                QS_U8(0, queueItem->evtType);
+            QS_END()
+            QS_FLUSH(); // Flush QSPY output
+        }
+    }
+}
+
+/**
+ * @brief Handles an System event
+ * 
+ * @param[in] evt Pointer to incoming event
+ * 
+ * @retval None
+ */
+static void handleSystemEvt_(Evt_sys_data_t* evt)
+{
+    uint8_t swState_ = evt->swStates;
+
+    QS_BEGIN_ID(MAIN, 0 /*prio/ID for local Filters*/)
+        QS_STR("Sys evt, set switches state: ");
+        QS_U8(0, swState_);
+    QS_END()
+}
+
+/** 
+ * @brief Posts an event into Main task event queue
+ * 
+ * @param[in] evt Event to post
+ * 
+ * @param[in] eventType Event type to post
+ * 
+ * @retval None
+ * 
+ */
+void MAIN_post_evt(Main_evt_t* evt, Evt_types_t eventType)
+{
+    HAL_ASSERT((evt != NULL) && (eventType < EVT_TYPE_MAX), __FILE__, __LINE__);
+
+    OSAL_Status_t status = OSAL_SUCCESS;
+    Main_queue_data_t queueItem;
+
+    queueItem.evtType = eventType;
+    memcpy((uint8_t*) &queueItem.evtData, (uint8_t*) evt, sizeof(Main_evt_t));
+
+    OSAL_QUEUE_PUT(
+        OSAL_QUEUE_GET_HANDLE(mainTaskQueueHandle),
+        &queueItem,
+        OSAL_QUEUE_TIMEOUT_NEVER,
+        status
+    );
+    if (status != OSAL_SUCCESS) {
+        HAL_ASSERT(0, __FILE__, __LINE__);
+    }
+}
+
 #endif // BMS_DISABLE_RTOS
 
 #if defined(BMS_DISABLE_RTOS)
@@ -747,6 +895,7 @@ void vApplicationStackOverflowHook( TaskHandle_t xTask, char *pcTaskName )
     QS_FLUSH(); // Flush QSPY output
 }
 
+#if 0
 // Stub, test Discharge switch only for QN9080DK
 void MAIN_post_evt(Main_evt_t* evt, Evt_types_t eventType)
 {
@@ -780,6 +929,7 @@ void MAIN_post_evt(Main_evt_t* evt, Evt_types_t eventType)
         );
     }
 }
+#endif // 0
 
 #endif // BMS_DISABLE_RTOS
 
