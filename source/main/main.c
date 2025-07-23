@@ -256,7 +256,8 @@ static void mainTask_(OSAL_arg_t arg)
         OSAL_TIMER_TYPE_ONE_SHOT, // One-shot timer for LED blinking
         blinkTimerCallback_,
         0U, // arg
-        status
+        status,
+        100U // initial timeout in ms
     );
     if (status != OSAL_SUCCESS) {
         HAL_ASSERT(0, __FILE__, __LINE__);

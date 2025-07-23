@@ -276,7 +276,7 @@ typedef void (*OSAL_TimerCallback_t)(OSAL_TimerArg_t arg);
  * @param[in] arg Argument to be passed to the timer callback function
  * @param[out] status Status of the timer creation
  */
-#define OSAL_TIMER_CREATE(timerHandle, timerType, timerCallback, arg, status) \
+#define OSAL_TIMER_CREATE(timerHandle, timerType, timerCallback, arg, status, ...) \
     cy_timer_trigger_type_t type = (timerType == OSAL_TIMER_TYPE_ONE_SHOT) ? CY_TIMER_TYPE_ONCE : CY_TIMER_TYPE_PERIODIC; \
     cy_rslt_t result = cy_rtos_timer_init( \
         timerHandle, \

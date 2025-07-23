@@ -220,9 +220,9 @@ typedef enum {
 /*!
  * @brief OSAL timer argument type
  * @details This type is used to pass arguments to the timer callback function.
- *          It is defined as a pointer to `cy_timer_callback_arg_t`.
+ *          It is defined as a pointer to `TimerHandle_t`.
  */
-// typedef cy_timer_callback_arg_t OSAL_TimerArg_t;    // todo: implement
+typedef  TimerHandle_t OSAL_TimerArg_t;
 
 /*!
  * @brief OSAL timer callback function type
@@ -230,18 +230,19 @@ typedef enum {
  *          It takes a pointer to an argument of type `OSAL_TimerArg_t`.
  *          The callback function is called when the timer expires.
  */
-// typedef void (*OSAL_TimerCallback_t)(OSAL_TimerArg_t arg);  // todo: implement
+typedef void (*OSAL_TimerCallback_t)(OSAL_TimerArg_t arg);
 
 /*!
  * @brief OSAL timer define
  * @details This macro defines a timer handle in the OSAL layer.
  *          It allocates memory for a static timer handle and a timer structure.
- * @note The timer handle is a static variable of type `cy_timer_t` 
- *       and the timer structure is of type `cy_timer_t`.
+ * @note The timer handle is a static variable of type `TimerHandle_t` 
+ *       and the timer structure is of type `TimerHandle_t`.
  *
  * @param[in] timerHandle Name of the timer handle to be defined.
  */
-#define OSAL_TIMER_DEFINE(timerHandle) (void) 0 // todo: implement
+#define OSAL_TIMER_DEFINE(timerHandle)  \
+    static TimerHandle_t OSAL_##timerHandle = NULL
 
 /*! 
  * @brief OSAL timer get handle
@@ -250,7 +251,8 @@ typedef enum {
  * @param[in] timerHandle Name of the timer handle to retrieve.
  * @return Pointer to the timer handle.
  */
-#define OSAL_TIMER_GET_HANDLE(timerHandle) (void) 0 // todo: implement
+#define OSAL_TIMER_GET_HANDLE(timerHandle) \
+    OSAL_##timerHandle
 
 /*!
  * @brief OSAL timer create
@@ -262,20 +264,43 @@ typedef enum {
  * @param[in] arg Argument to be passed to the timer callback function
  * @param[out] status Status of the timer creation
  */
-#define OSAL_TIMER_CREATE(timerHandle, timerType, timerCallback, arg, status) (void) 0 // todo: implement
+#define OSAL_TIMER_CREATE(timerHandle, timerType, timerCallback, arg, status, ...) \
+    TickType_t ticks = pdMS_TO_TICKS(__VA_ARGS__); /* Additional parameter for timer period */ \
+    timerHandle = xTimerCreate( \
+        #timerHandle, \
+        ticks, \
+        (timerType == OSAL_TIMER_TYPE_PERIODIC) ? pdTRUE : pdFALSE, \
+        (void *)arg, \
+        timerCallback   \
+    ); \
+    if (timerHandle == NULL) { \
+        status = OSAL_FAILURE; \
+    } else { \
+        status = OSAL_SUCCESS; \
+    }
 
 /*!
  * @brief OSAL timer start
  * @details This macro starts a timer in the OSAL layer.
  *
  * @param[in] timerHandle Handle of the timer to be started
- * @param[in] timerInterval Interval for the timer in milliseconds
+ * @param[in] timerInterval Interval for the timer in milliseconds.
+ *            The parameter isn't used in this implementation, but can be useful for future extensions.
  * @note The timer will start counting down from the specified interval.
  *       If the timer is a periodic timer, it will restart automatically after each expiration.
  *       If the timer is a one-shot timer, it will stop after the first expiration.
  * @param[out] status Status of the timer start operation
  */
-#define OSAL_TIMER_START(timerHandle, timerInterval, status) (void) 0 // todo: implement
+#define OSAL_TIMER_START(timerHandle, timerInterval, status) \
+    if (timerHandle != NULL) { \
+        if (xTimerStart(timerHandle, 0U) == pdPASS) { \
+            status = OSAL_SUCCESS; \
+        } else { \
+            status = OSAL_FAILURE; \
+        } \
+    } else { \
+        status = OSAL_FAILURE; \
+    }
 
 #endif // OSAL_H
 

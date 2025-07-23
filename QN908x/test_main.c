@@ -49,6 +49,8 @@ static void Adc_Test_Task(OSAL_arg_t argument);
 
 static void parseQueueItem_(Main_queue_data_t* queueItem);
 static void handleSystemEvt_(Evt_sys_data_t* evt);
+static void blinkTimerCallback_(OSAL_TimerArg_t arg);
+static void led_blink_alive_(void);
 #endif // BMS_DISABLE_RTOS
 
 // ADC tests
@@ -148,6 +150,12 @@ OSAL_TASK_DEFINE(AdcTask);
 // Main task and queue handles
 OSAL_TASK_DEFINE(MainTask);
 OSAL_QUEUE_DEFINE(mainTaskQueueHandle);
+
+/**
+ * @brief Timer for LED blinking
+ */
+OSAL_TIMER_DEFINE(blinkTimer);
+static volatile uint8_t ledBlinkCntr_;
 
 #endif // BMS_DISABLE_RTOS
 
@@ -675,10 +683,26 @@ static void Adc_Test_Task(OSAL_arg_t argument)
     /** Initialize ADC */
     HAL_ADC_init();
 
+    /** Init LED blink timer */
+    OSAL_Status_t status = OSAL_SUCCESS;
+    OSAL_TIMER_CREATE(
+        OSAL_TIMER_GET_HANDLE(blinkTimer),
+        OSAL_TIMER_TYPE_ONE_SHOT, // One-shot timer for LED blinking
+        blinkTimerCallback_,
+        0U, // arg
+        status,
+        100U // 100 ms interval for blinking
+    );
+    if (status != OSAL_SUCCESS) {
+        HAL_ASSERT(0, __FILE__, __LINE__); // Timer creation failed
+    }
+
     while (true) {
         QS_BEGIN_ID(MAIN, 0 /*prio/ID for local Filters*/)
             QS_STR("ADC test is running");
         QS_END()
+
+        led_blink_alive_();
 
         /** Read ADC value, Bank1 */
         int32_t bank1_raw_mv = HAL_ADC_read(HAL_ADC_CHANNEL_0);
@@ -745,6 +769,30 @@ static void Adc_Test_Task(OSAL_arg_t argument)
 }
 
 /**
+ * @brief Blinks the alive LED
+ * @details This function starts a timer that will blink the green LED
+ * @param None
+ * @retval None
+ * 
+ * @attention Should be non-blocking call
+ *            to avoid starvation of other threads especiaaly BLE stack
+ */
+static void led_blink_alive_(void)
+{
+    ledBlinkCntr_ = 0;
+    // start timer
+    OSAL_Status_t status = OSAL_SUCCESS;
+    OSAL_TIMER_START(
+        OSAL_TIMER_GET_HANDLE(blinkTimer),
+        100U, // 100 ms
+        status
+    );
+    if (status != OSAL_SUCCESS) {
+        HAL_ASSERT(0, __FILE__, __LINE__);
+    }
+}
+
+/**
  * @brief Main task function.
  * This function is called when the RTOS is enabled.
  * It runs the main task code in a loop.
@@ -757,6 +805,10 @@ static void Main_Test_Task(OSAL_arg_t argument)
 
     OSAL_Status_t status = OSAL_SUCCESS;
     Main_queue_data_t queueItem;
+
+    if (status != OSAL_SUCCESS) {
+        HAL_ASSERT(0, __FILE__, __LINE__);
+    }
 
     while (true) {
         /** Wait for event */
@@ -771,6 +823,43 @@ static void Main_Test_Task(OSAL_arg_t argument)
         }
 
         parseQueueItem_(&queueItem);
+    }
+}
+
+/**
+ * @brief Callback for the LED blink timer
+ * @details This function is called by the OSAL timer when it expires.
+ *          It toggles the green LED state to create a blink effect.
+ *
+ * @param[in] arg Timer argument (unused)
+ * @retval None
+ * @note 3 "on-off" blinks
+ */
+static void blinkTimerCallback_(OSAL_TimerArg_t arg)
+{
+    (void) arg; // unused argument
+
+    // Blink green LED
+    // 3 blinks, 100 ms each
+    // 100 ms on, 100 ms off
+    if (ledBlinkCntr_%2 == 0) {
+        HAL_LED_green_on();
+    } else {
+        HAL_LED_green_off();
+    }
+
+    ledBlinkCntr_++;
+    if (ledBlinkCntr_ < 6U) {
+        // re-start timer to continue blink
+        OSAL_Status_t status = OSAL_SUCCESS;
+        OSAL_TIMER_START(
+            OSAL_TIMER_GET_HANDLE(blinkTimer),
+            100U, // 100 ms
+            status
+        );
+        if (status != OSAL_SUCCESS) {
+            HAL_ASSERT(0, __FILE__, __LINE__);
+        }
     }
 }
 
