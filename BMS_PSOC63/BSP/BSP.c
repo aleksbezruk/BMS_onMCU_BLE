@@ -13,15 +13,17 @@
 #include "cycfg.h"
 #include "qpc.h"
 
-////////////////////////
+#include "osal_irq_prio.h"
+
+// ========================
 // Private data
-////////////////////////
+// ========================
 static cyhal_uart_t uartObj;
 static bspUartRxCallback rxCallback;
 
-//////////////////////////
+// ========================
 // Functions prototype
-//////////////////////////
+// ========================
 static void uart_event_callback_(void *callback_arg, cyhal_uart_event_t event);
 static cy_rslt_t uart_readFifo_(uint8_t *data, size_t *len);
 
@@ -29,9 +31,9 @@ static cy_rslt_t uart_readFifo_(uint8_t *data, size_t *len);
 void BSP_test_init(void);
 #endif  // Q_UTEST
 
-/////////////////////////
+// ========================
 // Code
-//////////////////////////
+// ========================
 
 #if BSP_ENABLE_PLL_CONFIG == true
 /**
@@ -361,7 +363,7 @@ bsp_status_init_t BSP_initUart(bspUartRxCallback callback)
                                     /*void *callback_arg*/ NULL);
         cyhal_uart_enable_event(&uartObj, 
                                 CYHAL_UART_IRQ_RX_NOT_EMPTY, 
-                                /* irq prio*/1U, 
+                                OSAL_IRQ_UART_PRIO,  /* irq prio*/
                                 true);
     } else {
         status = bsp_status_init_fail;
@@ -371,7 +373,7 @@ bsp_status_init_t BSP_initUart(bspUartRxCallback callback)
                                     /*void *callback_arg*/ NULL);
         cyhal_uart_enable_event(&uartObj, 
                                 CYHAL_UART_IRQ_RX_NOT_EMPTY, 
-                                /* irq prio*/1U, 
+                                OSAL_IRQ_UART_PRIO,  /* irq prio*/
                                 true);
 #endif //Q_UTEST
     }

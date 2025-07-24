@@ -59,7 +59,8 @@
 			"string.h": "c",
 			"qspyhelper.h": "c",
 			"typeinfo": "c",
-			"cstdlib": "c"
+			"cstdlib": "c",
+			"osal_irq_prio.h": "c"
 		}
 	}
 }

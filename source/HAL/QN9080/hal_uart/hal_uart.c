@@ -16,6 +16,8 @@
 #include "hal.h"
 #include "hal_uart.h"
 
+#include "osal_irq_prio.h"
+
 // ===================
 // Defines
 // ===================
@@ -97,9 +99,7 @@ HAL_UART_status_t HAL_UART_init(HAL_UART_config_t *config, HAL_UART_rxCallback_t
     /** Config UART IRQ for receiving data & Enable */
     USART_EnableInterrupts(base, kUSART_RxLevelInterruptEnable);
     InstallIRQHandler(FLEXCOMM0_IRQn,  (uint32_t) USART_ISR);
-    // TODO: define interrupts configuration including priority in separate Header file
-    // that based on RTOS kernel aware/unaware interrupts concept 
-    NVIC_SetPriority(FLEXCOMM0_IRQn, 1u);
+    NVIC_SetPriority(FLEXCOMM0_IRQn, OSAL_IRQ_UART_PRIO);
     NVIC_EnableIRQ(FLEXCOMM0_IRQn);
 
     return HAL_UART_SUCCESS;

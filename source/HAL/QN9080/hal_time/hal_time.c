@@ -14,12 +14,13 @@
 // OSA
 #include "fsl_os_abstraction.h"
 #include "fsl_os_abstraction_free_rtos.h"
+
+#include "osal_irq_prio.h"
 #endif
 
 // ===================
 // Defines
 // ===================
-#define SYSTICK_INTERRUPT_PRIORITY    (1U)
 #define TICK_COUNT_MAX    (0xFFFFFFFFU) // Helper macro for rollover calculation
 
 /** Debug on QSPY port */
@@ -37,11 +38,22 @@ static volatile uint32_t _previous_ticks = 0;
 // ===================
 // Code
 // ===================
+/**
+ * @brief Initialize the HAL time management.
+ * @details This function configures the SysTick timer to generate interrupts at a rate of 1ms.
+ *          It sets the SysTick interrupt priority to the kernel priority defined in OSAL.
+ * @param None
+ * @return None
+ * @note It maybe redundant to use the function since FreeRTOS already initializes the SysTick timer.
+ *       However, this function is provided for completeness and to ensure the SysTick is configured
+ *       correctly for the HAL time management.
+ * @note This function must be called after the FreeRTOS scheduler is started. 
+ */
 void hal_time_init(void) 
 {
     /** Configure SysTick for 1ms ticks */
     (void)SysTick_Config(SystemCoreClock / HAL_TICKS_PER_SEC);
-    NVIC_SetPriority(SysTick_IRQn, SYSTICK_INTERRUPT_PRIORITY);
+    NVIC_SetPriority(SysTick_IRQn, OSAL_IRQ_KERNEL_PRIO);
 }
 
 /**

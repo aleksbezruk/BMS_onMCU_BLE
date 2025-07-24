@@ -145,8 +145,27 @@ See http://www.FreeRTOS.org/RTOS-Cortex-M3-M4.html
 
 */
 
+/*! Cortex-M specific definitions. */
+#ifdef __NVIC_PRIO_BITS
+/* __NVIC_PRIO_BITS will be specified when CMSIS is being used. */
+#define configPRIO_BITS __NVIC_PRIO_BITS
+#else
+#define configPRIO_BITS 3
+#endif
+
+/*! 
+ * @brief The lowest interrupt priority that can be used in the application.
+ * This is the priority that will be used by the kernel port layer itself, and
+ * must not be used by any interrupt service routine that makes calls to
+ * interrupt safe FreeRTOS API functions.
+ * The value is set to the lowest priority that can be used by the
+ * application, which is 0x7 for a 3-bit priority field.
+ * This value is used to set the priority of the PendSV and SysTick interrupts,
+ * which are used by the FreeRTOS kernel.
+*/
+#define configLIBRARY_LOWEST_INTERRUPT_PRIORITY 0x7
 /* Put KERNEL_INTERRUPT_PRIORITY in top __NVIC_PRIO_BITS bits of CM4 register */
-#define configKERNEL_INTERRUPT_PRIORITY         0xFF
+#define configKERNEL_INTERRUPT_PRIORITY         ( configLIBRARY_LOWEST_INTERRUPT_PRIORITY << (8 - configPRIO_BITS) )
 /*
 Put MAX_SYSCALL_INTERRUPT_PRIORITY in top __NVIC_PRIO_BITS bits of CM4 register
 NOTE For IAR compiler make sure that changes of this macro is reflected in
@@ -155,7 +174,24 @@ file portable\TOOLCHAIN_IAR\COMPONENT_CM4\portasm.s in PendSV_Handler: routine
 #ifdef COMPONENT_CAT3
 #define configMAX_SYSCALL_INTERRUPT_PRIORITY    0x07
 #else
-#define configMAX_SYSCALL_INTERRUPT_PRIORITY    0x3F
+/*! 
+* @brief The highest interrupt priority that can be used by any interrupt service
+* routine that makes calls to interrupt safe FreeRTOS API functions.  DO NOT CALL
+* INTERRUPT SAFE FREERTOS API FUNCTIONS FROM ANY INTERRUPT THAT HAS A HIGHER
+* PRIORITY THAN THIS! (higher priorities are lower numeric values.).
+* 
+* @note This value is set to 1, which is the highest priority that can be used
+* by the application.  This value is used to set the priority of the
+* configMAX_SYSCALL_INTERRUPT_PRIORITY, which is the maximum priority that can
+* be used by any interrupt service routine that makes calls to interrupt safe
+* FreeRTOS API functions.
+*
+* @note Typically the macro is used to separate Kernel aware interrupts from Kernel unaware interrupts.
+* Kernel aware interrupts are those that make calls to interrupt safe FreeRTOS API functions.
+* Kernel unaware interrupts are those that do not make calls to interrupt safe FreeRTOS API functions.
+*/
+#define configLIBRARY_MAX_SYSCALL_INTERRUPT_PRIORITY 1
+#define configMAX_SYSCALL_INTERRUPT_PRIORITY     (configLIBRARY_MAX_SYSCALL_INTERRUPT_PRIORITY << (8 - configPRIO_BITS))
 #endif
 /* configMAX_API_CALL_INTERRUPT_PRIORITY is a new name for configMAX_SYSCALL_INTERRUPT_PRIORITY
  that is used by newer ports only. The two are equivalent. */

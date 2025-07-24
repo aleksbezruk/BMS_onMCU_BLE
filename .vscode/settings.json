@@ -8,6 +8,7 @@
         "system_qn908xc.h": "c",
         "gpio_adapter.h": "c",
         "led.h": "c",
-        "cstdint": "c"
+        "cstdint": "c",
+        "freertos.h": "c"
     }
 }
