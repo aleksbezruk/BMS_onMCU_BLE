@@ -91,11 +91,16 @@
 /** ADC task */
 OSAL_TASK_DEFINE(adcTask);
 
+#if !defined(BMS_DISABLE_OSAL_STATIC_ALL)
 /** 
  *  @note In stack words because stack pointer should be aligned to 
  *  8 bytes boundary per the RTOS requirements.
  */
 static uint64_t adcTaskStack_[ADC_TASK_STACK_SIZE/8U];
+#else
+/*! For some ports (e.g. QN908x) the OSAL static allocation is not supported */
+#define adcTaskStack_ NULL
+#endif // !BMS_DISABLE_OSAL_STATIC_ALL
 
 /*! ADC peripheral status flag */
 static volatile bool _adcEnabled = true;

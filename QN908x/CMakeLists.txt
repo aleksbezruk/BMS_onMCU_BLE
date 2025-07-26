@@ -1,3 +1,4 @@
+
 cmake_minimum_required(VERSION 3.15.3)
 
 # Optional: print out extra messages to see what is going on. Comment it to have less verbose messages
@@ -11,10 +12,24 @@ SET(CMAKE_SYSTEM_VERSION 1)
 SET(CMAKE_C_COMPILER_WORKS 1)
 SET(CMAKE_CXX_COMPILER_WORKS 1)
 
-# Setup project, output and linker file
-project(BMS_QN908x)
+# =============================
+# Build configuration selection
+# =============================
+option(BUILD_CONFIG "Choose build configuration: Debug or Test" "Debug")
+
+if(BUILD_CONFIG STREQUAL "Debug")
+    set(PROJECT_NAME BMS_QN9080_Debug)
+    set(CONFIG_DEFINE "-DDEBUG_BUILD")
+elseif(BUILD_CONFIG STREQUAL "Test")
+    set(PROJECT_NAME BMS_QN908x_Test)
+    set(CONFIG_DEFINE "-DTEST_BUILD")
+else()
+    message(FATAL_ERROR "Unknown BUILD_CONFIG: ${BUILD_CONFIG}. Use Debug or Test.")
+endif()
+
 set(EXECUTABLE ${PROJECT_NAME}.elf)
 set(LINKER_FILE ${CMAKE_SOURCE_DIR}/startup/qn908x.ld)
+project(${PROJECT_NAME})
 
 enable_language(C ASM)
 set(CMAKE_C_STANDARD 99)
@@ -24,13 +39,14 @@ set(CMAKE_C_EXTENSIONS OFF)
 # Optional: issue a message to be sure it uses the correct toolchain file.
 message(STATUS "CMAKE_TOOLCHAIN_FILE is: ${CMAKE_TOOLCHAIN_FILE}")
 
-# List of source files
-set(SRC_FILES
-        test_main.c
+# List of source files per build configuration
+if(BUILD_CONFIG STREQUAL "Debug")
+    set(SRC_FILES
+        ../source/main/main.c
+        ../source/ADC/ADC.c
         startup/startup_qn908x.S
         CMSIS/system_QN908XC.c
         drivers/fsl_adc.c
-        #drivers/fsl_aes.c
         drivers/fsl_calibration.c
         drivers/fsl_clock.c
         drivers/fsl_common.c
@@ -38,7 +54,6 @@ set(SRC_FILES
         drivers/fsl_flash.c
         drivers/fsl_flexcomm.c
         drivers/fsl_gpio.c
-        #drivers/fsl_i2c_freertos.c
         drivers/fsl_i2c.c
         drivers/fsl_inputmux.c
         drivers/fsl_power.c
@@ -46,14 +61,9 @@ set(SRC_FILES
         drivers/fsl_rf.c
         drivers/fsl_rng.c
         drivers/fsl_rtc.c
-        #drivers/fsl_spi_freertos.c
         drivers/fsl_spi.c
-        #drivers/fsl_usart_freertos.c
         drivers/fsl_usart.c
         drivers/fsl_wdt.c
-        #framework/common/FwkInit.c
-        #framework/FunctionLib/FunctionLib.c
-        #board/board.c
         board/clock_config.c
         board/gpio_pins.c
         board/pin_mux.c
@@ -84,7 +94,65 @@ set(SRC_FILES
         ../source/qspy/qs.c
         ../source/qspy/qstamp.c
         ../source/qspyHelper/qspyHelper.c
-        )
+    )
+elseif(BUILD_CONFIG STREQUAL "Test")
+    set(SRC_FILES
+        test_main.c
+        startup/startup_qn908x.S
+        CMSIS/system_QN908XC.c
+        drivers/fsl_adc.c
+        drivers/fsl_calibration.c
+        drivers/fsl_clock.c
+        drivers/fsl_common.c
+        drivers/fsl_ctimer.c
+        drivers/fsl_flash.c
+        drivers/fsl_flexcomm.c
+        drivers/fsl_gpio.c
+        drivers/fsl_i2c.c
+        drivers/fsl_inputmux.c
+        drivers/fsl_power.c
+        drivers/fsl_reset.c
+        drivers/fsl_rf.c
+        drivers/fsl_rng.c
+        drivers/fsl_rtc.c
+        drivers/fsl_spi.c
+        drivers/fsl_usart.c
+        drivers/fsl_wdt.c
+        board/clock_config.c
+        board/gpio_pins.c
+        board/pin_mux.c
+        utilities/fsl_debug_console.c
+        framework/LED/Source/LED.c
+        framework/GPIO/GPIO_Adapter.c
+        freertos/croutine.c
+        freertos/event_groups.c
+        freertos/fsl_tickless_systick.c
+        freertos/heap_4.c
+        freertos/list.c
+        freertos/port.c
+        freertos/queue.c
+        freertos/tasks.c
+        freertos/timers.c
+        framework/OSAbstraction/Source/fsl_os_abstraction_free_rtos.c
+        framework/Lists/GenericList.c
+        framework/Panic/Source/Panic.c
+        ../source/HAL/QN9080/hal/hal.c
+        ../source/HAL/QN9080/hal_led/hal_led.c
+        ../source/HAL/QN9080/hal_gpio/hal_gpio.c
+        ../source/HAL/QN9080/hal_uart/hal_uart.c
+        ../source/HAL/QN9080/hal_adc/hal_adc.c
+        ../source/HAL/QN9080/hal_time/hal_time.c
+        ../source/qspy/qs_64bit.c
+        ../source/qspy/qs_fp.c
+        ../source/qspy/qs_rx.c
+        ../source/qspy/qs.c
+        ../source/qspy/qstamp.c
+        ../source/qspyHelper/qspyHelper.c
+        # Add or remove files specific to Test config here
+    )
+else()
+    message(FATAL_ERROR "Unknown BUILD_CONFIG: ${BUILD_CONFIG}. Use Debug or Test.")
+endif()
 
 # Build the executable based on the source files
 add_executable(${EXECUTABLE} ${SRC_FILES})
@@ -94,6 +162,7 @@ target_compile_definitions(${EXECUTABLE} PRIVATE
         -D__STARTUP_CLEAR_BSS
         -D__ATOLLIC__
         -DCPU_QN9080C
+        ${CONFIG_DEFINE}
         )
 
 # List of includ directories
@@ -121,6 +190,8 @@ target_include_directories(${EXECUTABLE} PRIVATE
         ../source/qspyHelper
         ../source/qutestHelper
         ../source/OSAL/QN9080
+        ../source/main
+        ../source/ADC
         freertos
         framework/OSAbstraction/Interface
         framework/Lists

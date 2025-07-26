@@ -255,9 +255,10 @@ void QS_onCommand(uint8_t cmdId,
     }
 }
 
-///////////////////
-// Public API 
-///////////////////
+// ====================
+// Public API
+// ====================
+
 /**
  * @brief Init QSPY
  * 

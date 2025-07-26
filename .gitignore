@@ -15,3 +15,5 @@ doxygen/
 docs/
 mtb_shared/
 build/
+build-debug/
+build-test/

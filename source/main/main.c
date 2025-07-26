@@ -17,13 +17,18 @@
 #include "hal_time.h"
 
 // BMS Application includes
-#include "BSP.h"
 #include "qspyHelper.h"
-
 #include "ADC.h"
+
+#if !defined(BMS_DISABLE_BLE)
 #include "BLE.h"
+#endif // !BMS_DISABLE_BLE
+
 #include "MAIN.h"
+
+#if !defined(BMS_DISABLE_LP)
 #include "LP.h"
+#endif // !BMS_DISABLE_LP
 
 // Q_UTEST / Unit tests includes
 #if defined(Q_UTEST)
@@ -55,7 +60,9 @@ static void MAIN_setChargeSw(HAL_chargeSw_state_t state);
 static void MAIN_enableBalancerSw(uint8_t balBanksEnMask);
 static void MAIN_disableBalancerSw(uint8_t balBanksDisMask);
 
+#if !defined(BMS_DISABLE_BLE)
 static void ble_update_vbat_(Evt_adc_data_t* adcEvt);
+#endif // !BMS_DISABLE_BLE
 
 static void led_blink_alive_(void);
 static void blinkTimerCallback_(OSAL_TimerArg_t arg);
@@ -80,6 +87,7 @@ void vApplicationIdleHook(void);
 // ================
 OSAL_TASK_DEFINE(mainTask);
 
+#if !defined(BMS_DISABLE_OSAL_STATIC_ALL)
 /**
  * @brief Main task stack
  *
@@ -94,12 +102,21 @@ OSAL_TASK_DEFINE(mainTask);
  * So, always ensure your stack memory and stack pointer are 8-byte aligned for Cortex-M4 with FreeRTOS.
  */
 static uint64_t mainTaskStack_[MAIN_TASK_STACK_SIZE/8U];
+#else
+/*! For some ports (e.g. QN908x) the OSAL static allocation is not supported */
+#define mainTaskStack_ NULL
+#endif // !BMS_DISABLE_OSAL_STATIC_ALL
 
 /**
  * @brief Queue handle for the main task
  */
 OSAL_QUEUE_DEFINE(mainTaskQueueHandle);
+#if !defined(BMS_DISABLE_OSAL_STATIC_ALL)
 static Main_queue_data_t mainQueueSto[MAIN_QUEUE_SIZE];
+#else
+/*! For some ports (e.g. QN908x) the OSAL static allocation is not supported */
+#define mainQueueSto NULL
+#endif // !BMS_DISABLE_OSAL_STATIC_ALL
 
 /**
  * @brief State of the BMS and switches
@@ -177,8 +194,10 @@ int main(void)
     BSP_initUTdic();
 #endif //Q_UTEST
 
+#if !defined(BMS_DISABLE_LP)
     /** Set Low Power mode at start up  */
     LP_setMode(LP_DISABLED_MODE);
+#endif // !BMS_DISABLE_LP
 
     /** Create main task */
     OSAL_Status_t status = OSAL_SUCCESS;
@@ -226,17 +245,21 @@ static void mainTask_(OSAL_arg_t arg)
         HAL_ASSERT(0, __FILE__, __LINE__);
     }
 
+#if !defined(BMS_DISABLE_BLE)
     /** Init BLE peripheral & create BLE tasks */
     BLE_status_t bleStatus = BLE_init();
     if (bleStatus != BLE_STATUS_OK) {
         HAL_ASSERT(0, __FILE__, __LINE__);
     }
+#endif // !BMS_DISABLE_BLE
 
+#if !defined(BMS_DISABLE_LP)
     /** Init Low Power modes */
     LP_status_t lpStatus = LP_init();
     if (lpStatus != LP_INIT_STATUS_OK) {
         HAL_ASSERT(0, __FILE__, __LINE__);
     }
+#endif // !BMS_DISABLE_LP
 
     /** Set default state (OFF) for discharge control switch */
     MAIN_initDischargeSw();
@@ -393,10 +416,12 @@ static void handleSystemEvt_(Evt_sys_data_t* evt)
         QS_U8(0, swState_);
     QS_END()
 
+#if !defined(BMS_DISABLE_BLE)
     /** Notify BLE task about switches' state */
     Ble_evt_t btEvt;
     btEvt.sysData.swStates = swState_;
     BLE_post_evt(&btEvt, EVT_SYSTEM);
+#endif // !BMS_DISABLE_BLE
 }
 
 /**
@@ -414,6 +439,24 @@ void vApplicationIdleHook(void)
 {
      /** Handle QSPY communication */
      QS_onIdle();
+}
+
+/**
+ * @brief Stack overflow hook function.
+ * This function is called when a stack overflow is detected in a task.
+ * It logs the task name and ID to QSPY.
+ * 
+ * @param xTask Handle of the task that caused the stack overflow.
+ * @param pcTaskName Name of the task that caused the stack overflow.
+ */
+void vApplicationStackOverflowHook( TaskHandle_t xTask, char *pcTaskName )
+{
+    /** Handle stack overflow */
+    QS_BEGIN_ID(MAIN, 0 /*prio/ID for local Filters*/)
+        QS_STR("Stack overflow detected in task: ");
+        QS_STR(pcTaskName);
+    QS_END()
+    QS_FLUSH(); // Flush QSPY output
 }
 
 // ========================
@@ -800,8 +843,13 @@ static void MAIN_SM_handleAdcEvt(Evt_adc_data_t* evt)
              * 2. if VBAT > max: save log to flash
              * 4. Send VBAT to BLE task
              */
+#if !defined(BMS_DISABLE_BLE)
             ble_update_vbat_(evt);
+#endif // !BMS_DISABLE_BLE
+#if !defined(BMS_DISABLE_LP)
+            /** Set Low Power mode */
             LP_setMode(LP_DEEP_SLEEP_MODE);
+#endif // !BMS_DISABLE_LP
             break;
         }
 
@@ -812,8 +860,14 @@ static void MAIN_SM_handleAdcEvt(Evt_adc_data_t* evt)
                 evt.setDischState = 0;
                 MAIN_post_evt((Main_evt_t*) &evt, EVT_SYSTEM);
             }
+#if !defined(BMS_DISABLE_BLE)
+            /** Update VBAT via BLE */
             ble_update_vbat_(evt);
+#endif // !BMS_DISABLE_BLE
+#if !defined(BMS_DISABLE_LP)
+            /** Set Low Power mode */
             LP_setMode(LP_DEEP_SLEEP_MODE);
+#endif // !BMS_DISABLE_LP
             break;
         }
 
@@ -824,8 +878,14 @@ static void MAIN_SM_handleAdcEvt(Evt_adc_data_t* evt)
                 evt.setChargeState = 0;
                 MAIN_post_evt((Main_evt_t*) &evt, EVT_SYSTEM);
             }
+#if !defined(BMS_DISABLE_BLE)
+            /** Update VBAT via BLE */
             ble_update_vbat_(evt);
+#endif // !BMS_DISABLE_BLE
+#if !defined(BMS_DISABLE_LP)
+            /** Set Low Power mode */
             LP_setMode(LP_DEEP_SLEEP_MODE);
+#endif // !BMS_DISABLE_LP
             break;
         }
 
@@ -866,6 +926,7 @@ static void MAIN_SM_print_onStateChange(void)
 // ===========================
 /// BLE commands
 // ===========================
+#if !defined(BMS_DISABLE_BLE)
 /**
  * @brief Updates battery voltage level via BLE
  * 
@@ -886,6 +947,7 @@ static void ble_update_vbat_(Evt_adc_data_t* adcEvt)
 
     BLE_post_evt(&btEvt, EVT_BLE_VBAT);
 }
+#endif // !BMS_DISABLE_BLE
 
 // ==========================
 /// Spare, debug functions
