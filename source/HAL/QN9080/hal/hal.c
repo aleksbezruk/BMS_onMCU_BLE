@@ -13,6 +13,8 @@
 #include "system_QN908XC.h"
 #include "pin_mux.h"
 #include "fsl_rtc.h"
+#include "fsl_calibration.h"
+#include "fsl_syscon.h"
 #include "GPIO_Adapter.h"
 #include "gpio_pins.h"
 
@@ -26,7 +28,8 @@
 /* =========================
  * Functions prototype
  * ========================= */
-static void _initLed(void);
+static void _HAL_initLed(void);
+static void _HAL_setCrystalLoadCap(void);
 
 /* =========================
  * Private data
@@ -57,6 +60,12 @@ HAL_status_t HAL_init_hardware(void)
 {
     /** Init DC-DC mode */
     POWER_EnableDCDC(gDCDC_Mode);
+
+    /** Set crystal load capacitance */
+    _HAL_setCrystalLoadCap();
+
+    /** System calibration */
+    CALIB_SystemCalib();
 
     /** Relocate VTOR and copy Vector Table to RAM */
     extern uint32_t __VECTOR_TABLE[];
@@ -140,18 +149,59 @@ HAL_status_t HAL_init_hardware(void)
 #endif
 
     /** Init LED */
-    _initLed();
+    _HAL_initLed();
 
     return HAL_STATUS_OK;
 }
 
-///////////////////////
+// ==================================
 // Spare, private functions
-///////////////////////
-static void _initLed(void)
+// ==================================
+/**
+ * @brief Init LEDs
+ * 
+ * @note This function is called from HAL_init_hardware() to initialize LEDs.
+ * 
+ * @param None
+ * 
+ * @retval None
+ */
+static void _HAL_initLed(void)
 {
     BOARD_InitLEDs();
     GpioOutputPinInit(ledPins, gLEDsOnTargetBoardCnt_c);
+}
+
+/**
+ * @brief Set crystal load capacitance.
+ *
+ * @details See reference Guide "QN908x Crystals Load Capacitance Calibration"
+ * @note This function is used to set the load capacitance for the crystal oscillator.
+ *        The load capacitance is used to match the crystal oscillator to the load capacitance of the circuit.
+ *        The load capacitance is specified in the reference guide and is typically set to
+ *        a value between 0 and 3, where 0 is the lowest load capacitance and 3 is the highest load capacitance.
+ *        The load capacitance is used to match the crystal oscillator to the load capacitance of the circuit.
+ * This function sets the load capacitance for the crystal oscillator.
+ * The value is limited to a maximum of 3.
+ *
+ * @note 32MHz crystal: ANA_CTRL0[XTAL_LOAD_CAP] - register-controlled load cap of the XTAL in
+ *       normal mode. XTAL load cap =5 pF + 0.35 pF * XTAL_LOAD_CAP + 5 pF * XTAL_EXTRA_CAP
+ *       8pF should be set for 32MHz crystal => XTAL_LOAD_CAP = 8
+ * 
+ * @note 32kHz crystal: ANA_CTRL0[XTAL32K_LOAD_CAP] - load cap selection of XTAL32K; XTAL32K
+ *       load cap = 3.6 pF + 0.4 pF * XTAL32K_LOAD_CAP + 6.4 pF * XTAL32K_EXTRA_CAP
+ *       7pF should be set for 32kHz crystal => XTAL32K_LOAD_CAP = 7
+ *
+ * @param None
+ *
+ * @retval None
+ */
+static void _HAL_setCrystalLoadCap(void)
+{
+    /** 32 MHz crystal */
+    SYSCON_SetLoadCap(SYSCON, 1, 8U); // 1 = 16/32MHz, loadCap = 8
+    /** 32 kHz crystal */
+    SYSCON_SetLoadCap(SYSCON, 0, 7U); // 0 = 32kHz, loadCap = 7
 }
 
 /* [] END OF FILE */
