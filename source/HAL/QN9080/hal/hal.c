@@ -30,6 +30,7 @@
  * ========================= */
 static void _HAL_initLed(void);
 static void _HAL_setCrystalLoadCap(void);
+static inline bool _HAL_isDebuggerConnected(void);
 
 /* =========================
  * Private data
@@ -62,10 +63,14 @@ HAL_status_t HAL_init_hardware(void)
     POWER_EnableDCDC(gDCDC_Mode);
 
     /** Set crystal load capacitance */
-    _HAL_setCrystalLoadCap();
+    if (!_HAL_isDebuggerConnected()) {
+        _HAL_setCrystalLoadCap();
+    }
 
     /** System calibration */
-    CALIB_SystemCalib();
+    if (!_HAL_isDebuggerConnected()) {
+        CALIB_SystemCalib();
+    }
 
     /** Relocate VTOR and copy Vector Table to RAM */
     extern uint32_t __VECTOR_TABLE[];
@@ -202,6 +207,28 @@ static void _HAL_setCrystalLoadCap(void)
     SYSCON_SetLoadCap(SYSCON, 1, 8U); // 1 = 16/32MHz, loadCap = 8
     /** 32 kHz crystal */
     SYSCON_SetLoadCap(SYSCON, 0, 7U); // 0 = 32kHz, loadCap = 7
+}
+
+/**
+ * @brief Checks if a debugger is connected to the MCU.
+ *
+ * @details This function checks the Debug Halting Control and Status Register (DHCSR)
+ *          to determine if a debugger is connected. The C_DEBUGEN bit in DHCSR is set
+ *          when a debugger is connected and has enabled debug mode.
+ *
+ * @note This is useful to skip crystal calibration and system calibration when debugging,
+ *       as these operations can interfere with the debugger's ability to maintain connection
+ *       and properly halt/step through code.
+ *
+ * @param None
+ *
+ * @retval true if debugger is connected, false otherwise
+ */
+static inline bool _HAL_isDebuggerConnected(void)
+{
+    /* Check the Debug Halting Control and Status Register (DHCSR) */
+    /* C_DEBUGEN bit (bit 0) is set when debugger is connected */
+    return (CoreDebug->DHCSR & CoreDebug_DHCSR_C_DEBUGEN_Msk) != 0;
 }
 
 /* [] END OF FILE */

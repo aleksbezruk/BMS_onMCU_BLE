@@ -11,21 +11,17 @@
             "request": "launch",
             "type": "cortex-debug",
             "runToEntryPoint": "main",
-            "postLaunchCommands": [
-                //"set semihosting enable on"
-                //"monitor arm semihosting enable",
-                //"monitor arm semihosting ioclient 'enable'", // 1: telnet (port 2333); 2: gdb; 3: both telnet and gdbclient output
-                //"monitor arm semihosting_basedir .",
-                //"monitor arm semihosting_fileio enable"
-            ],
             "servertype": "jlink",
             "serverpath": "/home/oleksandr/IDEs/Segger/JLink_Linux_V792k_x86_64/JLinkGDBServerCLExe",
             "armToolchainPath": "/home/oleksandr/Toolchains/gcc-arm-none-eabi-10.3-2021.10-x86_64-linux/gcc-arm-none-eabi-10.3-2021.10/bin",
             "device": "QN9080C",
             "interface": "swd",
             "serialNumber": "", // add J-Link serial number if having multiple attached the same time.
-            "runToEntryPoint": false,
-            "svdFile": "${workspaceRoot}/device/QN908XC.svd"
+            "svdFile": "${workspaceRoot}/device/QN908XC.svd",
+            "preLaunchCommands": [
+                "set debug remote 1",
+                "set remotetimeout 60"
+            ]
         },
         {
             "cwd": "${workspaceRoot}",
@@ -34,21 +30,17 @@
             "request": "launch",
             "type": "cortex-debug",
             "runToEntryPoint": "main",
-            "postLaunchCommands": [
-                //"set semihosting enable on"
-                //"monitor arm semihosting enable",
-                //"monitor arm semihosting ioclient 'enable'", // 1: telnet (port 2333); 2: gdb; 3: both telnet and gdbclient output
-                //"monitor arm semihosting_basedir .",
-                //"monitor arm semihosting_fileio enable"
-            ],
             "servertype": "jlink",
             "serverpath": "/home/oleksandr/IDEs/Segger/JLink_Linux_V792k_x86_64/JLinkGDBServerCLExe",
             "armToolchainPath": "/home/oleksandr/Toolchains/gcc-arm-none-eabi-10.3-2021.10-x86_64-linux/gcc-arm-none-eabi-10.3-2021.10/bin",
             "device": "QN9080C",
             "interface": "swd",
             "serialNumber": "", // add J-Link serial number if having multiple attached the same time.
-            "runToEntryPoint": false,
-            "svdFile": "${workspaceRoot}/device/QN908XC.svd"
+            "svdFile": "${workspaceRoot}/device/QN908XC.svd",
+            "preLaunchCommands": [
+                "set debug remote 1",
+                "set remotetimeout 60"
+            ]
         }
     ]
 }
