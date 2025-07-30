@@ -196,8 +196,13 @@ NMI_Handler:
     .weak HardFault_Handler
     .type HardFault_Handler, %function
 HardFault_Handler:
-    ldr   r0,=HardFault_Handler
-    bx    r0
+    /* Save registers and call C handler */
+    tst lr, #4
+    ite eq
+    mrseq r0, msp
+    mrsne r0, psp
+    ldr r1, =HardFault_Handler_C
+    bx r1
     .size HardFault_Handler, . - HardFault_Handler
 
     .align 1

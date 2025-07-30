@@ -101,6 +101,7 @@ elseif(BUILD_CONFIG STREQUAL "Test")
         startup/startup_qn908x.S
         CMSIS/system_QN908XC.c
         drivers/fsl_adc.c
+        drivers/fsl_aes.c
         drivers/fsl_calibration.c
         drivers/fsl_clock.c
         drivers/fsl_common.c
@@ -136,6 +137,15 @@ elseif(BUILD_CONFIG STREQUAL "Test")
         framework/OSAbstraction/Source/fsl_os_abstraction_free_rtos.c
         framework/Lists/GenericList.c
         framework/Panic/Source/Panic.c
+        framework/MemManager/Source/MemManager.c
+        framework/FunctionLib/FunctionLib.c
+        framework/SecLib/SecLib.c
+        framework/RNG/Source/RNG.c
+        framework/Messaging/Source/Messaging.c
+        framework/NVM/Source/NV_Flash.c
+        framework/Flash/Internal/Flash_Adapter.c
+        framework/TimersManager/Source/TimersManager.c
+        framework/TimersManager/Source/TMR_Adapter.c
         ../source/HAL/QN9080/hal/hal.c
         ../source/HAL/QN9080/hal_led/hal_led.c
         ../source/HAL/QN9080/hal_gpio/hal_gpio.c
@@ -148,6 +158,12 @@ elseif(BUILD_CONFIG STREQUAL "Test")
         ../source/qspy/qs.c
         ../source/qspy/qstamp.c
         ../source/qspyHelper/qspyHelper.c
+        BLE_qn9080/BLE_qn9080.c
+        bluetooth/controller/interface/controller_config.c
+        bluetooth/host/config/ble_globals.c
+        bluetooth/hci_transport/source/hcit_serial_interface.c
+        BLE_qn9080/ble_controller_task.c
+        BLE_qn9080/ble_stubs_fixed.c
         # Add or remove files specific to Test config here
     )
 else()
@@ -162,6 +178,12 @@ target_compile_definitions(${EXECUTABLE} PRIVATE
         -D__STARTUP_CLEAR_BSS
         -D__ATOLLIC__
         -DCPU_QN9080C
+        -DCPU_QN9080C_cm4
+        -DDEBUG
+        -DCPU_QN908X=1
+        -DFSL_RTOS_FREE_RTOS
+        -DCFG_BLE_PRJ=1
+
         ${CONFIG_DEFINE}
         )
 
@@ -196,6 +218,18 @@ target_include_directories(${EXECUTABLE} PRIVATE
         framework/OSAbstraction/Interface
         framework/Lists
         framework/Panic/Interface
+        framework/MemManager/Interface
+        framework/FunctionLib
+        framework/SecLib
+        framework/Messaging/Interface
+        framework/NVM/Interface
+        framework/Flash/Internal
+        framework/SerialManager/Interface
+        framework/ModuleInfo
+        bluetooth/controller/interface
+        bluetooth/hci_transport/interface
+        bluetooth/host/interface
+        BLE_qn9080
         )
 
 # Compiler options
@@ -224,13 +258,21 @@ target_link_options(${EXECUTABLE} PRIVATE
         -mfpu=fpv4-sp-d16
         -mfloat-abi=hard
         -specs=nano.specs
-        -lc
-        -lm
-        -lnosys
         -Wl,-Map=${PROJECT_NAME}.map,--cref
         -Wl,--gc-sections
         -Xlinker -print-memory-usage -Xlinker
         -Wl,--defsym=__ram_vector_table__=1
+        -Wl,--just-symbols=${CMAKE_SOURCE_DIR}/board/fw_symbols_gcc.h
+        )
+
+# Add the crypto and BLE libraries after the executable target
+target_link_libraries(${EXECUTABLE} PRIVATE
+        ${CMAKE_SOURCE_DIR}/libs/lib_crypto_m4.a
+        ${CMAKE_SOURCE_DIR}/libs/lib_ble_QN908XC_controller.a
+        ${CMAKE_SOURCE_DIR}/libs/lib_ble_5-0_host_peripheral_cm4.a
+        c
+        m
+        nosys
         )
 
 # Optional: Print executable size as part of the post build process

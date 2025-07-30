@@ -60,7 +60,12 @@
 			"qspyhelper.h": "c",
 			"typeinfo": "c",
 			"cstdlib": "c",
-			"osal_irq_prio.h": "c"
+			"osal_irq_prio.h": "c",
+			"ble_qn9080.h": "c",
+			"messaging.h": "c",
+			"flash_adapter.h": "c",
+			"serialmanager.h": "c",
+			"qn_ble_config.h": "c"
 		}
 	}
 }

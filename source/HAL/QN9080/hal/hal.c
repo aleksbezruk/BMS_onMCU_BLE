@@ -15,6 +15,8 @@
 #include "fsl_rtc.h"
 #include "fsl_calibration.h"
 #include "fsl_syscon.h"
+#include "fsl_rf.h"
+
 #include "GPIO_Adapter.h"
 #include "gpio_pins.h"
 
@@ -61,6 +63,9 @@ HAL_status_t HAL_init_hardware(void)
 {
     /** Init DC-DC mode */
     POWER_EnableDCDC(gDCDC_Mode);
+
+    /** Set RF Rx Mode */
+    RF_ConfigRxMode(SYSCON, gBleRfRxMode);
 
     /** Set crystal load capacitance */
     if (!_HAL_isDebuggerConnected()) {

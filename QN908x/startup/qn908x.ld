@@ -108,7 +108,12 @@ m_flash_end     = 0x0007FFFF;
 m_flash_size    = 0x00080000;
 m_sector_size   = 2048; /* 2k  */
 
-/* User custom/temporary solution to link the project */
+/* User custom/temporary solution to link the project
+ * BMS NVM Configuration: 4 sectors × 2KB = 8KB total
+ * - fNVM_region: 4KB (active storage)
+ * - sNVM_region: 4KB (backup/wear leveling)
+ * Used for: battery params, config data, history, BLE bonding 
+ */
 gNVMSectorCountLink_d = 4;
 
 /****************************************************

@@ -23,6 +23,65 @@
 // BMS Application
 #include "MAIN.h"
 
+#include "BLE_qn9080.h"
+
+// ===================
+// HardFault Handler
+// ===================
+typedef struct {
+    uint32_t r0;
+    uint32_t r1;
+    uint32_t r2;
+    uint32_t r3;
+    uint32_t r12;
+    uint32_t lr;
+    uint32_t pc;
+    uint32_t psr;
+} fault_stack_frame_t;
+
+void HardFault_Handler_C(uint32_t *stack_frame) {
+    volatile fault_stack_frame_t *frame = (fault_stack_frame_t *)stack_frame;
+    volatile uint32_t fault_pc = frame->pc;
+    volatile uint32_t fault_lr = frame->lr;
+    volatile uint32_t cfsr = SCB->CFSR;  // Configurable Fault Status Register
+    volatile uint32_t hfsr = SCB->HFSR;  // HardFault Status Register
+    volatile uint32_t mmfar = SCB->MMFAR; // MemManage Fault Address Register
+    volatile uint32_t bfar = SCB->BFAR;   // BusFault Address Register
+    
+    // Log fault information via QSPY
+    QS_BEGIN_ID(MAIN, 0 /*prio/ID for local Filters*/)
+        QS_STR("HardFault: PC=");
+        QS_U32(0, fault_pc);
+        QS_STR(" LR=");
+        QS_U32(0, fault_lr);
+        QS_STR(" CFSR=");
+        QS_U32(0, cfsr);
+        QS_STR(" HFSR=");
+        QS_U32(0, hfsr);
+        QS_STR(" MMFAR=");
+        QS_U32(0, mmfar);
+        QS_STR(" BFAR=");
+        QS_U32(0, bfar);
+    QS_END()
+    QS_FLUSH(); // Flush QSPY output
+    
+    // Blink red LED rapidly to indicate hard fault
+    HAL_LED_init_red();
+    for(int i = 0; i < 10; i++) {
+        HAL_LED_red_toggle();
+        for(volatile int j = 0; j < 100000; j++); // Simple delay
+    }
+    
+    // Set breakpoint here to examine variables in debugger
+    __asm("BKPT #0");
+    
+    // Infinite loop to prevent return
+    while(1) {
+        HAL_LED_red_toggle();
+        for(volatile int j = 0; j < 500000; j++); // Slower blink in fault state
+    }
+}
+
 // ===================
 // Defines
 // ===================
@@ -100,7 +159,7 @@ static void led_blink_alive_(void);
 #define ADC_TEST_TASK_PRIORITY   (OSAL_ADC_TASK_PRIORITY)
 #define ADC_TEST_TASK_INTERVAL   (10000U)    // in milliseconds
 
-#define MAIN_TEST_TASK_STACK_SIZE  (560U)
+#define MAIN_TEST_TASK_STACK_SIZE  (4096U)  // Further increased for BLE initialization debugging
 #define MAIN_TEST_TASK_PRIORITY   (OSAL_MAIN_TASK_PRIORITY)
 #define MAIN_TEST_TASK_INTERVAL   (1000U)    // in milliseconds
 #define MAIN_TASK_QUEUE_SIZE      (5U)
@@ -806,9 +865,59 @@ static void Main_Test_Task(OSAL_arg_t argument)
     OSAL_Status_t status = OSAL_SUCCESS;
     Main_queue_data_t queueItem;
 
-    if (status != OSAL_SUCCESS) {
+    // Debug: Turn on red LED to indicate we're in the task
+    HAL_LED_red_On();
+    
+    // Add stack canary to detect stack overflow
+    volatile uint32_t stack_canary = 0xDEADBEEF;
+    
+    // Log current stack pointer
+    uint32_t current_sp;
+    __asm volatile ("mov %0, sp" : "=r" (current_sp));
+    QS_BEGIN_ID(MAIN, 0)
+        QS_STR("Main task start: SP=");
+        QS_U32(0, current_sp);
+        QS_STR(" Canary=");
+        QS_U32(0, stack_canary);
+    QS_END()
+    QS_FLUSH();
+    
+    // Small delay to ensure QSPY message is sent
+    for(volatile int i = 0; i < 100000; i++);
+    
+    // Check stack canary before BLE init
+    if (stack_canary != 0xDEADBEEF) {
+        QS_BEGIN_ID(MAIN, 0)
+            QS_STR("Stack corruption detected before BLE_init!");
+        QS_END()
+        QS_FLUSH();
         HAL_ASSERT(0, __FILE__, __LINE__);
     }
+    
+    // Initialize BLE stack in task context with large stack
+    QS_BEGIN_ID(MAIN, 0)
+        QS_STR("Calling BLE_init...");
+    QS_END()
+    QS_FLUSH();
+    
+    BLE_init();
+    
+    // Check stack canary after BLE init
+    if (stack_canary != 0xDEADBEEF) {
+        QS_BEGIN_ID(MAIN, 0)
+            QS_STR("Stack corruption detected after BLE_init!");
+        QS_END()
+        QS_FLUSH();
+        HAL_ASSERT(0, __FILE__, __LINE__);
+    }
+    
+    // Debug: Turn off red LED to indicate BLE init completed
+    HAL_LED_red_Off();
+    
+    QS_BEGIN_ID(MAIN, 0)
+        QS_STR("BLE_init completed successfully");
+    QS_END()
+    QS_FLUSH();
 
     while (true) {
         /** Wait for event */
