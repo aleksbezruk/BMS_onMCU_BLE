@@ -498,7 +498,7 @@ int DbgConsole_Scanf(char *fmt_ptr, ...)
 /* See fsl_debug_console.h for documentation of this function. */
 int DbgConsole_Getchar(void)
 {
-    char ch;
+    char ch = 0;  /* Initialize to avoid compiler warning */
     /* Do nothing if the debug UART is not initialized. */
     if (s_debugConsole.type == DEBUG_CONSOLE_DEVICE_TYPE_NONE)
     {

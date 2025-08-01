@@ -82,6 +82,8 @@ if(BUILD_CONFIG STREQUAL "Debug")
         framework/OSAbstraction/Source/fsl_os_abstraction_free_rtos.c
         framework/Lists/GenericList.c
         framework/Panic/Source/Panic.c
+        framework/NVM/Source/NV_Flash.c
+        framework/Flash/Internal/Flash_Adapter.c
         ../source/HAL/QN9080/hal/hal.c
         ../source/HAL/QN9080/hal_led/hal_led.c
         ../source/HAL/QN9080/hal_gpio/hal_gpio.c
@@ -176,7 +178,9 @@ add_executable(${EXECUTABLE} ${SRC_FILES})
 # List of compiler defines, prefix with -D compiler option
 target_compile_definitions(${EXECUTABLE} PRIVATE
         -D__STARTUP_CLEAR_BSS
-        -D__ATOLLIC__
+        -D__MCUXPRESSO
+        -D__USE_CMSIS
+        -D__NEWLIB__
         -DCPU_QN9080C
         -DCPU_QN9080C_cm4
         -DDEBUG
@@ -241,10 +245,16 @@ target_compile_options(${EXECUTABLE} PRIVATE
 
         -fdata-sections
         -ffunction-sections
+        -ffreestanding
+        -fno-builtin
+        -fno-common
+        -fmerge-constants
+        -fstack-usage
 
         -Wall
         -O0
         -g3
+        -gdwarf-4
 
         -include app_preinclude.h
         )
@@ -260,8 +270,11 @@ target_link_options(${EXECUTABLE} PRIVATE
         -specs=nano.specs
         -Wl,-Map=${PROJECT_NAME}.map,--cref
         -Wl,--gc-sections
+        -Wl,--sort-section=alignment
         -Xlinker -print-memory-usage -Xlinker
         -Wl,--defsym=__ram_vector_table__=1
+        -Wl,--defsym=gUseNVMLink_d=1
+        -Wl,--defsym=gEraseNVMLink_d=1
         -Wl,--just-symbols=${CMAKE_SOURCE_DIR}/board/fw_symbols_gcc.h
         )
 
@@ -273,6 +286,7 @@ target_link_libraries(${EXECUTABLE} PRIVATE
         c
         m
         nosys
+        gcc
         )
 
 # Optional: Print executable size as part of the post build process

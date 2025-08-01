@@ -38,12 +38,21 @@
 // Defines
 // =======================
 /** 
- * ADC error in [%]. 
+ * ADC error RATIO [-2 %]. 
  * 1. Maybe variable from sample to sample
  * 2. Maybe needed external precise VREF to improve accuracy 
  */
-#define ADC_ERR 2.0f
-#define ADC_MEAS_COMPENSATE_ERR(val)    (int16_t)((float) val * (1.0f - ADC_ERR/100.0f))  // val in [mV] 
+#define ADC_ERR_RATIO 0.98f
+
+/**
+ * @brief Compensate ADC measurement error using integer arithmetic
+ * @param val ADC value in mV
+ * @return Compensated value in mV
+ */
+static inline int16_t ADC_MEAS_COMPENSATE_ERR(int16_t val)
+{
+    return (int16_t)(val * ADC_ERR_RATIO);
+} 
 /**
  * Bank1
  * R1 = 1.2 MOhm, R2 = 1.2 MOhm

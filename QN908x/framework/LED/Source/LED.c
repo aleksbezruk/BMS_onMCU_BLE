@@ -15,7 +15,7 @@
 #include "GPIO_Adapter.h"
 #include "gpio_pins.h"
 #include "pin_mux.h"
-// #include "fsl_os_abstraction.h"
+#include "fsl_os_abstraction.h"
 
 #ifndef BOARD_USE_PWM_FOR_RGB_LED
 #define BOARD_USE_PWM_FOR_RGB_LED 0

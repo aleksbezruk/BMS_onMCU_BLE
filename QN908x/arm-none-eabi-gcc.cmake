@@ -1,7 +1,8 @@
 set(CMAKE_SYSTEM_NAME Generic)
 set(CMAKE_SYSTEM_PROCESSOR ARM)
 
-set(ARM_TOOLCHAIN_DIR "/home/oleksandr/Toolchains/gcc-arm-none-eabi-10.3-2021.10-x86_64-linux/gcc-arm-none-eabi-10.3-2021.10/bin")
+#set(ARM_TOOLCHAIN_DIR "/home/oleksandr/Toolchains/gcc-arm-none-eabi-10.3-2021.10-x86_64-linux/gcc-arm-none-eabi-10.3-2021.10/bin")
+set(ARM_TOOLCHAIN_DIR "/home/oleksandr/Toolchains/gcc-arm-11.2-2022.02-x86_64-arm-none-eabi/bin")
 set(BINUTILS_PATH ${ARM_TOOLCHAIN_DIR})
 
 set(TOOLCHAIN_PREFIX ${ARM_TOOLCHAIN_DIR}/arm-none-eabi-)

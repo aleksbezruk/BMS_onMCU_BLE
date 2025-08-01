@@ -21,7 +21,7 @@
 #include "fsl_iocon.h"
 #include "fsl_inputmux.h"
 #endif
-// #include "fsl_os_abstraction.h"
+#include "fsl_os_abstraction.h"
 
 #include "GPIO_Adapter.h"
 #include "FunctionLib.h"
@@ -59,7 +59,7 @@
 *************************************************************************************
 ********************************************************************************** */
 void Gpio_CommonIsr(void);
-// static gpioStatus_t Gpio_InstallPortISR(IRQn_Type irqId, uint32_t nvicPrio); // commented out to avoid compilation warnings
+static gpioStatus_t Gpio_InstallPortISR(IRQn_Type irqId, uint32_t nvicPrio);
 #if (FSL_FEATURE_SOC_INTMUX_COUNT <= 0) && (FSL_FEATURE_SOC_SYSCON_COUNT > 0)
 void           GpioSetInterruptType(GPIO_Type *base, uint8_t gpioPin, pinInterrupt_t int_mode);
 pinInterrupt_t GpioGetInterruptType(GPIO_Type *base, gpioPort_t gpioPort, uint8_t gpioPin);
@@ -92,7 +92,7 @@ static gpioIsr_t mGpioIsr[gGpioMaxIsrEntries_c];
 static uint16_t mGpioIsrCount = 0;
 static PORT_Type *const maPortBases[] = PORT_BASE_PTRS;
 static GPIO_Type *const maGpioBases[] = GPIO_BASE_PTRS;
-// static IRQn_Type maPortIrqId[] = PORT_IRQS;  // commented out to avoid compilation warnings
+static IRQn_Type maPortIrqId[] = PORT_IRQS;
 #if defined(FSL_FEATURE_SOC_INTMUX_COUNT) && FSL_FEATURE_SOC_INTMUX_COUNT
 static INTMUX_Type *const maIntmuxBases[] = INTMUX_BASE_PTRS;
 static const IRQn_Type maIntmuxIRQNumber[][FSL_FEATURE_INTMUX_CHANNEL_COUNT] = INTMUX_IRQS;
@@ -515,109 +515,109 @@ bool_t GpioOutputPinInit(const gpioOutputPinConfig_t* pOutputConfig, uint32_t no
 *
 ********************************************************************************** */
 
-// gpioStatus_t GpioInstallIsr( pfGpioIsrCb_t cb, uint8_t priority, uint8_t nvicPriority, const gpioInputPinConfig_t* pInputConfig )
-// {
-//     uint32_t i;
-//     uint8_t  found   = 0;
-//     uint8_t  pos     = mGpioIsrCount;
-//     gpioPort_t portId = pInputConfig->gpioPort;
-//     uint32_t pinMask = 1 << pInputConfig->gpioPin;
-//     IRQn_Type irqNo  = maPortIrqId[portId];
-//     #if defined(FSL_FEATURE_SOC_INTMUX_COUNT) && FSL_FEATURE_SOC_INTMUX_COUNT      
-//     IRQn_Type intmuxIRQ ;
-//     if(irqNo < FSL_FEATURE_INTMUX_IRQ_START_INDEX)
-//     {
-//       intmuxIRQ = irqNo;
-//     }
-//     else
-//     {
-//       intmuxIRQ = maIntmuxIRQNumber[gGpio_IntmuxInstance_d][maGpioIntMuxChannel[portId]];
-//     }
-//     #endif
+gpioStatus_t GpioInstallIsr( pfGpioIsrCb_t cb, uint8_t priority, uint8_t nvicPriority, const gpioInputPinConfig_t* pInputConfig )
+{
+    uint32_t i;
+    uint8_t  found   = 0;
+    uint8_t  pos     = mGpioIsrCount;
+    gpioPort_t portId = pInputConfig->gpioPort;
+    uint32_t pinMask = 1 << pInputConfig->gpioPin;
+    IRQn_Type irqNo  = maPortIrqId[portId];
+    #if defined(FSL_FEATURE_SOC_INTMUX_COUNT) && FSL_FEATURE_SOC_INTMUX_COUNT      
+    IRQn_Type intmuxIRQ ;
+    if(irqNo < FSL_FEATURE_INTMUX_IRQ_START_INDEX)
+    {
+      intmuxIRQ = irqNo;
+    }
+    else
+    {
+      intmuxIRQ = maIntmuxIRQNumber[gGpio_IntmuxInstance_d][maGpioIntMuxChannel[portId]];
+    }
+    #endif
 
-//     for( i=0; i<mGpioIsrCount; i++ )
-//     {
-//         /* search for port ISR already installed */
-//         if( mGpioIsr[i].port == portId )
-//         {
-//             found |= gGpio_FoundPortIsr_c;
-//         }
-//         /* search for insert position */
-//         if( (pos == mGpioIsrCount) && (mGpioIsr[i].prio >= priority) ) 
-//         {
-//             pos = i;
-//         }
-//         /* search for an entry with the same callback installed for the same port with the same priority */
-//         if( (mGpioIsr[i].callback == cb) && (mGpioIsr[i].port == portId) && (mGpioIsr[i].prio == priority) )
-//         {
-//             pos = i;
-//             found |= gGpio_FoundSimilar_c;
-//             break;
-//         }
-//     }
+    for( i=0; i<mGpioIsrCount; i++ )
+    {
+        /* search for port ISR already installed */
+        if( mGpioIsr[i].port == portId )
+        {
+            found |= gGpio_FoundPortIsr_c;
+        }
+        /* search for insert position */
+        if( (pos == mGpioIsrCount) && (mGpioIsr[i].prio >= priority) ) 
+        {
+            pos = i;
+        }
+        /* search for an entry with the same callback installed for the same port with the same priority */
+        if( (mGpioIsr[i].callback == cb) && (mGpioIsr[i].port == portId) && (mGpioIsr[i].prio == priority) )
+        {
+            pos = i;
+            found |= gGpio_FoundSimilar_c;
+            break;
+        }
+    }
 
-//     if( found & gGpio_FoundSimilar_c )
-//     {
-//         /* found the same ISR installed for the same port, but other pins */
-//         mGpioIsr[pos].pinMask |= pinMask;
-//     }
-//     else
-//     {
-//       if( mGpioIsrCount >= gGpioMaxIsrEntries_c )
-//       {
-//         return gpio_outOfMemory;
-//       }
-//       OSA_InterruptDisable();
-//       if( pos != mGpioIsrCount )
-//       {
+    if( found & gGpio_FoundSimilar_c )
+    {
+        /* found the same ISR installed for the same port, but other pins */
+        mGpioIsr[pos].pinMask |= pinMask;
+    }
+    else
+    {
+      if( mGpioIsrCount >= gGpioMaxIsrEntries_c )
+      {
+        return gpio_outOfMemory;
+      }
+      OSA_InterruptDisable();
+      if( pos != mGpioIsrCount )
+      {
         
-//         /* Shift all entries to the left, to obtain a sorted list */
-//         for( i=mGpioIsrCount; i>pos; i-- )
-//         {
-//           mGpioIsr[i] = mGpioIsr[i-1];
-//         }
+        /* Shift all entries to the left, to obtain a sorted list */
+        for( i=mGpioIsrCount; i>pos; i-- )
+        {
+          mGpioIsr[i] = mGpioIsr[i-1];
+        }
         
-//       }
-//       /* install new callback */
-//       mGpioIsr[pos].callback = cb;
-//       mGpioIsr[pos].prio     = priority;
-//       mGpioIsr[pos].port     = portId;
-//       mGpioIsr[pos].pinMask  = pinMask;
-// #if defined(FSL_FEATURE_SOC_INTMUX_COUNT) && FSL_FEATURE_SOC_INTMUX_COUNT      
-//       mGpioIsr[pos].irqId = intmuxIRQ;
-// #else      
-//       mGpioIsr[pos].irqId    = irqNo;
-// #endif      
+      }
+      /* install new callback */
+      mGpioIsr[pos].callback = cb;
+      mGpioIsr[pos].prio     = priority;
+      mGpioIsr[pos].port     = portId;
+      mGpioIsr[pos].pinMask  = pinMask;
+#if defined(FSL_FEATURE_SOC_INTMUX_COUNT) && FSL_FEATURE_SOC_INTMUX_COUNT      
+      mGpioIsr[pos].irqId = intmuxIRQ;
+#else      
+      mGpioIsr[pos].irqId    = irqNo;
+#endif      
       
-//       mGpioIsrCount++;
-//       OSA_InterruptEnable();
-//     }
+      mGpioIsrCount++;
+      OSA_InterruptEnable();
+    }
 
-//     if( found )
-//     {
-//         /* The PORT ISR was already installed. Update NVIC priority if higher than the old one! */
-//         nvicPriority = nvicPriority >> (8 - __NVIC_PRIO_BITS);
-//         #if defined(FSL_FEATURE_SOC_INTMUX_COUNT) && FSL_FEATURE_SOC_INTMUX_COUNT      
-//         i = NVIC_GetPriority(intmuxIRQ);
-//         if( i > nvicPriority )
-//         {
-//             NVIC_SetPriority(intmuxIRQ, nvicPriority);
-//         }
-//         #else
-//         i = NVIC_GetPriority(irqNo);
-//         if( i > nvicPriority )
-//         {
-//             NVIC_SetPriority(irqNo, nvicPriority);
-//         }
-//         #endif
-//         return gpio_success;
-//     }
-//     else
-//     {
-//         /* Install common PORT ISR */
-//         return Gpio_InstallPortISR(irqNo, nvicPriority);
-//     }
-// }
+    if( found )
+    {
+        /* The PORT ISR was already installed. Update NVIC priority if higher than the old one! */
+        nvicPriority = nvicPriority >> (8 - __NVIC_PRIO_BITS);
+        #if defined(FSL_FEATURE_SOC_INTMUX_COUNT) && FSL_FEATURE_SOC_INTMUX_COUNT      
+        i = NVIC_GetPriority(intmuxIRQ);
+        if( i > nvicPriority )
+        {
+            NVIC_SetPriority(intmuxIRQ, nvicPriority);
+        }
+        #else
+        i = NVIC_GetPriority(irqNo);
+        if( i > nvicPriority )
+        {
+            NVIC_SetPriority(irqNo, nvicPriority);
+        }
+        #endif
+        return gpio_success;
+    }
+    else
+    {
+        /* Install common PORT ISR */
+        return Gpio_InstallPortISR(irqNo, nvicPriority);
+    }
+}
 
 /*! *********************************************************************************
 * \brief  Uninstall the callback for the specified Pin Definition
@@ -628,55 +628,55 @@ bool_t GpioOutputPinInit(const gpioOutputPinConfig_t* pOutputConfig, uint32_t no
 *
 ********************************************************************************** */
 
-// gpioStatus_t GpioUninstallIsr( const gpioInputPinConfig_t* pInputConfig )
-// {
-//     IRQn_Type irqNo;
-//     uint32_t  i, j;
-//     gpioPort_t portId = pInputConfig->gpioPort;
-//     uint32_t pinMask  = 1 <<pInputConfig->gpioPin;        
-//     for( i=0; i<mGpioIsrCount; i++ )
-//     {
-//         if( (mGpioIsr[i].port == portId) && (mGpioIsr[i].pinMask & pinMask) )
-//         {
-//             OSA_InterruptDisable();
-//             /* uninstall ISR only for specified pins */
-//             mGpioIsr[i].pinMask &= ~pinMask;
-//             /* if no more pins are active, uninstall handler function */
-//             if( !mGpioIsr[i].pinMask )
-//             {
-//                 irqNo = mGpioIsr[i].irqId;
-//                 mGpioIsr[i].callback = NULL;
+gpioStatus_t GpioUninstallIsr( const gpioInputPinConfig_t* pInputConfig )
+{
+    IRQn_Type irqNo;
+    uint32_t  i, j;
+    gpioPort_t portId = pInputConfig->gpioPort;
+    uint32_t pinMask  = 1 <<pInputConfig->gpioPin;        
+    for( i=0; i<mGpioIsrCount; i++ )
+    {
+        if( (mGpioIsr[i].port == portId) && (mGpioIsr[i].pinMask & pinMask) )
+        {
+            OSA_InterruptDisable();
+            /* uninstall ISR only for specified pins */
+            mGpioIsr[i].pinMask &= ~pinMask;
+            /* if no more pins are active, uninstall handler function */
+            if( !mGpioIsr[i].pinMask )
+            {
+                irqNo = mGpioIsr[i].irqId;
+                mGpioIsr[i].callback = NULL;
 
-//                 /* Shift next entries to the left */
-//                 for( j=i; j<mGpioIsrCount-1; j++ )
-//                 {
-//                     mGpioIsr[j] = mGpioIsr[j+1];
-//                 }
-//                 mGpioIsrCount--;
+                /* Shift next entries to the left */
+                for( j=i; j<mGpioIsrCount-1; j++ )
+                {
+                    mGpioIsr[j] = mGpioIsr[j+1];
+                }
+                mGpioIsrCount--;
 
-//                 /* Search for other ISR installed for the same IRQ */
-//                 for( j=0; j<mGpioIsrCount; j++ )
-//                 {
-//                     if( irqNo == mGpioIsr[j].irqId )
-//                     {
-//                         irqNo = NotAvail_IRQn;
-//                         break;
-//                     }
-//                 }
+                /* Search for other ISR installed for the same IRQ */
+                for( j=0; j<mGpioIsrCount; j++ )
+                {
+                    if( irqNo == mGpioIsr[j].irqId )
+                    {
+                        irqNo = NotAvail_IRQn;
+                        break;
+                    }
+                }
 
-//                 /* If no other ISR was installed for this IRQ, disable IRQ in NVIC */
-//                 if( irqNo != NotAvail_IRQn )
-//                 {
-//                     NVIC_DisableIRQ(irqNo);
-//                 }
-//             }
-//             OSA_InterruptEnable();
-//             return gpio_success;
-//         }
-//     }
+                /* If no other ISR was installed for this IRQ, disable IRQ in NVIC */
+                if( irqNo != NotAvail_IRQn )
+                {
+                    NVIC_DisableIRQ(irqNo);
+                }
+            }
+            OSA_InterruptEnable();
+            return gpio_success;
+        }
+    }
 
-//     return gpio_notFound;
-// }
+    return gpio_notFound;
+}
 
 /*! *********************************************************************************
 *************************************************************************************
@@ -723,37 +723,37 @@ void Gpio_CommonIsr(void)
 * \return  install status
 *
 ********************************************************************************** */
-// static gpioStatus_t Gpio_InstallPortISR(IRQn_Type irqId, uint32_t nvicPrio)
-// {
-//     if( irqId != NotAvail_IRQn )
-//     {
-//         OSA_InstallIntHandler(irqId, Gpio_CommonIsr);
-// #if defined(FSL_FEATURE_SOC_INTMUX_COUNT) && FSL_FEATURE_SOC_INTMUX_COUNT
-//         if(irqId>= FSL_FEATURE_INTMUX_IRQ_START_INDEX)
-//         {
-//           uint8_t portId;
-//           for(portId = 0; portId < gpioPort_Invalid_c; portId++)
-//           {
-//             if(maPortIrqId[portId] == irqId)
-//             {
-//              Gpio_IntmuxInit();
-//              INTMUX_EnableInterrupt(maIntmuxBases[gGpio_IntmuxInstance_d], maGpioIntMuxChannel[portId], irqId);
-//              NVIC_SetPriority(maIntmuxIRQNumber[gGpio_IntmuxInstance_d][maGpioIntMuxChannel[portId]], nvicPrio >> (8 - __NVIC_PRIO_BITS));
-//              break;
-//             }
-//           }
-//         }
-//         else
-// #endif        
-//         {
-//         /* Enable IRQ in NVIC and set priority */
-//         NVIC_ClearPendingIRQ(irqId);
-//         NVIC_EnableIRQ(irqId);
-//         NVIC_SetPriority(irqId, nvicPrio >> (8 - __NVIC_PRIO_BITS));
-//         }
-//     }
-//     return gpio_success;
-// }
+static gpioStatus_t Gpio_InstallPortISR(IRQn_Type irqId, uint32_t nvicPrio)
+{
+    if( irqId != NotAvail_IRQn )
+    {
+        OSA_InstallIntHandler(irqId, Gpio_CommonIsr);
+#if defined(FSL_FEATURE_SOC_INTMUX_COUNT) && FSL_FEATURE_SOC_INTMUX_COUNT
+        if(irqId>= FSL_FEATURE_INTMUX_IRQ_START_INDEX)
+        {
+          uint8_t portId;
+          for(portId = 0; portId < gpioPort_Invalid_c; portId++)
+          {
+            if(maPortIrqId[portId] == irqId)
+            {
+             Gpio_IntmuxInit();
+             INTMUX_EnableInterrupt(maIntmuxBases[gGpio_IntmuxInstance_d], maGpioIntMuxChannel[portId], irqId);
+             NVIC_SetPriority(maIntmuxIRQNumber[gGpio_IntmuxInstance_d][maGpioIntMuxChannel[portId]], nvicPrio >> (8 - __NVIC_PRIO_BITS));
+             break;
+            }
+          }
+        }
+        else
+#endif        
+        {
+        /* Enable IRQ in NVIC and set priority */
+        NVIC_ClearPendingIRQ(irqId);
+        NVIC_EnableIRQ(irqId);
+        NVIC_SetPriority(irqId, nvicPrio >> (8 - __NVIC_PRIO_BITS));
+        }
+    }
+    return gpio_success;
+}
 
 #if (FSL_FEATURE_SOC_INTMUX_COUNT <= 0) && (FSL_FEATURE_SOC_SYSCON_COUNT > 0)
 void GpioSetInterruptType(GPIO_Type *base,  uint8_t gpioPin, pinInterrupt_t int_mode)

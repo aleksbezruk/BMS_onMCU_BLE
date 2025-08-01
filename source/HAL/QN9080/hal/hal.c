@@ -23,6 +23,8 @@
 #include "hal.h"
 #include "hal_gpio.h"
 
+#include "Flash_Adapter.h"
+
 /* =========================
  * Defines
  * ========================= */
@@ -66,6 +68,9 @@ HAL_status_t HAL_init_hardware(void)
 
     /** Set RF Rx Mode */
     RF_ConfigRxMode(SYSCON, gBleRfRxMode);
+
+    /** Initialize the FLASH driver via FLASH Adapter */
+    NV_Init();
 
     /** Set crystal load capacitance */
     if (!_HAL_isDebuggerConnected()) {

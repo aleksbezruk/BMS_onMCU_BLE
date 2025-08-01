@@ -918,6 +918,25 @@ static void Main_Test_Task(OSAL_arg_t argument)
         QS_STR("BLE_init completed successfully");
     QS_END()
     QS_FLUSH();
+    
+    // Start BLE Advertising for device discovery
+    QS_BEGIN_ID(MAIN, 0)
+        QS_STR("Starting BLE Advertising...");
+    QS_END()
+    QS_FLUSH();
+    
+    BLE_qn9080_status_t advStatus = BLE_StartAdvertising();
+    if (advStatus != BLE_QN9080_STATUS_OK) {
+        QS_BEGIN_ID(MAIN, 0)
+            QS_STR("WARNING: BLE Advertising failed to start");
+        QS_END()
+        QS_FLUSH();
+    } else {
+        QS_BEGIN_ID(MAIN, 0)
+            QS_STR("BLE Advertising started - device discoverable as 'QN9080_BMS'");
+        QS_END()
+        QS_FLUSH();
+    }
 
     while (true) {
         /** Wait for event */
@@ -930,8 +949,8 @@ static void Main_Test_Task(OSAL_arg_t argument)
         if (status != OSAL_SUCCESS) {
             HAL_ASSERT(0, __FILE__, __LINE__);
         }
-
-        parseQueueItem_(&queueItem);
+        
+            parseQueueItem_(&queueItem);
     }
 }
 

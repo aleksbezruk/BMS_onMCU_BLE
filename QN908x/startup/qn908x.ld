@@ -126,8 +126,8 @@ ram_vector_table        = DEFINED(__ram_vector_table__)     ? __ram_vector_table
 UseBootloaderLink       = DEFINED(gUseBootloaderLink_d)     ? gUseBootloaderLink_d      : 0;
 UseInternalStorageLink  = DEFINED(gUseInternalStorageLink_d)? gUseInternalStorageLink_d : 0;
 
-HEAP_SIZE               = DEFINED(__heap_size__)            ? __heap_size__             : 0;
-STACK_SIZE              = DEFINED(__stack_size__)           ? __stack_size__            : 0x0800;
+HEAP_SIZE               = DEFINED(__heap_size__)            ? __heap_size__             : 0x3C00;  /* 15KB heap */
+STACK_SIZE              = DEFINED(__stack_size__)           ? __stack_size__            : 0x2000;  /* 8KB stack */
 vector_table_size       = 0x114;
 
 

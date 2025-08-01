@@ -102,10 +102,13 @@ subsequent connections over the LE transport */
 
 /* Defines pools by block size and number of blocks. Must be aligned to 4 bytes.*/
 #define AppPoolsDetails_c \
-         _block_size_  32  _number_of_blocks_    5 _eol_  \
-         _block_size_  64  _number_of_blocks_    5 _eol_  \
-         _block_size_ 128  _number_of_blocks_    5 _eol_  \
-         _block_size_ 512  _number_of_blocks_    5 _eol_
+    _block_size_   32   _number_of_blocks_   6 _eol_  \
+    _block_size_   64   _number_of_blocks_   3 _eol_  \
+    _block_size_  128   _number_of_blocks_   8 _eol_  \
+    _block_size_  256   _number_of_blocks_   8 _eol_  \
+    _block_size_  312   _number_of_blocks_   1 _eol_  \
+    _block_size_  512   _number_of_blocks_   4 _eol_  \
+    _block_size_ 1024   _number_of_blocks_   3 _eol_
 
 /* Defines number of timers needed by the application */
 #define gTmrApplicationTimers_c         5
