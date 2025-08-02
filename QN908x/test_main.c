@@ -25,6 +25,9 @@
 
 #include "BLE_qn9080.h"
 
+// Include for SYSCON register access
+#include "fsl_device_registers.h"
+
 // ===================
 // HardFault Handler
 // ===================
@@ -43,10 +46,17 @@ void HardFault_Handler_C(uint32_t *stack_frame) {
     volatile fault_stack_frame_t *frame = (fault_stack_frame_t *)stack_frame;
     volatile uint32_t fault_pc = frame->pc;
     volatile uint32_t fault_lr = frame->lr;
+    volatile uint32_t fault_r0 = frame->r0;
+    volatile uint32_t fault_r1 = frame->r1;
+    volatile uint32_t fault_r2 = frame->r2;
+    volatile uint32_t fault_r3 = frame->r3;
     volatile uint32_t cfsr = SCB->CFSR;  // Configurable Fault Status Register
     volatile uint32_t hfsr = SCB->HFSR;  // HardFault Status Register
     volatile uint32_t mmfar = SCB->MMFAR; // MemManage Fault Address Register
     volatile uint32_t bfar = SCB->BFAR;   // BusFault Address Register
+    
+    // Check if this is the expected nvds_get fault
+    bool is_nvds_fault = (fault_pc == 0x0302559d) || (fault_r3 == 0x0302559d);
     
     // Log fault information via QSPY
     QS_BEGIN_ID(MAIN, 0 /*prio/ID for local Filters*/)
@@ -54,6 +64,14 @@ void HardFault_Handler_C(uint32_t *stack_frame) {
         QS_U32(0, fault_pc);
         QS_STR(" LR=");
         QS_U32(0, fault_lr);
+        QS_STR(" R0=");
+        QS_U32(0, fault_r0);
+        QS_STR(" R1=");
+        QS_U32(0, fault_r1);
+        QS_STR(" R2=");
+        QS_U32(0, fault_r2);
+        QS_STR(" R3=");
+        QS_U32(0, fault_r3);
         QS_STR(" CFSR=");
         QS_U32(0, cfsr);
         QS_STR(" HFSR=");
@@ -62,6 +80,9 @@ void HardFault_Handler_C(uint32_t *stack_frame) {
         QS_U32(0, mmfar);
         QS_STR(" BFAR=");
         QS_U32(0, bfar);
+        if (is_nvds_fault) {
+            QS_STR(" [NVDS_GET ROM ACCESS FAULT]");
+        }
     QS_END()
     QS_FLUSH(); // Flush QSPY output
     
@@ -159,7 +180,7 @@ static void led_blink_alive_(void);
 #define ADC_TEST_TASK_PRIORITY   (OSAL_ADC_TASK_PRIORITY)
 #define ADC_TEST_TASK_INTERVAL   (10000U)    // in milliseconds
 
-#define MAIN_TEST_TASK_STACK_SIZE  (4096U)  // Further increased for BLE initialization debugging
+#define MAIN_TEST_TASK_STACK_SIZE  (2048U)  // Further increased for BLE initialization debugging
 #define MAIN_TEST_TASK_PRIORITY   (OSAL_MAIN_TASK_PRIORITY)
 #define MAIN_TEST_TASK_INTERVAL   (1000U)    // in milliseconds
 #define MAIN_TASK_QUEUE_SIZE      (5U)
@@ -255,75 +276,53 @@ int main(void)
 #endif // BMS_DISABLE_RTOS
 
     /** Run tests */
-    while(1) {
-#ifdef BMS_DISABLE_RTOS
-        _runTests_noRTOS();
-#else
-        /** LED task creation */
-        OSAL_Status_t status = OSAL_SUCCESS;
-        OSAL_TASK_CREATE(
-            OSAL_TASK_GET_HANDLE(LedTask),
-             Led_Test_Task, 
-             "Led_Test_Task",
-             NULL,  // Stack pointer
-             LED_TEST_TASK_STACK_SIZE,
-             LED_TEST_TASK_PRIORITY, 
-             NULL, // Argument to pass to the task
-             status
-        );
-        if (status != OSAL_SUCCESS) {
-            HAL_ASSERT(0, __FILE__, __LINE__); // Task creation failed
-        }
-
-        /** ADC task creation */
-        status = OSAL_SUCCESS;
-        // ADC task creation
-        OSAL_TASK_CREATE(
-            OSAL_TASK_GET_HANDLE(AdcTask),
-            Adc_Test_Task,
-            "Adc_Test_Task",
-            NULL,  // Stack pointer
-            ADC_TEST_TASK_STACK_SIZE,
-            ADC_TEST_TASK_PRIORITY,
-            NULL, // Argument to pass to the task
-            status
-        );
-        if (status != OSAL_SUCCESS) {
-            HAL_ASSERT(0, __FILE__, __LINE__); // Task creation failed
-        }
-
-        /** Main task creation */
-        status = OSAL_SUCCESS;
-        OSAL_TASK_CREATE(
-            OSAL_TASK_GET_HANDLE(MainTask),
-            Main_Test_Task,
-            "Main_Test_Task",
-            NULL,  // Stack pointer
-            MAIN_TEST_TASK_STACK_SIZE,
-            MAIN_TEST_TASK_PRIORITY,
-            NULL, // Argument to pass to the task
-            status
-        );
-        if (status != OSAL_SUCCESS) {
-            HAL_ASSERT(0, __FILE__, __LINE__); // Task creation failed
-        }
-        /** Create an event Queue for main task */
-        OSAL_QUEUE_CREATE(
-            mainTaskQueueHandle,
-            "mainTaskQueue",
-            MAIN_TASK_QUEUE_SIZE,
-            sizeof(Main_queue_data_t),
-            NULL, // Queue storage (not used in this implementation)
-            status
-        );
-        if (status != OSAL_SUCCESS) {
-            HAL_ASSERT(0, __FILE__, __LINE__); // Queue creation failed
-        }
-
-        /** Start RTOS scheduler */
-        vTaskStartScheduler();
-#endif  // BMS_DISABLE_RTOS
+#ifndef BMS_DISABLE_RTOS
+    /** Main task creation */
+    OSAL_Status_t status = OSAL_SUCCESS;
+    OSAL_TASK_CREATE(
+        OSAL_TASK_GET_HANDLE(MainTask),
+        Main_Test_Task,
+        "Main_Test_Task",
+        NULL,  // Stack pointer
+        MAIN_TEST_TASK_STACK_SIZE,
+        MAIN_TEST_TASK_PRIORITY,
+        NULL, // Argument to pass to the task
+        status
+    );
+    if (status != OSAL_SUCCESS) {
+        HAL_ASSERT(0, __FILE__, __LINE__); // Task creation failed
     }
+    /** Create an event Queue for main task */
+    OSAL_QUEUE_CREATE(
+        mainTaskQueueHandle,
+        "mainTaskQueue",
+        MAIN_TASK_QUEUE_SIZE,
+        sizeof(Main_queue_data_t),
+        NULL, // Queue storage (not used in this implementation)
+        status
+    );
+    if (status != OSAL_SUCCESS) {
+        HAL_ASSERT(0, __FILE__, __LINE__); // Queue creation failed
+    }
+
+    /** Start RTOS scheduler */
+    vTaskStartScheduler();
+    HAL_ASSERT(0, __FILE__, __LINE__); // Scheduler should never return
+#else
+    while(1) {
+        _runTests_noRTOS();
+    }
+#endif // BMS_DISABLE_RTOS
+
+    // If we reach here, it means the scheduler returned unexpectedly
+    HAL_ASSERT(0, __FILE__, __LINE__); // Scheduler should never return
+    // This is a fail-safe to prevent the application from running into undefined behavior
+    QS_BEGIN_ID(MAIN, 0)
+        QS_STR("Scheduler returned unexpectedly");
+    QS_END()
+    QS_FLUSH(); // Flush QSPY output
+
+    // Return 0 to indicate normal termination (though this should never happen)
     return 0;
 }
 
@@ -894,12 +893,59 @@ static void Main_Test_Task(OSAL_arg_t argument)
         HAL_ASSERT(0, __FILE__, __LINE__);
     }
     
+    // Test ROM accessibility before BLE initialization
+    QS_BEGIN_ID(MAIN, 0)
+        QS_STR("Testing ROM accessibility...");
+    QS_END()
+    QS_FLUSH();
+    
+    // Check system control register for memory remapping
+    volatile uint32_t sys_mode_ctrl = SYSCON->SYS_MODE_CTRL;
+    QS_BEGIN_ID(MAIN, 0)
+        QS_STR("SYS_MODE_CTRL=");
+        QS_U32(0, sys_mode_ctrl);
+        QS_STR(" REMAP=");
+        QS_U32(0, sys_mode_ctrl & 0x3);
+    QS_END()
+    QS_FLUSH();
+    
+    // Try to read from ROM entry point (should be accessible)
+    volatile uint32_t *rom_entry = (volatile uint32_t *)0x03000738;
+    QS_BEGIN_ID(MAIN, 0)
+        QS_STR("Attempting to read ROM entry point at 0x03000738...");
+    QS_END()
+    QS_FLUSH();
+    
+    // Simple read test - if ROM is accessible, this should work
+    volatile uint32_t rom_value = *rom_entry;
+    
+    QS_BEGIN_ID(MAIN, 0)
+        QS_STR("ROM entry value=");
+        QS_U32(0, rom_value);
+    QS_END()
+    QS_FLUSH();
+    
+    // Try reading the specific nvds_get function address
+    QS_BEGIN_ID(MAIN, 0)
+        QS_STR("Testing nvds_get address 0x0302559d...");
+    QS_END()
+    QS_FLUSH();
+    
+    volatile uint32_t *nvds_get_addr = (volatile uint32_t *)0x0302559d;
+    volatile uint32_t nvds_value = *nvds_get_addr;
+    
+    QS_BEGIN_ID(MAIN, 0)
+        QS_STR("nvds_get instruction=");
+        QS_U32(0, nvds_value);
+    QS_END()
+    QS_FLUSH();
+    
     // Initialize BLE stack in task context with large stack
     QS_BEGIN_ID(MAIN, 0)
         QS_STR("Calling BLE_init...");
     QS_END()
     QS_FLUSH();
-    
+
     BLE_init();
     
     // Check stack canary after BLE init
@@ -936,6 +982,39 @@ static void Main_Test_Task(OSAL_arg_t argument)
             QS_STR("BLE Advertising started - device discoverable as 'QN9080_BMS'");
         QS_END()
         QS_FLUSH();
+    }
+
+    /** LED task creation */
+    status = OSAL_SUCCESS;
+    OSAL_TASK_CREATE(
+        OSAL_TASK_GET_HANDLE(LedTask),
+            Led_Test_Task, 
+            "Led_Test_Task",
+            NULL,  // Stack pointer
+            LED_TEST_TASK_STACK_SIZE,
+            LED_TEST_TASK_PRIORITY, 
+            NULL, // Argument to pass to the task
+            status
+    );
+    if (status != OSAL_SUCCESS) {
+        HAL_ASSERT(0, __FILE__, __LINE__); // Task creation failed
+    }
+
+    /** ADC task creation */
+    status = OSAL_SUCCESS;
+    // ADC task creation
+    OSAL_TASK_CREATE(
+        OSAL_TASK_GET_HANDLE(AdcTask),
+        Adc_Test_Task,
+        "Adc_Test_Task",
+        NULL,  // Stack pointer
+        ADC_TEST_TASK_STACK_SIZE,
+        ADC_TEST_TASK_PRIORITY,
+        NULL, // Argument to pass to the task
+        status
+    );
+    if (status != OSAL_SUCCESS) {
+        HAL_ASSERT(0, __FILE__, __LINE__); // Task creation failed
     }
 
     while (true) {

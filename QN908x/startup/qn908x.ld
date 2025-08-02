@@ -114,7 +114,7 @@ m_sector_size   = 2048; /* 2k  */
  * - sNVM_region: 4KB (backup/wear leveling)
  * Used for: battery params, config data, history, BLE bonding 
  */
-gNVMSectorCountLink_d = 4;
+/* gNVMSectorCountLink_d = 4; */
 
 /****************************************************
  *******         User Defines                 *******

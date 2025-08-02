@@ -271,11 +271,11 @@ target_link_options(${EXECUTABLE} PRIVATE
         -Wl,-Map=${PROJECT_NAME}.map,--cref
         -Wl,--gc-sections
         -Wl,--sort-section=alignment
-        -Xlinker -print-memory-usage -Xlinker
+        -Wl,--print-memory-usage
         -Wl,--defsym=__ram_vector_table__=1
         -Wl,--defsym=gUseNVMLink_d=1
         -Wl,--defsym=gEraseNVMLink_d=1
-        -Wl,--just-symbols=${CMAKE_SOURCE_DIR}/board/fw_symbols_gcc.h
+        "-Wl,--just-symbols=${CMAKE_SOURCE_DIR}/board/fw_symbols_gcc.h"
         )
 
 # Add the crypto and BLE libraries after the executable target

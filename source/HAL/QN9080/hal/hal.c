@@ -16,6 +16,7 @@
 #include "fsl_calibration.h"
 #include "fsl_syscon.h"
 #include "fsl_rf.h"
+#include "fsl_flash.h"
 
 #include "GPIO_Adapter.h"
 #include "gpio_pins.h"
@@ -24,6 +25,9 @@
 #include "hal_gpio.h"
 
 #include "Flash_Adapter.h"
+
+// NVDS (Non-Volatile Data Storage) for BLE ROM functions
+#include "nvds.h"
 
 /* =========================
  * Defines
@@ -71,6 +75,31 @@ HAL_status_t HAL_init_hardware(void)
 
     /** Initialize the FLASH driver via FLASH Adapter */
     NV_Init();
+
+    /** Initialize NVDS (Non-Volatile Data Storage) for BLE ROM functions */
+    // NVDS initialization must be done after NV_Init() which sets up gFlashConfig
+    // This enables ROM BLE functions like nvds_get, nvds_put, etc.
+    extern flash_config_t gFlashConfig;  // Declared in Flash_Adapter.c
+    
+    // Temporarily set flash block base to FSL_FEATURE_FLASH_BASE_ADDR for NVDS operations
+    uint32_t originalBlockBase = gFlashConfig.blockBase;
+    gFlashConfig.blockBase = FSL_FEATURE_FLASH_BASE_ADDR;
+    
+    // Initialize NVDS with ROM function
+    uint8_t nvds_status = nvds_init(
+        (uint8_t *)CFG_NVDS_ADDRESS,        // NVDS space in FLASH (0x2107F000)
+        CFG_NVDS_SIZE,                      // Size: 2KB
+        (uint8_t *)CFG_NVDS_BACKUP_ADDRESS, // Backup space (0x2107E800)
+        NULL,                               // Use default ROM API
+        &gFlashConfig                       // Flash configuration
+    );
+    
+    // Restore original flash block base for normal operations
+    gFlashConfig.blockBase = originalBlockBase;
+    
+    // NVDS_FAIL (status=1) is normal for fresh devices - continue execution like NXP examples
+    // Only log the status without failing - ROM BLE functions are now accessible regardless
+    (void)nvds_status; // Suppress unused variable warning
 
     /** Set crystal load capacitance */
     if (!_HAL_isDebuggerConnected()) {

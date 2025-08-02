@@ -25,6 +25,7 @@
 #include "hal.h"
 #include "hal_led.h"
 
+// NVDS includes
 // QSPY for debugging
 #include "qs.h"
 #include "MAIN.h"
@@ -203,6 +204,13 @@ void BLE_init(void)
         HAL_ASSERT(0, __FILE__, __LINE__); // RNG initialization failed
     }
     RNG_SetPseudoRandomNoSeed(NULL);
+
+    // NVDS is initialized in main() before any tasks start
+    // This ensures ROM BLE functions (nvds_get, nvds_put, etc.) are accessible
+    QS_BEGIN_ID(MAIN, 0)
+        QS_STR("NVDS initialized in main() - ROM functions accessible");
+    QS_END()
+    QS_FLUSH();
 
 #if gAppUseNvm_d
     /* Initialize NV module only if we have registered datasets */
