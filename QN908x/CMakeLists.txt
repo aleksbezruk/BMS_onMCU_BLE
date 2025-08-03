@@ -165,7 +165,8 @@ elseif(BUILD_CONFIG STREQUAL "Test")
         bluetooth/host/config/ble_globals.c
         bluetooth/hci_transport/source/hcit_serial_interface.c
         BLE_qn9080/ble_controller_task.c
-        BLE_qn9080/ble_stubs_fixed.c
+        BLE_qn9080/ble_host_tasks.c
+        BLE_qn9080/gatt_db_app.c
         # Add or remove files specific to Test config here
     )
 else()

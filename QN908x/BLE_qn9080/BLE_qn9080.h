@@ -23,7 +23,6 @@ typedef enum {
 
 // Function declarations
 void BLE_init(void);
-BLE_qn9080_status_t BLE_StartAdvertising(void);
 BLE_qn9080_status_t BLE_StopAdvertising(void);
 
 #endif // BLE_QN9080_H
