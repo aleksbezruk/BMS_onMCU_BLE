@@ -41,6 +41,11 @@
 #include "ble_host_tasks.h"
 #include "ble_host_task_config.h"
 
+// =====================
+// Defines
+// =====================
+#define BLE_EXTENDED_LOGS 0
+
 // Forward declarations for missing function prototypes
 bool_t Ble_CheckMemoryStorage(void);
 
@@ -70,8 +75,20 @@ NVM_RegisterDataSet(&bmsTestConfig,
 /* Compute the number of elements of an array */
 #define NumberOfElements(x) (sizeof(x)/sizeof((x)[0]))
 
+// Set up advertising parameters
+static gapAdvertisingParameters_t advParams = {
+    .minInterval = 2048,   // 1.28s (2048 * 0.625ms) - very slow for maximum visibility 
+    .maxInterval = 2048,   // 1.28s - same as min for consistent timing
+    .advertisingType = gAdvConnectableUndirected_c,
+    .ownAddressType = gBleAddrTypePublic_c,
+    .peerAddressType = gBleAddrTypePublic_c,
+    .peerAddress = {0, 0, 0, 0, 0, 0},
+    .channelMap = gGapAdvertisingChannelMapDefault_c,
+    .filterPolicy = gProcessAll_c
+};
+
 static const uint8_t adData0[1] = { (gapAdTypeFlags_t)(gLeGeneralDiscoverableMode_c | gBrEdrNotSupported_c) };
-static const uint8_t adData1[] = "QN9080_BMS";
+static const char adData1[] = "QN9080_BMS";
 
 static const gapAdStructure_t advScanStruct[] = {
     {
@@ -80,8 +97,8 @@ static const gapAdStructure_t advScanStruct[] = {
         .aData = (uint8_t*)adData0
     },
     {
-        .length = NumberOfElements(adData1) - 1 + 1,  // String length (no null terminator) + AD type byte
-        .adType = gAdCompleteLocalName_c,
+        .length = NumberOfElements(adData1) + 1,  // String length (no null terminator) + AD type byte
+        .adType = gAdShortenedLocalName_c,
         .aData = (uint8_t*)adData1
     }
 };
@@ -96,11 +113,11 @@ static gapScanResponseData_t g_scanRspData = {
     .aAdStructures = NULL
 };
 
+#if BLE_EXTENDED_LOGS == 1
 static volatile uint32_t g_advertisingCallbackCount = 0;
+#endif // BLE_EXTENDED_LOGS
 
 // Forward declarations for BLE callbacks
-static void BLE_GenericCallback(gapGenericEvent_t* pGenericEvent);
-static bleResult_t BLE_HostHciRecvCallback(hciPacketType_t packetType, void* pHciPacket, uint16_t packetSize);
 static bleResult_t BLE_HostToControllerInterface(hciPacketType_t packetType, void* pPacket, uint16_t packetSize);
 // static void App_SecLibMultCallback(computeDhKeyParam_t *pData);
 
@@ -122,10 +139,12 @@ static void BLE_GenericCallback(gapGenericEvent_t* pGenericEvent)
         return;
     }
 
+#if BLE_EXTENDED_LOGS == 1
     QS_BEGIN_ID(MAIN, 0)
         QS_STR("BLE GAP Event received: type=");
         QS_U32(0, pGenericEvent->eventType);
     QS_END()
+#endif // BLE_EXTENDED_LOGS
 
     switch (pGenericEvent->eventType) {
         case gInitializationComplete_c:
@@ -181,43 +200,6 @@ static void BLE_GenericCallback(gapGenericEvent_t* pGenericEvent)
 }
 
 /*! *********************************************************************************
- * \brief  HCI Host Receive Callback (from Controller to Host)
- * \param[in] packetType HCI packet type
- * \param[in] pHciPacket HCI packet
- * \param[in] packetSize HCI packet size
- * \return BLE result status
- ********************************************************************************** */
-static bleResult_t BLE_HostHciRecvCallback(hciPacketType_t packetType, void* pHciPacket, uint16_t packetSize)
-{
-    // This callback receives HCI packets from the controller
-    // Forward them to the BLE host stack for processing
-    if (pHciPacket != NULL && packetSize > 0) {
-        QS_BEGIN_ID(MAIN, 0)
-            QS_STR("HCI RX: type=");
-            QS_U8(0, packetType);
-            QS_STR(" size=");
-            QS_U16(0, packetSize);
-        QS_END()
-        
-        // For debugging: log the first few bytes if it's an event packet
-        if (packetType == 0x04 && packetSize >= 2) {  // HCI Event packet
-            uint8_t* pData = (uint8_t*)pHciPacket;
-            QS_BEGIN_ID(MAIN, 0)
-                QS_STR(" HCI Event: code=");
-                QS_U8(0, pData[0]);
-                QS_STR(" len=");
-                QS_U8(0, pData[1]);
-            QS_END()
-        }
-        
-        // Call the BLE Host downlink interface to process the HCI packet
-        return Ble_HciRecv(packetType, pHciPacket, packetSize);
-    }
-    
-    return gBleSuccess_c; // Return success for empty packets
-}
-
-/*! *********************************************************************************
  * \brief  Host to Controller Interface (from Host to Controller)
  * \param[in] packetType HCI packet type
  * \param[in] pPacket HCI packet
@@ -230,12 +212,14 @@ static bleResult_t BLE_HostToControllerInterface(hciPacketType_t packetType, voi
         return gBleInvalidParameter_c;
     }
 
+#if BLE_EXTENDED_LOGS == 1
     QS_BEGIN_ID(MAIN, 0)
         QS_STR("HCI TX: type=");
         QS_U8(0, packetType);
         QS_STR(" size=");
         QS_U16(0, packetSize);
     QS_END()
+#endif // BLE_EXTENDED_LOGS
 
     // Send HCI packet to controller
     return Hci_SendPacketToController(packetType, pPacket, packetSize);
@@ -304,14 +288,15 @@ void BLE_init(void)
         QS_FLUSH();
         HAL_ASSERT(0, __FILE__, __LINE__); // Controller task initialization failed
     }
-    
+
+#if BLE_EXTENDED_LOGS == 1
     QS_BEGIN_ID(MAIN, 0)
         QS_STR("Controller_TaskInit completed successfully");
     QS_END()
-    QS_FLUSH();
+#endif // BLE_EXTENDED_LOGS
 
     /** Step 2: Initialize BLE Controller with HCI callback */
-    bleResult_t controllerResult = Controller_Init(BLE_HostHciRecvCallback);
+    bleResult_t controllerResult = Controller_Init(Ble_HciRecv);
     if (controllerResult != gBleSuccess_c) {
         QS_BEGIN_ID(MAIN, 0)
             QS_STR("Controller_Init failed with result=");
@@ -321,10 +306,11 @@ void BLE_init(void)
         HAL_ASSERT(0, __FILE__, __LINE__); // Controller initialization failed
     }
 
+#if BLE_EXTENDED_LOGS == 1
     QS_BEGIN_ID(MAIN, 0)
         QS_STR("Controller_Init completed successfully");
     QS_END()
-    QS_FLUSH();
+#endif // BLE_EXTENDED_LOGS
 
     /** Step 3: Initialize BLE Host Tasks */    
     /* Check for available memory storage */
@@ -336,10 +322,11 @@ void BLE_init(void)
         HAL_ASSERT(0, __FILE__, __LINE__); // Memory storage check failed
     }
     
+#if BLE_EXTENDED_LOGS == 1
     QS_BEGIN_ID(MAIN, 0)
         QS_STR("BLE memory storage check passed - calling Ble_HostTaskInit");
     QS_END()
-    QS_FLUSH();
+#endif // BLE_EXTENDED_LOGS
     
     osaStatus_t hostTaskStatus = Ble_HostTaskInit();
     if (hostTaskStatus != osaStatus_Success) {
@@ -351,10 +338,11 @@ void BLE_init(void)
         HAL_ASSERT(0, __FILE__, __LINE__); // BLE Host task initialization failed
     }
     
+#if BLE_EXTENDED_LOGS == 1
     QS_BEGIN_ID(MAIN, 0)
         QS_STR("Ble_HostTaskInit completed successfully");
     QS_END()
-    QS_FLUSH();
+#endif // BLE_EXTENDED_LOGS
 
     /** Step 4: Initialize BLE Host with callbacks */    
     bleResult_t hostResult = Ble_HostInitialize(BLE_GenericCallback, BLE_HostToControllerInterface);
@@ -367,78 +355,81 @@ void BLE_init(void)
         HAL_ASSERT(0, __FILE__, __LINE__); // Host initialization failed
     }
     
+#if BLE_EXTENDED_LOGS == 1
     QS_BEGIN_ID(MAIN, 0)
         QS_STR("Ble_HostInitialize completed successfully");
     QS_END()
-    QS_FLUSH();
+#endif // BLE_EXTENDED_LOGS
 
-    /** Step 5: Configure GAP default parameters (CRITICAL - often missing!) */    
-    // Set default pairing parameters - required for proper GAP operation
-    gapPairingParameters_t pairingParams = {
-        .withBonding = FALSE,
-        .securityModeAndLevel = gSecurityMode_1_Level_1_c,  // Just Works
-        .maxEncryptionKeySize = gDefaultEncryptionKeySize_d,  // Use correct constant
-        .localIoCapabilities = gIoNone_c,
-        .oobAvailable = FALSE,
-        .centralKeys = gLtk_c | gIrk_c | gCsrk_c,
-        .peripheralKeys = gLtk_c | gIrk_c | gCsrk_c,
-        .leSecureConnectionSupported = TRUE,
-        .useKeypressNotifications = FALSE,
-    };
+    // /** Step 5: Configure GAP default parameters (CRITICAL - often missing!) */    
+    // // Set default pairing parameters - required for proper GAP operation
+    // gapPairingParameters_t pairingParams = {
+    //     .withBonding = FALSE,
+    //     .securityModeAndLevel = gSecurityMode_1_Level_1_c,  // Just Works
+    //     .maxEncryptionKeySize = gDefaultEncryptionKeySize_d,  // Use correct constant
+    //     .localIoCapabilities = gIoNone_c,
+    //     .oobAvailable = FALSE,
+    //     .centralKeys = gLtk_c | gIrk_c | gCsrk_c,
+    //     .peripheralKeys = gLtk_c | gIrk_c | gCsrk_c,
+    //     .leSecureConnectionSupported = TRUE,
+    //     .useKeypressNotifications = FALSE,
+    // };
     
-    bleResult_t pairingResult = Gap_SetDefaultPairingParameters(&pairingParams);
-    if (pairingResult != gBleSuccess_c) {
-        QS_BEGIN_ID(MAIN, 0)
-            QS_STR("Gap_SetDefaultPairingParameters failed: ");
-            QS_U32(0, pairingResult);
-        QS_END()
-        QS_FLUSH();
-        // Don't fail here - some stacks work without this
-    } else {
-        QS_BEGIN_ID(MAIN, 0)
-            QS_STR("Gap_SetDefaultPairingParameters completed successfully");
-        QS_END()
-        QS_FLUSH();
-    }
+    // bleResult_t pairingResult = Gap_SetDefaultPairingParameters(&pairingParams);
+    // if (pairingResult != gBleSuccess_c) {
+    //     QS_BEGIN_ID(MAIN, 0)
+    //         QS_STR("Gap_SetDefaultPairingParameters failed: ");
+    //         QS_U32(0, pairingResult);
+    //     QS_END()
+    //     QS_FLUSH();
+    //     // Don't fail here - some stacks work without this
+    // } else {
+    //     QS_BEGIN_ID(MAIN, 0)
+    //         QS_STR("Gap_SetDefaultPairingParameters completed successfully");
+    //     QS_END()
+    //     QS_FLUSH();
+    // }
 
-    /** Step 6: CRITICAL - Read and verify device address (required for advertising) */
-    bleResult_t addressResult = Gap_ReadPublicDeviceAddress();
-    if (addressResult != gBleSuccess_c) {
-        QS_BEGIN_ID(MAIN, 0)
-            QS_STR("WARNING: Gap_ReadPublicDeviceAddress failed: ");
-            QS_U32(0, addressResult);
-            QS_STR(" - Will try to set random address");
-        QS_END()
-        QS_FLUSH();
+    // /** Step 6: CRITICAL - Read and verify device address (required for advertising) */
+    // bleResult_t addressResult = Gap_ReadPublicDeviceAddress();
+    // if (addressResult != gBleSuccess_c) {
+    //     QS_BEGIN_ID(MAIN, 0)
+    //         QS_STR("WARNING: Gap_ReadPublicDeviceAddress failed: ");
+    //         QS_U32(0, addressResult);
+    //         QS_STR(" - Will try to set random address");
+    //     QS_END()
+    //     QS_FLUSH();
         
-        // If public address fails, set a random static address
-        bleDeviceAddress_t randomAddr = {0x01, 0x02, 0x03, 0x04, 0x05, 0xC0}; // MSB must be 11xxxxxx for static random
-        bleResult_t randomResult = Gap_SetRandomAddress(randomAddr);
-        if (randomResult != gBleSuccess_c) {
-            QS_BEGIN_ID(MAIN, 0)
-                QS_STR("CRITICAL: Gap_SetRandomAddress also failed: ");
-                QS_U32(0, randomResult);
-            QS_END()
-            QS_FLUSH();
-            HAL_ASSERT(0, __FILE__, __LINE__); // This is critical for advertising
-        } else {
-            QS_BEGIN_ID(MAIN, 0)
-                QS_STR("Random device address set successfully");
-            QS_END()
-            QS_FLUSH();
-        }
-    } else {
-        QS_BEGIN_ID(MAIN, 0)
-            QS_STR("Public device address read successfully");
-        QS_END()
-        QS_FLUSH();
-    }
-    
+    //     // If public address fails, set a random static address
+    //     bleDeviceAddress_t randomAddr = {0x01, 0x02, 0x03, 0x04, 0x05, 0xC0}; // MSB must be 11xxxxxx for static random
+    //     bleResult_t randomResult = Gap_SetRandomAddress(randomAddr);
+    //     if (randomResult != gBleSuccess_c) {
+    //         QS_BEGIN_ID(MAIN, 0)
+    //             QS_STR("CRITICAL: Gap_SetRandomAddress also failed: ");
+    //             QS_U32(0, randomResult);
+    //         QS_END()
+    //         QS_FLUSH();
+    //         HAL_ASSERT(0, __FILE__, __LINE__); // This is critical for advertising
+    //     } else {
+    //         QS_BEGIN_ID(MAIN, 0)
+    //             QS_STR("Random device address set successfully");
+    //         QS_END()
+    //         QS_FLUSH();
+    //     }
+    // } else {
+    //     QS_BEGIN_ID(MAIN, 0)
+    //         QS_STR("Public device address read successfully");
+    //     QS_END()
+    //     QS_FLUSH();
+    // }
+
+#if BLE_EXTENDED_LOGS == 1
     QS_BEGIN_ID(MAIN, 0)
         QS_STR("BLE initialization complete - advertising will start automatically");
         QS_STR(" when stack generates gInitializationComplete_c event");
     QS_END()
     QS_FLUSH();
+#endif // BLE_EXTENDED_LOGS
 }
 
 /*! *********************************************************************************
@@ -446,23 +437,14 @@ void BLE_init(void)
  ********************************************************************************** */
 static void BLE_SetupAdvertisingParameters(void)
 {
+#if BLE_EXTENDED_LOGS == 1
     QS_BEGIN_ID(MAIN, 0)
         QS_STR("BLE_SetupAdvertisingParameters: Setting up advertising parameters");
     QS_END()
     QS_FLUSH();
+#endif // BLE_EXTENDED_LOGS
 
-    // Set up advertising parameters
-    gapAdvertisingParameters_t advParams = {
-        .minInterval = 2048,   // 1.28s (2048 * 0.625ms) - very slow for maximum visibility 
-        .maxInterval = 2048,   // 1.28s - same as min for consistent timing
-        .advertisingType = gAdvConnectableUndirected_c,
-        .ownAddressType = gBleAddrTypePublic_c,
-        .peerAddressType = gBleAddrTypePublic_c,
-        .peerAddress = {0, 0, 0, 0, 0, 0},
-        .channelMap = gGapAdvertisingChannelMapDefault_c,
-        .filterPolicy = gProcessAll_c
-    };
-
+#if BLE_EXTENDED_LOGS == 1
     QS_BEGIN_ID(MAIN, 0)
         QS_STR("Setting advertising params: min=");
         QS_U16(0, advParams.minInterval);
@@ -472,6 +454,7 @@ static void BLE_SetupAdvertisingParameters(void)
         QS_U8(0, advParams.advertisingType);
     QS_END()
     QS_FLUSH();
+#endif // BLE_EXTENDED_LOGS
 
     bleResult_t result = Gap_SetAdvertisingParameters(&advParams);
     if (result != gBleSuccess_c) {
@@ -483,10 +466,12 @@ static void BLE_SetupAdvertisingParameters(void)
         HAL_ASSERT(0, __FILE__, __LINE__); // Critical failure
     }
 
+#if BLE_EXTENDED_LOGS == 1
     QS_BEGIN_ID(MAIN, 0)
         QS_STR("Gap_SetAdvertisingParameters completed successfully");
     QS_END()
     QS_FLUSH();
+#endif // BLE_EXTENDED_LOGS
 }
 
 /*! *********************************************************************************
@@ -494,10 +479,10 @@ static void BLE_SetupAdvertisingParameters(void)
  ********************************************************************************** */
 static void BLE_SetupAdvertisingData(void)
 {
+#if BLE_EXTENDED_LOGS == 1
     QS_BEGIN_ID(MAIN, 0)
         QS_STR("BLE_SetupAdvertisingData: Setting up advertising data (NXP style)");
     QS_END()
-    QS_FLUSH();
 
     // Debug: Log advertising data details (structures are statically initialized)
     QS_BEGIN_ID(MAIN, 0)
@@ -505,7 +490,6 @@ static void BLE_SetupAdvertisingData(void)
         QS_U8(0, g_advData.cNumAdStructures);
         QS_STR(" device_name='QN9080_BMS'");
     QS_END()
-    QS_FLUSH();
     
     // Debug: Print advertising data structures
     QS_BEGIN_ID(MAIN, 0)
@@ -516,7 +500,6 @@ static void BLE_SetupAdvertisingData(void)
         QS_STR(" flags=");
         QS_U8(0, adData0[0]);
     QS_END()
-    QS_FLUSH();
     
     QS_BEGIN_ID(MAIN, 0)
         QS_STR("ADV Structure 1 (Name): len=");
@@ -527,7 +510,7 @@ static void BLE_SetupAdvertisingData(void)
         QS_STR((char*)advScanStruct[1].aData);
         QS_STR("'");
     QS_END()
-    QS_FLUSH();
+#endif // BLE_EXTENDED_LOGS
 
     // Use g_scanRspData (empty scan response) following NXP pattern
     bleResult_t result = Gap_SetAdvertisingData(&g_advData, &g_scanRspData);
@@ -539,11 +522,12 @@ static void BLE_SetupAdvertisingData(void)
         QS_FLUSH();
         HAL_ASSERT(0, __FILE__, __LINE__); // Critical failure
     }
-
+#if BLE_EXTENDED_LOGS == 1
     QS_BEGIN_ID(MAIN, 0)
         QS_STR("Gap_SetAdvertisingData completed successfully (NXP style)");
     QS_END()
     QS_FLUSH();
+#endif // BLE_EXTENDED_LOGS
 }
 
 /*! *********************************************************************************
@@ -551,10 +535,11 @@ static void BLE_SetupAdvertisingData(void)
  ********************************************************************************** */
 static void BLE_StartAdvertisingInternal(void)
 {
+#if BLE_EXTENDED_LOGS == 1
     QS_BEGIN_ID(MAIN, 0)
         QS_STR("BLE_StartAdvertisingInternal: Starting advertising");
     QS_END()
-    QS_FLUSH();
+#endif // BLE_EXTENDED_LOGS
 
     bleResult_t result = Gap_StartAdvertising(BLE_AdvertisingCallback, BLE_ConnectionCallback);
     if (result != gBleSuccess_c) {
@@ -566,11 +551,12 @@ static void BLE_StartAdvertisingInternal(void)
         HAL_ASSERT(0, __FILE__, __LINE__); // Critical failure
     }
 
+#if BLE_EXTENDED_LOGS == 1
     QS_BEGIN_ID(MAIN, 0)
         QS_STR("Gap_StartAdvertising completed successfully - BLE device is now advertising!");
         QS_STR(" Device should be visible as 'QN9080_BMS' on BLE scanners.");
     QS_END()
-    QS_FLUSH();
+#endif // BLE_EXTENDED_LOGS
 }
 
 /*! *********************************************************************************
@@ -579,20 +565,18 @@ static void BLE_StartAdvertisingInternal(void)
  ********************************************************************************** */
 static void BLE_AdvertisingCallback(gapAdvertisingEvent_t* pAdvertisingEvent)
 {
+#if BLE_EXTENDED_LOGS == 1
     // Set the flag immediately to track that callback was called
     g_advertisingCallbackCount++;
-    
     QS_BEGIN_ID(MAIN, 0)
         QS_STR("*** ADVERTISING CALLBACK TRIGGERED *** Count=");
         QS_U32(0, g_advertisingCallbackCount);
     QS_END()
-    QS_FLUSH();
     
     if (pAdvertisingEvent == NULL) {
         QS_BEGIN_ID(MAIN, 0)
             QS_STR("BLE Advertising Event: NULL pointer received");
         QS_END()
-        QS_FLUSH();
         return;
     }
 
@@ -603,33 +587,37 @@ static void BLE_AdvertisingCallback(gapAdvertisingEvent_t* pAdvertisingEvent)
         QS_U32(0, gAdvertisingStateChanged_c);
         QS_STR(")");
     QS_END()
-    QS_FLUSH();
+#endif // BLE_EXTENDED_LOGS
 
     switch (pAdvertisingEvent->eventType) {
         case gAdvertisingStateChanged_c:
+        {
             QS_BEGIN_ID(MAIN, 0)
-                QS_STR("*** Advertising State Changed - Advertisement state updated ***");
-                QS_STR(" This means advertising is now active on the radio!");
+                QS_STR("*** Advertising State Changed ***");
             QS_END()
-            QS_FLUSH();
             break;
+        }
             
         case gAdvertisingCommandFailed_c:
+        {
             QS_BEGIN_ID(MAIN, 0)
                 QS_STR("*** Advertising Command Failed *** - reason=");
                 QS_U32(0, pAdvertisingEvent->eventData.failReason);
             QS_END()
             QS_FLUSH();
+            HAL_ASSERT(0, __FILE__, __LINE__); // Critical failure
             break;
+        }
             
         default:
+        {
             QS_BEGIN_ID(MAIN, 0)
                 QS_STR("*** Unhandled Advertising event: ");
                 QS_U32(0, pAdvertisingEvent->eventType);
                 QS_STR(" ***");
             QS_END()
-            QS_FLUSH();
             break;
+        }
     }
 }
 
@@ -640,37 +628,56 @@ static void BLE_AdvertisingCallback(gapAdvertisingEvent_t* pAdvertisingEvent)
  ********************************************************************************** */
 static void BLE_ConnectionCallback(deviceId_t peerDeviceId, gapConnectionEvent_t* pConnectionEvent)
 {
+#if BLE_EXTENDED_LOGS == 1
     QS_BEGIN_ID(MAIN, 0)
         QS_STR("BLE Connection Event: device=");
         QS_U8(0, peerDeviceId);
         QS_STR(" type=");
         QS_U32(0, pConnectionEvent->eventType);
     QS_END()
-    QS_FLUSH();
+#endif // BLE_EXTENDED_LOGS
 
     switch (pConnectionEvent->eventType) {
         case gConnEvtConnected_c:
+        {
             QS_BEGIN_ID(MAIN, 0)
                 QS_STR("BLE Device Connected!");
             QS_END()
-            QS_FLUSH();
             break;
+        }
             
         case gConnEvtDisconnected_c:
+        {
             QS_BEGIN_ID(MAIN, 0)
                 QS_STR("BLE Device Disconnected - reason=");
                 QS_U32(0, pConnectionEvent->eventData.disconnectedEvent.reason);
+                QS_STR(" - Restarting advertising...");
             QS_END()
-            QS_FLUSH();
+            
+            // Restart advertising after disconnect
+            bleResult_t result = Gap_StartAdvertising(BLE_AdvertisingCallback, BLE_ConnectionCallback);
+            if (result != gBleSuccess_c) {
+                QS_BEGIN_ID(MAIN, 0)
+                    QS_STR("Failed to restart advertising after disconnect: ");
+                    QS_U32(0, result);
+                QS_END()
+                QS_FLUSH();
+            } else {
+                QS_BEGIN_ID(MAIN, 0)
+                    QS_STR("Advertising restarted successfully after disconnect");
+                QS_END()
+            }
             break;
+        }
             
         default:
+        {
             QS_BEGIN_ID(MAIN, 0)
                 QS_STR("Unhandled Connection event: ");
                 QS_U32(0, pConnectionEvent->eventType);
             QS_END()
-            QS_FLUSH();
             break;
+        }
     }
 }
 

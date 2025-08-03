@@ -102,14 +102,16 @@ HAL_status_t HAL_init_hardware(void)
     (void)nvds_status; // Suppress unused variable warning
 
     /** Set crystal load capacitance */
-    if (!_HAL_isDebuggerConnected()) {
-        _HAL_setCrystalLoadCap();
-    }
+    // if (!_HAL_isDebuggerConnected()) {
+    //     _HAL_setCrystalLoadCap();
+    // }
+    _HAL_setCrystalLoadCap();
 
     /** System calibration */
-    if (!_HAL_isDebuggerConnected()) {
-        CALIB_SystemCalib();
-    }
+    // if (!_HAL_isDebuggerConnected()) {
+    //     CALIB_SystemCalib();
+    // }
+    CALIB_SystemCalib();
 
     /** Relocate VTOR and copy Vector Table to RAM */
     extern uint32_t __VECTOR_TABLE[];
