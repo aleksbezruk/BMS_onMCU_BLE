@@ -29,7 +29,7 @@ typedef enum {
     HAL_STATUS_UNKNOWN
 } HAL_status_t;
 
-#define HAL_ASSERT_HANDLER()   while(true) {}
+#define HAL_ASSERT_HANDLER()   __disable_irq(); while(true) {}
 
 /*! Assert an argument is true, else call assert handler */
 /**

@@ -41,6 +41,14 @@
 #include "ble_host_tasks.h"
 #include "ble_host_task_config.h"
 
+// GATT includes
+#include "gatt_interface.h"
+#include "gatt_server_interface.h"
+#include "gatt_client_interface.h"
+#include "gatt_database.h"
+#include "gatt_db_app_interface.h"
+#include "gatt_db_handles_simple.h"
+
 // =====================
 // Defines
 // =====================
@@ -117,6 +125,9 @@ static gapScanResponseData_t g_scanRspData = {
 static volatile uint32_t g_advertisingCallbackCount = 0;
 #endif // BLE_EXTENDED_LOGS
 
+// BMS data for GATT characteristics
+static uint8_t g_batteryLevel = 90;    // Battery level percentage (0-100%)
+
 // Forward declarations for BLE callbacks
 static bleResult_t BLE_HostToControllerInterface(hciPacketType_t packetType, void* pPacket, uint16_t packetSize);
 // static void App_SecLibMultCallback(computeDhKeyParam_t *pData);
@@ -127,6 +138,10 @@ static void BLE_SetupAdvertisingData(void);
 static void BLE_StartAdvertisingInternal(void);
 static void BLE_AdvertisingCallback(gapAdvertisingEvent_t* pAdvertisingEvent);
 static void BLE_ConnectionCallback(deviceId_t peerDeviceId, gapConnectionEvent_t* pConnectionEvent);
+
+// Forward declarations for GATT functions
+static void BLE_GattServerCallback(deviceId_t deviceId, gattServerEvent_t* pServerEvent);
+static void BLE_InitializeGattDatabase(void);
 
 /*! *********************************************************************************
  * \brief  GAP Generic Event Callback
@@ -150,10 +165,13 @@ static void BLE_GenericCallback(gapGenericEvent_t* pGenericEvent)
         case gInitializationComplete_c:
         {
             QS_BEGIN_ID(MAIN, 0)
-                QS_STR("BLE Host Initialization Complete! Setting up advertising parameters...");
+                QS_STR("BLE Host Initialization Complete! Initializing GATT database and advertising...");
             QS_END()
             
-            // Step 1: Set advertising parameters when initialization is complete
+            // Step 1: Initialize GATT database when BLE host initialization is complete
+            BLE_InitializeGattDatabase();
+            
+            // Step 2: Set advertising parameters after GATT DB is initialized
             BLE_SetupAdvertisingParameters();
             break;
         }
@@ -747,6 +765,176 @@ BLE_qn9080_status_t BLE_StopAdvertising(void)
     QS_FLUSH();
 
     return BLE_QN9080_STATUS_OK;
+}
+
+/*! *********************************************************************************
+ * \brief  Initialize GATT Database (called on gInitializationComplete_c)
+ ********************************************************************************** */
+static void BLE_InitializeGattDatabase(void)
+{
+    QS_BEGIN_ID(MAIN, 0)
+        QS_STR("BLE_InitializeGattDatabase: Initializing GATT database");
+    QS_END()
+
+    // Initialize GATT database from static definition
+    bleResult_t result = GattDb_Init();
+    if (!((result ==gBleSuccess_c) || (result == gBleAlreadyInitialized_c))) {
+        QS_BEGIN_ID(MAIN, 0)
+            QS_STR("GattDb_Init failed: ");
+            QS_U32(0, result);
+        QS_END()
+        QS_FLUSH();
+        HAL_ASSERT(0, __FILE__, __LINE__); // Critical failure
+    }
+
+    // Register GATT server callback
+    result = GattServer_RegisterCallback(BLE_GattServerCallback);
+    if (result != gBleSuccess_c) {
+        QS_BEGIN_ID(MAIN, 0)
+            QS_STR("GattServer_RegisterCallback failed: ");
+            QS_U32(0, result);
+        QS_END()
+        QS_FLUSH();
+        HAL_ASSERT(0, __FILE__, __LINE__); // Critical failure
+    }
+
+    QS_BEGIN_ID(MAIN, 0)
+        QS_STR("GATT Database and Server initialized successfully");
+    QS_END()
+}
+
+/*! *********************************************************************************
+ * \brief  GATT Server Event Callback
+ * \param[in] deviceId Device ID of the peer
+ * \param[in] pServerEvent GATT Server Event
+ ********************************************************************************** */
+static void BLE_GattServerCallback(deviceId_t deviceId, gattServerEvent_t* pServerEvent)
+{
+    if (pServerEvent == NULL) {
+        QS_BEGIN_ID(MAIN, 0)
+            QS_STR("GATT Server Event: NULL pointer received");
+        QS_END()
+        return;
+    }
+
+    QS_BEGIN_ID(MAIN, 0)
+        QS_STR("GATT Server Event: device=");
+        QS_U8(0, deviceId);
+        QS_STR(" type=");
+        QS_U32(0, pServerEvent->eventType);
+    QS_END()
+
+    switch (pServerEvent->eventType) {
+        case gEvtAttributeWritten_c:
+        {
+            QS_BEGIN_ID(MAIN, 0)
+                QS_STR("GATT Attribute Written: handle=");
+                QS_U16(0, pServerEvent->eventData.attributeWrittenEvent.handle);
+                QS_STR(" length=");
+                QS_U16(0, pServerEvent->eventData.attributeWrittenEvent.cValueLength);
+            QS_END()
+            
+            // Handle CCCD writes for notifications/indications
+            uint16_t cccdValue = 0;
+            
+            if (pServerEvent->eventData.attributeWrittenEvent.cValueLength == 2) {
+                cccdValue = *(uint16_t*)pServerEvent->eventData.attributeWrittenEvent.aValue;
+                
+                QS_BEGIN_ID(MAIN, 0)
+                    QS_STR("CCCD Value: ");
+                    QS_U16(0, cccdValue);
+                    QS_STR(" (notifications ");
+                    QS_STR((cccdValue & gCccdNotification_c) ? "enabled" : "disabled");
+                    QS_STR(")");
+                QS_END()
+            }
+            break;
+        }
+        
+        case gEvtAttributeRead_c:
+        {
+            QS_BEGIN_ID(MAIN, 0)
+                QS_STR("GATT Attribute Read: handle=");
+                QS_U16(0, pServerEvent->eventData.attributeReadEvent.handle);
+            QS_END()
+            
+            // Update battery level and other characteristics when read
+            // You can update characteristic values here based on handle
+            // Example: if this is battery level characteristic, read actual battery level
+            // and update the database value
+            break;
+        }
+        
+        case gEvtCharacteristicCccdWritten_c:
+        {
+            QS_BEGIN_ID(MAIN, 0)
+                QS_STR("GATT CCCD Written: handle=");
+                QS_U16(0, pServerEvent->eventData.charCccdWrittenEvent.handle);
+                QS_STR(" cccd=");
+                QS_U16(0, pServerEvent->eventData.charCccdWrittenEvent.newCccd);
+            QS_END()
+            break;
+        }
+        
+        default:
+        {
+            QS_BEGIN_ID(MAIN, 0)
+                QS_STR("Unhandled GATT Server event: ");
+                QS_U32(0, pServerEvent->eventType);
+            QS_END()
+            break;
+        }
+    }
+}
+
+/*! *********************************************************************************
+ * \brief  Update BMS Characteristics with Current Values
+ * \param[in] deviceId Device ID of the connected peer (gInvalidDeviceId_c if not connected)
+ * \return BLE_qn9080_status_t Status of the operation
+ ********************************************************************************** */
+BLE_qn9080_status_t BLE_UpdateBMSCharacteristics(deviceId_t deviceId)
+{
+    bleResult_t result;
+    
+    // Update battery level characteristic using the handle from gatt_db.h
+    result = GattDb_WriteAttribute(value_battery_level, sizeof(g_batteryLevel), &g_batteryLevel);
+    if (result != gBleSuccess_c) {
+        QS_BEGIN_ID(MAIN, 0)
+            QS_STR("Failed to update battery level: ");
+            QS_U32(0, result);
+        QS_END()
+        return BLE_QN9080_STATUS_ERROR;
+    }
+    
+    // If device is connected and notifications are enabled, send notifications
+    if (deviceId != gInvalidDeviceId_c) {
+        // Send battery level notification
+        result = GattServer_SendNotification(deviceId, value_battery_level);
+        if (result == gBleSuccess_c) {
+            QS_BEGIN_ID(MAIN, 0)
+                QS_STR("Battery level notification sent: ");
+                QS_U8(0, g_batteryLevel);
+                QS_STR("%");
+            QS_END()
+        }
+    }
+    
+    return BLE_QN9080_STATUS_SUCCESS;
+}
+
+/*! *********************************************************************************
+ * \brief  Set BMS Data Values
+ * \param[in] batteryLevel Battery level percentage (0-100%)
+ ********************************************************************************** */
+void BLE_SetBMSData(uint8_t batteryLevel)
+{
+    g_batteryLevel = batteryLevel;
+    
+    QS_BEGIN_ID(MAIN, 0)
+        QS_STR("BMS Data Updated: Level=");
+        QS_U8(0, g_batteryLevel);
+        QS_STR("%");
+    QS_END()
 }
 
 /*! *********************************************************************************

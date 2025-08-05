@@ -166,7 +166,7 @@ elseif(BUILD_CONFIG STREQUAL "Test")
         bluetooth/hci_transport/source/hcit_serial_interface.c
         BLE_qn9080/ble_controller_task.c
         BLE_qn9080/ble_host_tasks.c
-        BLE_qn9080/gatt_db_app.c
+        BLE_qn9080/gatt_db/gatt_database.c
         # Add or remove files specific to Test config here
     )
 else()
@@ -235,6 +235,8 @@ target_include_directories(${EXECUTABLE} PRIVATE
         bluetooth/hci_transport/interface
         bluetooth/host/interface
         BLE_qn9080
+        BLE_qn9080/gatt_db
+        BLE_qn9080/gatt_db/macros
         )
 
 # Compiler options
