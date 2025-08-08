@@ -50,9 +50,9 @@
 #include "ble_sig_defines.h"
 #include "gatt_db/gatt_db_handles.h"  // Include GATT database handle enums
 
-// =====================
-// Defines
-// =====================
+// ============================
+// Defines & private variables
+// ============================
 #define BLE_EXTENDED_LOGS 0
 
 // Forward declarations for missing function prototypes
@@ -99,6 +99,12 @@ static gapAdvertisingParameters_t advParams = {
 static const uint8_t adData0[1] = { (gapAdTypeFlags_t)(gLeGeneralDiscoverableMode_c | gBrEdrNotSupported_c) };
 static const char adData1[] = "QN9080_BMS";
 
+// Complete list of 16-bit UUIDs: Battery Service (0x180F) and Automation IO Service (0x1815)
+static const uint8_t adData2[4] = { 0x0F, 0x18, 0x15, 0x18 }; // Little-endian format
+
+// 16-bit service data for Battery Service (0x180F) with battery level
+static uint8_t adData3[3] = { 0x0F, 0x18, 90 }; // Service UUID (little-endian) + battery level (90%)
+
 static const gapAdStructure_t advScanStruct[] = {
     {
         .length = NumberOfElements(adData0) + 1,  // Data elements + AD type byte
@@ -109,6 +115,16 @@ static const gapAdStructure_t advScanStruct[] = {
         .length = NumberOfElements(adData1) + 1,  // String length (no null terminator) + AD type byte
         .adType = gAdShortenedLocalName_c,
         .aData = (uint8_t*)adData1
+    },
+    {
+        .length = NumberOfElements(adData2) + 1,  // UUID list length + AD type byte
+        .adType = gAdComplete16bitServiceList_c,
+        .aData = (uint8_t*)adData2
+    },
+    {
+        .length = NumberOfElements(adData3) + 1,  // Service data length + AD type byte
+        .adType = gAdServiceData16bit_c,
+        .aData = (uint8_t*)adData3
     }
 };
 
@@ -117,9 +133,20 @@ static gapAdvertisingData_t g_advData = {
     .aAdStructures = (gapAdStructure_t*)advScanStruct
 };
 
+// TX Power Level for scan response data (typical value: 0 dBm)
+static const uint8_t scanRspData0[1] = { 0x00 }; // 0 dBm TX power
+
+static const gapAdStructure_t scanRspStruct[] = {
+    {
+        .length = NumberOfElements(scanRspData0) + 1,  // Data elements + AD type byte
+        .adType = gAdTxPowerLevel_c,
+        .aData = (uint8_t*)scanRspData0
+    }
+};
+
 static gapScanResponseData_t g_scanRspData = {
-    .cNumAdStructures = 0,
-    .aAdStructures = NULL
+    .cNumAdStructures = sizeof(scanRspStruct) / sizeof(gapAdStructure_t),
+    .aAdStructures = (gapAdStructure_t*)scanRspStruct
 };
 
 #if BLE_EXTENDED_LOGS == 1
@@ -148,6 +175,23 @@ static gatt_handles_t g_gattHandles = {
     .handlesDiscovered = false
 };
 
+static bool isBLEstackInitialized = false;
+static bool isAdvertising = false; // Track advertising state for proper state management
+
+// State machine for advertising data updates
+typedef enum {
+    ADV_UPDATE_IDLE,           // No update in progress
+    ADV_UPDATE_STOPPING,       // Waiting for advertising to stop
+    ADV_UPDATE_SETTING_DATA,   // Waiting for advertising data to be set
+    ADV_UPDATE_STARTING        // Waiting for advertising to start
+} adv_update_state_t;
+
+static adv_update_state_t advUpdateState = ADV_UPDATE_IDLE;
+static uint8_t pendingBatteryLevel = 0; // Battery level waiting to be updated
+
+// ========================
+// Function Prototypes
+// ========================
 // Forward declarations for BLE callbacks
 static bleResult_t BLE_HostToControllerInterface(hciPacketType_t packetType, void* pPacket, uint16_t packetSize);
 // static void App_SecLibMultCallback(computeDhKeyParam_t *pData);
@@ -158,6 +202,9 @@ static void BLE_SetupAdvertisingData(void);
 static void BLE_StartAdvertisingInternal(void);
 static void BLE_AdvertisingCallback(gapAdvertisingEvent_t* pAdvertisingEvent);
 static void BLE_ConnectionCallback(deviceId_t peerDeviceId, gapConnectionEvent_t* pConnectionEvent);
+
+// Forward declarations for advertising update state machine
+static bleResult_t BLE_StartAdvertisingDataUpdate(uint8_t batteryLevel);
 
 // Forward declarations for GATT functions
 static void BLE_GattServerCallback(deviceId_t deviceId, gattServerEvent_t* pServerEvent);
@@ -174,11 +221,13 @@ static void BLE_DiscoverGattHandles(void)
 {
     bleResult_t result;
     bleUuid_t batteryLevelCharUuid;
-    
+
+#if (BLE_EXTENDED_LOGS == 1)
     QS_BEGIN_ID(MAIN, 0)
         QS_STR("BLE_DiscoverGattHandles: Using NXP symbolic service name + API discovery");
     QS_END()
-    
+#endif // BLE_EXTENDED_LOGS
+
     // Reset handles
     g_gattHandles.batteryLevelValueHandle = 0x0000;
     g_gattHandles.batteryLevelCccdHandle = 0x0000;
@@ -186,12 +235,15 @@ static void BLE_DiscoverGattHandles(void)
     
     // Use symbolic name from gatt_db.h for the service handle (NXP approach)
     g_gattHandles.batteryServiceHandle = service_battery;
-    
+
+#if (BLE_EXTENDED_LOGS == 1)
     QS_BEGIN_ID(MAIN, 0)
         QS_STR("Battery Service handle (symbolic): 0x");
         QS_U16(0, g_gattHandles.batteryServiceHandle);
     QS_END()
-    
+
+#endif // (BLE_EXTENDED_LOGS == 1)
+
     // Set up Battery Level Characteristic UUID (0x2A19)
     batteryLevelCharUuid.uuid16 = gBleSig_BatteryLevel_d;
     
@@ -210,49 +262,39 @@ static void BLE_DiscoverGattHandles(void)
         QS_END()
         return;
     }
-    
+
+#if (BLE_EXTENDED_LOGS == 1)
     QS_BEGIN_ID(MAIN, 0)
         QS_STR("Battery Level value handle found: 0x");
         QS_U16(0, g_gattHandles.batteryLevelValueHandle);
     QS_END()
-    
+
+#endif // (BLE_EXTENDED_LOGS == 1)
+
     // Find Battery Level CCCD handle using the proper NXP API
     result = GattDb_FindCccdHandleForCharValueHandle(
         g_gattHandles.batteryLevelValueHandle,
         &g_gattHandles.batteryLevelCccdHandle
     );
     
+#if (BLE_EXTENDED_LOGS == 1)
     QS_BEGIN_ID(MAIN, 0)
         QS_STR("GattDb_FindCccdHandleForCharValueHandle result: ");
         QS_U32(0, result);
         QS_STR(" handle: 0x");
         QS_U16(0, g_gattHandles.batteryLevelCccdHandle);
     QS_END()
-    
-    if ((result != gBleSuccess_c) || (g_gattHandles.batteryLevelCccdHandle == 0x0000)) {
+#endif // (BLE_EXTENDED_LOGS == 1)
+
+    if (result != gBleSuccess_c) {
         QS_BEGIN_ID(MAIN, 0)
-            QS_STR("CCCD discovery failed or returned invalid handle - using symbolic name");
+            QS_STR("CCCD discovery failed or returned invalid handle");
         QS_END()
-        
-        // Fallback: use symbolic name from gatt_db.h
-        g_gattHandles.batteryLevelCccdHandle = cccd_battery_level;
-        
-        QS_BEGIN_ID(MAIN, 0)
-            QS_STR("Using symbolic CCCD handle: 0x");
-            QS_U16(0, g_gattHandles.batteryLevelCccdHandle);
-        QS_END()
-    } else {
-        QS_BEGIN_ID(MAIN, 0)
-            QS_STR("Battery Level CCCD handle found: 0x");
-            QS_U16(0, g_gattHandles.batteryLevelCccdHandle);
-        QS_END()
+        QS_FLUSH();
+        HAL_ASSERT(0, __FILE__, __LINE__);
     }
-    
+
     g_gattHandles.handlesDiscovered = true;
-    
-    QS_BEGIN_ID(MAIN, 0)
-        QS_STR("GATT handle discovery completed successfully");
-    QS_END()
 }
 
 /*! *********************************************************************************
@@ -301,12 +343,22 @@ static void BLE_GenericCallback(gapGenericEvent_t* pGenericEvent)
 
         case gAdvertisingDataSetupComplete_c:
         {
+#if BLE_EXTENDED_LOGS == 1
             QS_BEGIN_ID(MAIN, 0)
                 QS_STR("Advertising Data Setup Complete! Starting advertising...");
             QS_END()
-            
-            // Step 3: Start advertising when data is set
-            BLE_StartAdvertisingInternal();
+#endif // BLE_EXTENDED_LOGS
+
+            // Check if this is part of an advertising update sequence
+            if (advUpdateState == ADV_UPDATE_SETTING_DATA) {
+                // Step 3 of update: Start advertising with updated data
+                advUpdateState = ADV_UPDATE_STARTING;
+                BLE_StartAdvertisingInternal();
+            } else {
+                // Initial setup: Start advertising when data is set
+                isBLEstackInitialized = true;
+                BLE_StartAdvertisingInternal();
+            }
             break;
         }
 
@@ -491,68 +543,6 @@ void BLE_init(void)
     QS_END()
 #endif // BLE_EXTENDED_LOGS
 
-    // /** Step 5: Configure GAP default parameters (CRITICAL - often missing!) */    
-    // // Set default pairing parameters - required for proper GAP operation
-    // gapPairingParameters_t pairingParams = {
-    //     .withBonding = FALSE,
-    //     .securityModeAndLevel = gSecurityMode_1_Level_1_c,  // Just Works
-    //     .maxEncryptionKeySize = gDefaultEncryptionKeySize_d,  // Use correct constant
-    //     .localIoCapabilities = gIoNone_c,
-    //     .oobAvailable = FALSE,
-    //     .centralKeys = gLtk_c | gIrk_c | gCsrk_c,
-    //     .peripheralKeys = gLtk_c | gIrk_c | gCsrk_c,
-    //     .leSecureConnectionSupported = TRUE,
-    //     .useKeypressNotifications = FALSE,
-    // };
-    
-    // bleResult_t pairingResult = Gap_SetDefaultPairingParameters(&pairingParams);
-    // if (pairingResult != gBleSuccess_c) {
-    //     QS_BEGIN_ID(MAIN, 0)
-    //         QS_STR("Gap_SetDefaultPairingParameters failed: ");
-    //         QS_U32(0, pairingResult);
-    //     QS_END()
-    //     QS_FLUSH();
-    //     // Don't fail here - some stacks work without this
-    // } else {
-    //     QS_BEGIN_ID(MAIN, 0)
-    //         QS_STR("Gap_SetDefaultPairingParameters completed successfully");
-    //     QS_END()
-    //     QS_FLUSH();
-    // }
-
-    // /** Step 6: CRITICAL - Read and verify device address (required for advertising) */
-    // bleResult_t addressResult = Gap_ReadPublicDeviceAddress();
-    // if (addressResult != gBleSuccess_c) {
-    //     QS_BEGIN_ID(MAIN, 0)
-    //         QS_STR("WARNING: Gap_ReadPublicDeviceAddress failed: ");
-    //         QS_U32(0, addressResult);
-    //         QS_STR(" - Will try to set random address");
-    //     QS_END()
-    //     QS_FLUSH();
-        
-    //     // If public address fails, set a random static address
-    //     bleDeviceAddress_t randomAddr = {0x01, 0x02, 0x03, 0x04, 0x05, 0xC0}; // MSB must be 11xxxxxx for static random
-    //     bleResult_t randomResult = Gap_SetRandomAddress(randomAddr);
-    //     if (randomResult != gBleSuccess_c) {
-    //         QS_BEGIN_ID(MAIN, 0)
-    //             QS_STR("CRITICAL: Gap_SetRandomAddress also failed: ");
-    //             QS_U32(0, randomResult);
-    //         QS_END()
-    //         QS_FLUSH();
-    //         HAL_ASSERT(0, __FILE__, __LINE__); // This is critical for advertising
-    //     } else {
-    //         QS_BEGIN_ID(MAIN, 0)
-    //             QS_STR("Random device address set successfully");
-    //         QS_END()
-    //         QS_FLUSH();
-    //     }
-    // } else {
-    //     QS_BEGIN_ID(MAIN, 0)
-    //         QS_STR("Public device address read successfully");
-    //     QS_END()
-    //     QS_FLUSH();
-    // }
-
 #if BLE_EXTENDED_LOGS == 1
     QS_BEGIN_ID(MAIN, 0)
         QS_STR("BLE initialization complete - advertising will start automatically");
@@ -618,7 +608,7 @@ static void BLE_SetupAdvertisingData(void)
     QS_BEGIN_ID(MAIN, 0)
         QS_STR("Advertising data setup: structures=");
         QS_U8(0, g_advData.cNumAdStructures);
-        QS_STR(" device_name='QN9080_BMS'");
+        QS_STR(" device_name='QN9080_BMS' with service UUIDs and battery data");
     QS_END()
     
     // Debug: Print advertising data structures
@@ -639,6 +629,32 @@ static void BLE_SetupAdvertisingData(void)
         QS_STR(" name='");
         QS_STR((char*)advScanStruct[1].aData);
         QS_STR("'");
+    QS_END()
+    
+    QS_BEGIN_ID(MAIN, 0)
+        QS_STR("ADV Structure 2 (UUIDs): len=");
+        QS_U8(0, advScanStruct[2].length);
+        QS_STR(" type=");
+        QS_U8(0, advScanStruct[2].adType);
+        QS_STR(" UUIDs: 0x180F, 0x1815");
+    QS_END()
+    
+    QS_BEGIN_ID(MAIN, 0)
+        QS_STR("ADV Structure 3 (Service Data): len=");
+        QS_U8(0, advScanStruct[3].length);
+        QS_STR(" type=");
+        QS_U8(0, advScanStruct[3].adType);
+        QS_STR(" battery=");
+        QS_U8(0, adData3[2]);
+        QS_STR("%");
+    QS_END()
+    
+    QS_BEGIN_ID(MAIN, 0)
+        QS_STR("Scan Response: structures=");
+        QS_U8(0, g_scanRspData.cNumAdStructures);
+        QS_STR(" TX_power=");
+        QS_U8(0, scanRspData0[0]);
+        QS_STR("dBm");
     QS_END()
 #endif // BLE_EXTENDED_LOGS
 
@@ -678,7 +694,10 @@ static void BLE_StartAdvertisingInternal(void)
             QS_U32(0, result);
         QS_END()
         QS_FLUSH();
+        isAdvertising = false; // Ensure state is correct on failure
         HAL_ASSERT(0, __FILE__, __LINE__); // Critical failure
+    } else {
+        isAdvertising = true; // Set state on successful start
     }
 
 #if BLE_EXTENDED_LOGS == 1
@@ -722,9 +741,52 @@ static void BLE_AdvertisingCallback(gapAdvertisingEvent_t* pAdvertisingEvent)
     switch (pAdvertisingEvent->eventType) {
         case gAdvertisingStateChanged_c:
         {
-            QS_BEGIN_ID(MAIN, 0)
-                QS_STR("*** Advertising State Changed ***");
-            QS_END()
+            // Handle advertising state changes for update state machine
+            if (advUpdateState == ADV_UPDATE_STOPPING) {
+                // Step 1 complete: Advertising stopped, now update data
+#if BLE_EXTENDED_LOGS == 1
+                QS_BEGIN_ID(MAIN, 0)
+                    QS_STR("*** Advertising Stopped for Data Update ***");
+                QS_END()
+#endif // BLE_EXTENDED_LOGS
+
+                isAdvertising = false;
+                advUpdateState = ADV_UPDATE_SETTING_DATA;
+                
+                // Update the advertising service data with new battery level
+                adData3[2] = pendingBatteryLevel;
+                
+                // Set advertising data - this will trigger gAdvertisingDataSetupComplete_c
+                bleResult_t result = Gap_SetAdvertisingData(&g_advData, &g_scanRspData);
+                if (result != gBleSuccess_c) {
+                    QS_BEGIN_ID(MAIN, 0)
+                        QS_STR("Failed to set advertising data during update: ");
+                        QS_U32(0, result);
+                    QS_END()
+                    advUpdateState = ADV_UPDATE_IDLE; // Reset state on failure
+                }
+            } else if (advUpdateState == ADV_UPDATE_STARTING) {
+#if BLE_EXTENDED_LOGS == 1
+                // Step 3 complete: Advertising started with updated data
+                QS_BEGIN_ID(MAIN, 0)
+                    QS_STR("*** Advertising Started with Updated Data ***");
+                QS_END()
+#endif // BLE_EXTENDED_LOGS
+
+                isAdvertising = true;
+                advUpdateState = ADV_UPDATE_IDLE; // Update sequence complete
+                
+                QS_BEGIN_ID(MAIN, 0)
+                    QS_STR("Advertising data update completed successfully - battery level: ");
+                    QS_U8(0, pendingBatteryLevel);
+                    QS_STR("%");
+                QS_END()
+            } else {
+                // Normal advertising state change
+                QS_BEGIN_ID(MAIN, 0)
+                    QS_STR("*** Advertising State Changed ***");
+                QS_END()
+            }
             break;
         }
             
@@ -773,6 +835,7 @@ static void BLE_ConnectionCallback(deviceId_t peerDeviceId, gapConnectionEvent_t
                 QS_STR("BLE Device Connected!");
             QS_END()
             client_deviceId = peerDeviceId; // Store the connected device ID
+            isAdvertising = false; // Advertising automatically stops when connected
             break;
         }
    
@@ -794,10 +857,12 @@ static void BLE_ConnectionCallback(deviceId_t peerDeviceId, gapConnectionEvent_t
                     QS_U32(0, result);
                 QS_END()
                 QS_FLUSH();
+                isAdvertising = false; // Ensure state is correct on failure
             } else {
                 QS_BEGIN_ID(MAIN, 0)
                     QS_STR("Advertising restarted successfully after disconnect");
                 QS_END()
+                isAdvertising = true; // Set state on successful restart
             }
             break;
         }
@@ -881,7 +946,10 @@ BLE_qn9080_status_t BLE_StopAdvertising(void)
         QS_END()
         QS_FLUSH();
         return BLE_QN9080_STATUS_ERROR;
+    } else {
+        isAdvertising = false; // Set state on successful stop
     }
+    
 #if BLE_EXTENDED_LOGS == 1
     QS_BEGIN_ID(MAIN, 0)
         QS_STR("Gap_StopAdvertising completed successfully");
@@ -889,6 +957,51 @@ BLE_qn9080_status_t BLE_StopAdvertising(void)
 #endif  // BLE_EXTENDED_LOGS
 
     return BLE_QN9080_STATUS_OK;
+}
+
+/*! *********************************************************************************
+ * \brief  Start Advertising Data Update Process (Asynchronous State Machine)
+ * \param[in] batteryLevel New battery level to advertise
+ * \return bleResult_t Result of starting the update process
+ ********************************************************************************** */
+static bleResult_t BLE_StartAdvertisingDataUpdate(uint8_t batteryLevel)
+{
+    // Check if an update is already in progress
+    if (advUpdateState != ADV_UPDATE_IDLE) {
+        QS_BEGIN_ID(MAIN, 0)
+            QS_STR("Advertising update already in progress - state: ");
+            QS_U8(0, advUpdateState);
+        QS_END()
+        return gBleInvalidState_c;
+    }
+    
+    // Check if advertising is currently active
+    if (!isAdvertising) {
+        QS_BEGIN_ID(MAIN, 0)
+            QS_STR("Advertising not active - updating data directly");
+        QS_END()
+        
+        // Update data directly and start advertising
+        adData3[2] = batteryLevel;
+        advUpdateState = ADV_UPDATE_SETTING_DATA;
+        return Gap_SetAdvertisingData(&g_advData, &g_scanRspData);
+    }
+    
+#if BLE_EXTENDED_LOGS == 1
+    QS_BEGIN_ID(MAIN, 0)
+        QS_STR("Starting advertising data update sequence for battery level: ");
+        QS_U8(0, batteryLevel);
+        QS_STR("%");
+    QS_END()
+#endif // BLE_EXTENDED_LOGS
+
+    
+    // Save the battery level for the update sequence
+    pendingBatteryLevel = batteryLevel;
+    
+    // Step 1: Stop advertising - this will trigger gAdvertisingStateChanged_c
+    advUpdateState = ADV_UPDATE_STOPPING;
+    return Gap_StopAdvertising();
 }
 
 /*! *********************************************************************************
@@ -1041,6 +1154,8 @@ static void BLE_GattServerCallback(deviceId_t deviceId, gattServerEvent_t* pServ
                     
                     if ((checkResult == gBleSuccess_c) && (isNotifActive == TRUE)) {
                         bleResult_t result = GattServer_SendNotification(client_deviceId, g_gattHandles.batteryLevelValueHandle);
+                        (void)result; // Ignore result for now, handled in callback
+#if BLE_EXTENDED_LOGS == 1
                         if (result == gBleSuccess_c) {
                             QS_BEGIN_ID(MAIN, 0)
                                 QS_STR("Initial battery level notification sent: ");
@@ -1053,6 +1168,7 @@ static void BLE_GattServerCallback(deviceId_t deviceId, gattServerEvent_t* pServ
                                 QS_U32(0, result);
                             QS_END()
                         }
+#endif // BLE_EXTENDED_LOGS
                     } else {
                         QS_BEGIN_ID(MAIN, 0)
                             QS_STR("CCCD not yet active for notifications - check result: ");
@@ -1075,7 +1191,7 @@ static void BLE_GattServerCallback(deviceId_t deviceId, gattServerEvent_t* pServ
             }
             break;
         }
-        
+
         case gEvtError_c:
         {
             gattServerProcedureError_t* pError = &pServerEvent->eventData.procedureError;
@@ -1090,7 +1206,7 @@ static void BLE_GattServerCallback(deviceId_t deviceId, gattServerEvent_t* pServ
                     QS_STR(" (CCCD not found in device DB)");
                 }
             QS_END()
-            
+
             // Log specific procedure types that failed
             switch (pError->procedureType) {
                 case gSendNotification_c:
@@ -1123,13 +1239,6 @@ static void BLE_GattServerCallback(deviceId_t deviceId, gattServerEvent_t* pServ
                     QS_END()
                     break;
             }
-            
-            // Don't assert on notification errors as they can happen normally
-            // when client disconnects or has notifications disabled
-            if (pError->procedureType != gSendNotification_c) {
-                QS_FLUSH();
-                // HAL_ASSERT(0, __FILE__, __LINE__); // Uncomment for critical errors only
-            }
             break;
         }
         
@@ -1158,6 +1267,8 @@ BLE_qn9080_status_t BLE_UpdateBMSCharacteristics(uint8_t vbat)
 
     g_batteryLevel = vbat; // Update the global battery level variable
 
+    // Note: adData3[2] will be updated by the advertising state machine when needed
+
     // Update battery level characteristic using the discovered handle
     if ((client_deviceId != gInvalidDeviceId_c) && (isBatteryServiceSubscribed)) {
         result = GattDb_WriteAttribute(g_gattHandles.batteryLevelValueHandle, sizeof(g_batteryLevel), &g_batteryLevel);
@@ -1181,6 +1292,7 @@ BLE_qn9080_status_t BLE_UpdateBMSCharacteristics(uint8_t vbat)
         if ((checkResult == gBleSuccess_c) && (isNotifActive == TRUE)) {
             // Send battery level notification using discovered handle
             result = GattServer_SendNotification(client_deviceId, g_gattHandles.batteryLevelValueHandle);
+#if BLE_EXTENDED_LOGS == 1
             if (result == gBleSuccess_c) {
                 QS_BEGIN_ID(MAIN, 0)
                     QS_STR("Battery level notification sent: ");
@@ -1197,7 +1309,9 @@ BLE_qn9080_status_t BLE_UpdateBMSCharacteristics(uint8_t vbat)
                     QS_U32(0, result);
                 QS_END()
             }
+#endif // BLE_EXTENDED_LOGS
         } else {
+#if BLE_EXTENDED_LOGS == 1
             QS_BEGIN_ID(MAIN, 0)
                 QS_STR("CCCD not active - skipping notification (check result: ");
                 QS_U32(0, checkResult);
@@ -1205,7 +1319,26 @@ BLE_qn9080_status_t BLE_UpdateBMSCharacteristics(uint8_t vbat)
                 QS_U32(0, isNotifActive);
                 QS_STR(")");
             QS_END()
+#endif // BLE_EXTENDED_LOGS
         }
+    }
+
+    // If not connected, update advertising data to reflect new battery level
+    if ((client_deviceId == gInvalidDeviceId_c) && (isBLEstackInitialized == true)) {
+        // Use asynchronous state machine to update advertising data
+        result = BLE_StartAdvertisingDataUpdate(vbat);
+        if (result != gBleSuccess_c) {
+            QS_BEGIN_ID(MAIN, 0)
+                QS_STR("Failed to start advertising data update: ");
+                QS_U32(0, result);
+            QS_END()
+            return BLE_QN9080_STATUS_ERROR;
+        }
+#if BLE_EXTENDED_LOGS == 1
+        QS_BEGIN_ID(MAIN, 0)
+            QS_STR("Advertising data update started (asynchronous)");
+        QS_END()
+#endif // BLE_EXTENDED_LOGS
     }
 
     return BLE_QN9080_STATUS_SUCCESS;
