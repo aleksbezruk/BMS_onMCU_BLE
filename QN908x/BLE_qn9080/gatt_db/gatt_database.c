@@ -129,31 +129,4 @@ uint16_t GattDb_GetIndexOfHandle(uint16_t handle)
     return gGattDbInvalidHandleIndex_d;
 }
 
-/*! *********************************************************************************
-* @}
-********************************************************************************** */
-
-/*! *********************************************************************************
-* \brief    NVM Application Layer Functions required by BLE host library
-********************************************************************************** */
-
-/* Global variable required by BLE host library */
-bool_t gHostInitResetController = TRUE;
-
-uint16_t App_NvmRead(uint8_t mEntryId, void* pBuff, uint16_t buffLen, uint16_t offset)
-{
-    /* Stub implementation - returns 0 bytes read */
-    return 0;
-}
-
-uint16_t App_NvmWrite(uint8_t mEntryId, void* pBuff, uint16_t buffLen, uint16_t offset)
-{
-    /* Stub implementation - returns 0 bytes written */
-    return 0;
-}
-
-uint16_t App_NvmErase(uint8_t mEntryId)
-{
-    /* Stub implementation - returns success */
-    return 0;
-}
+/* [] END OF FILE */

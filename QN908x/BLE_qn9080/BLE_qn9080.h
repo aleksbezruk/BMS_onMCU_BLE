@@ -27,13 +27,30 @@ void BLE_init(void);
 BLE_qn9080_status_t BLE_StopAdvertising(void);
 
 // GATT BMS functions
-BLE_qn9080_status_t BLE_UpdateBMSCharacteristics(deviceId_t deviceId);
-void BLE_SetBMSData(uint8_t batteryLevel);
+BLE_qn9080_status_t BLE_UpdateBMSCharacteristics(uint8_t vbat);
 
 // NVM Application Layer Functions (required by BLE host library)
-uint16_t App_NvmRead(uint8_t mEntryId, void* pBuff, uint16_t buffLen, uint16_t offset);
-uint16_t App_NvmWrite(uint8_t mEntryId, void* pBuff, uint16_t buffLen, uint16_t offset);
-uint16_t App_NvmErase(uint8_t mEntryId);
+void App_NvmRead
+(
+    uint8_t  mEntryIdx,
+    void*    pBondHeader,
+    void*    pBondDataDynamic,
+    void*    pBondDataStatic,
+    void*    pBondDataDeviceInfo,
+    void*    pBondDataDescriptor,
+    uint8_t  mDescriptorIndex
+);
+void App_NvmWrite
+(
+    uint8_t  mEntryIdx,
+    void*    pBondHeader,
+    void*    pBondDataDynamic,
+    void*    pBondDataStatic,
+    void*    pBondDataDeviceInfo,
+    void*    pBondDataDescriptor,
+    uint8_t  mDescriptorIndex
+);
+void App_NvmErase(uint8_t mEntryIdx);
 
 #endif // BLE_QN9080_H
 

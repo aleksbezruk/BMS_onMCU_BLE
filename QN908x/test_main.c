@@ -28,6 +28,8 @@
 // Include for SYSCON register access
 #include "fsl_device_registers.h"
 
+#include "NVM_Interface.h"
+
 // ===================
 // HardFault Handler
 // ===================
@@ -822,6 +824,20 @@ static void Adc_Test_Task(OSAL_arg_t argument)
             QS_I16(0, (int16_t) full_mv);
         QS_END()
 
+        static uint8_t vbat = 90U; // fake for battery voltage level
+        vbat++;
+        if (vbat > 100U) {
+            vbat = 90U; // reset to 90% after reaching 100%
+        }
+        BLE_qn9080_status_t sendNorifStatus = BLE_UpdateBMSCharacteristics(vbat);
+        if (sendNorifStatus != BLE_QN9080_STATUS_OK) {
+            QS_BEGIN_ID(MAIN, 0 /*prio/ID for local Filters*/)
+                QS_STR("Failed to send battery status via BLE");
+            QS_END()
+            QS_FLUSH(); // Flush QSPY output
+            HAL_ASSERT(0, __FILE__, __LINE__); // BLE update failed
+        }
+
         OSAL_TASK_DELAY(ADC_TEST_TASK_INTERVAL);
     }
 }
@@ -1150,6 +1166,8 @@ static void _IdleTask(void)
  */
 void vApplicationIdleHook(void)
 {
+    NvIdle();
+
     /** Handle QSPY communication */
     QS_onIdle();
 }

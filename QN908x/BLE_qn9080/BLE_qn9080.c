@@ -47,7 +47,8 @@
 #include "gatt_client_interface.h"
 #include "gatt_database.h"
 #include "gatt_db_app_interface.h"
-#include "gatt_db_handles_simple.h"
+#include "ble_sig_defines.h"
+#include "gatt_db/gatt_db_handles.h"  // Include GATT database handle enums
 
 // =====================
 // Defines
@@ -128,6 +129,25 @@ static volatile uint32_t g_advertisingCallbackCount = 0;
 // BMS data for GATT characteristics
 static uint8_t g_batteryLevel = 90;    // Battery level percentage (0-100%)
 
+static deviceId_t client_deviceId = gInvalidDeviceId_c; // Device ID for the current connection
+static bool isBatteryServiceSubscribed = false; // Flag to track if Battery Service is subscribed
+
+// Structure to store discovered GATT handles
+typedef struct {
+    uint16_t batteryServiceHandle;          // Battery Service declaration handle
+    uint16_t batteryLevelValueHandle;       // Battery Level characteristic value handle
+    uint16_t batteryLevelCccdHandle;        // Battery Level CCCD handle
+    bool     handlesDiscovered;             // Flag indicating if handles were successfully discovered
+} gatt_handles_t;
+
+// Global variable to store discovered GATT handles
+static gatt_handles_t g_gattHandles = {
+    .batteryServiceHandle = 0x0000,
+    .batteryLevelValueHandle = 0x0000,
+    .batteryLevelCccdHandle = 0x0000,
+    .handlesDiscovered = false
+};
+
 // Forward declarations for BLE callbacks
 static bleResult_t BLE_HostToControllerInterface(hciPacketType_t packetType, void* pPacket, uint16_t packetSize);
 // static void App_SecLibMultCallback(computeDhKeyParam_t *pData);
@@ -142,6 +162,98 @@ static void BLE_ConnectionCallback(deviceId_t peerDeviceId, gapConnectionEvent_t
 // Forward declarations for GATT functions
 static void BLE_GattServerCallback(deviceId_t deviceId, gattServerEvent_t* pServerEvent);
 static void BLE_InitializeGattDatabase(void);
+static void BLE_DiscoverGattHandles(void);
+
+/*! *********************************************************************************
+ * \brief  Discover GATT Handles using NXP symbolic names and API functions
+ * 
+ * This function uses the symbolic service name from gatt_db.h for the service handle,
+ * then uses NXP API functions to discover characteristic and CCCD handles.
+ ********************************************************************************** */
+static void BLE_DiscoverGattHandles(void)
+{
+    bleResult_t result;
+    bleUuid_t batteryLevelCharUuid;
+    
+    QS_BEGIN_ID(MAIN, 0)
+        QS_STR("BLE_DiscoverGattHandles: Using NXP symbolic service name + API discovery");
+    QS_END()
+    
+    // Reset handles
+    g_gattHandles.batteryLevelValueHandle = 0x0000;
+    g_gattHandles.batteryLevelCccdHandle = 0x0000;
+    g_gattHandles.handlesDiscovered = false;
+    
+    // Use symbolic name from gatt_db.h for the service handle (NXP approach)
+    g_gattHandles.batteryServiceHandle = service_battery;
+    
+    QS_BEGIN_ID(MAIN, 0)
+        QS_STR("Battery Service handle (symbolic): 0x");
+        QS_U16(0, g_gattHandles.batteryServiceHandle);
+    QS_END()
+    
+    // Set up Battery Level Characteristic UUID (0x2A19)
+    batteryLevelCharUuid.uuid16 = gBleSig_BatteryLevel_d;
+    
+    // Find Battery Level characteristic value handle using NXP API
+    result = GattDb_FindCharValueHandleInService(
+        g_gattHandles.batteryServiceHandle,
+        gBleUuidType16_c,
+        &batteryLevelCharUuid,
+        &g_gattHandles.batteryLevelValueHandle
+    );
+    
+    if (result != gBleSuccess_c) {
+        QS_BEGIN_ID(MAIN, 0)
+            QS_STR("Failed to find Battery Level characteristic handle: ");
+            QS_U32(0, result);
+        QS_END()
+        return;
+    }
+    
+    QS_BEGIN_ID(MAIN, 0)
+        QS_STR("Battery Level value handle found: 0x");
+        QS_U16(0, g_gattHandles.batteryLevelValueHandle);
+    QS_END()
+    
+    // Find Battery Level CCCD handle using the proper NXP API
+    result = GattDb_FindCccdHandleForCharValueHandle(
+        g_gattHandles.batteryLevelValueHandle,
+        &g_gattHandles.batteryLevelCccdHandle
+    );
+    
+    QS_BEGIN_ID(MAIN, 0)
+        QS_STR("GattDb_FindCccdHandleForCharValueHandle result: ");
+        QS_U32(0, result);
+        QS_STR(" handle: 0x");
+        QS_U16(0, g_gattHandles.batteryLevelCccdHandle);
+    QS_END()
+    
+    if ((result != gBleSuccess_c) || (g_gattHandles.batteryLevelCccdHandle == 0x0000)) {
+        QS_BEGIN_ID(MAIN, 0)
+            QS_STR("CCCD discovery failed or returned invalid handle - using symbolic name");
+        QS_END()
+        
+        // Fallback: use symbolic name from gatt_db.h
+        g_gattHandles.batteryLevelCccdHandle = cccd_battery_level;
+        
+        QS_BEGIN_ID(MAIN, 0)
+            QS_STR("Using symbolic CCCD handle: 0x");
+            QS_U16(0, g_gattHandles.batteryLevelCccdHandle);
+        QS_END()
+    } else {
+        QS_BEGIN_ID(MAIN, 0)
+            QS_STR("Battery Level CCCD handle found: 0x");
+            QS_U16(0, g_gattHandles.batteryLevelCccdHandle);
+        QS_END()
+    }
+    
+    g_gattHandles.handlesDiscovered = true;
+    
+    QS_BEGIN_ID(MAIN, 0)
+        QS_STR("GATT handle discovery completed successfully");
+    QS_END()
+}
 
 /*! *********************************************************************************
  * \brief  GAP Generic Event Callback
@@ -205,7 +317,7 @@ static void BLE_GenericCallback(gapGenericEvent_t* pGenericEvent)
             QS_END()
             break;
         }
-            
+ 
         default:
         {
             QS_BEGIN_ID(MAIN, 0)
@@ -630,9 +742,8 @@ static void BLE_AdvertisingCallback(gapAdvertisingEvent_t* pAdvertisingEvent)
         default:
         {
             QS_BEGIN_ID(MAIN, 0)
-                QS_STR("*** Unhandled Advertising event: ");
+                QS_STR("Unhandled Advertising event: ");
                 QS_U32(0, pAdvertisingEvent->eventType);
-                QS_STR(" ***");
             QS_END()
             break;
         }
@@ -661,9 +772,10 @@ static void BLE_ConnectionCallback(deviceId_t peerDeviceId, gapConnectionEvent_t
             QS_BEGIN_ID(MAIN, 0)
                 QS_STR("BLE Device Connected!");
             QS_END()
+            client_deviceId = peerDeviceId; // Store the connected device ID
             break;
         }
-            
+   
         case gConnEvtDisconnected_c:
         {
             QS_BEGIN_ID(MAIN, 0)
@@ -671,7 +783,9 @@ static void BLE_ConnectionCallback(deviceId_t peerDeviceId, gapConnectionEvent_t
                 QS_U32(0, pConnectionEvent->eventData.disconnectedEvent.reason);
                 QS_STR(" - Restarting advertising...");
             QS_END()
-            
+
+            client_deviceId = gInvalidDeviceId_c; // Reset client device ID
+
             // Restart advertising after disconnect
             bleResult_t result = Gap_StartAdvertising(BLE_AdvertisingCallback, BLE_ConnectionCallback);
             if (result != gBleSuccess_c) {
@@ -685,6 +799,17 @@ static void BLE_ConnectionCallback(deviceId_t peerDeviceId, gapConnectionEvent_t
                     QS_STR("Advertising restarted successfully after disconnect");
                 QS_END()
             }
+            break;
+        }
+        
+        case gConnEvtLeDataLengthChanged_c:
+        {
+            QS_BEGIN_ID(MAIN, 0)
+                QS_STR("BLE Data Length Changed: TX=");
+                QS_U16(0, pConnectionEvent->eventData.leDataLengthChanged.maxTxOctets);
+                QS_STR(" RX=");
+                QS_U16(0, pConnectionEvent->eventData.leDataLengthChanged.maxRxOctets);
+            QS_END()
             break;
         }
             
@@ -747,7 +872,6 @@ BLE_qn9080_status_t BLE_StopAdvertising(void)
     QS_BEGIN_ID(MAIN, 0)
         QS_STR("BLE_StopAdvertising: Stopping advertising");
     QS_END()
-    QS_FLUSH();
 
     bleResult_t result = Gap_StopAdvertising();
     if (result != gBleSuccess_c) {
@@ -758,11 +882,11 @@ BLE_qn9080_status_t BLE_StopAdvertising(void)
         QS_FLUSH();
         return BLE_QN9080_STATUS_ERROR;
     }
-
+#if BLE_EXTENDED_LOGS == 1
     QS_BEGIN_ID(MAIN, 0)
-        QS_STR("BLE Advertising stopped successfully");
+        QS_STR("Gap_StopAdvertising completed successfully");
     QS_END()
-    QS_FLUSH();
+#endif  // BLE_EXTENDED_LOGS
 
     return BLE_QN9080_STATUS_OK;
 }
@@ -772,9 +896,11 @@ BLE_qn9080_status_t BLE_StopAdvertising(void)
  ********************************************************************************** */
 static void BLE_InitializeGattDatabase(void)
 {
+#if BLE_EXTENDED_LOGS == 1
     QS_BEGIN_ID(MAIN, 0)
         QS_STR("BLE_InitializeGattDatabase: Initializing GATT database");
     QS_END()
+#endif // BLE_EXTENDED_LOGS
 
     // Initialize GATT database from static definition
     bleResult_t result = GattDb_Init();
@@ -787,6 +913,9 @@ static void BLE_InitializeGattDatabase(void)
         HAL_ASSERT(0, __FILE__, __LINE__); // Critical failure
     }
 
+    // Discover GATT handles after database initialization
+    BLE_DiscoverGattHandles();
+
     // Register GATT server callback
     result = GattServer_RegisterCallback(BLE_GattServerCallback);
     if (result != gBleSuccess_c) {
@@ -798,9 +927,11 @@ static void BLE_InitializeGattDatabase(void)
         HAL_ASSERT(0, __FILE__, __LINE__); // Critical failure
     }
 
+#if BLE_EXTENDED_LOGS == 1
     QS_BEGIN_ID(MAIN, 0)
         QS_STR("GATT Database and Server initialized successfully");
     QS_END()
+#endif // BLE_EXTENDED_LOGS
 }
 
 /*! *********************************************************************************
@@ -814,50 +945,55 @@ static void BLE_GattServerCallback(deviceId_t deviceId, gattServerEvent_t* pServ
         QS_BEGIN_ID(MAIN, 0)
             QS_STR("GATT Server Event: NULL pointer received");
         QS_END()
-        return;
+        HAL_ASSERT(0, __FILE__, __LINE__); // Invalid event
     }
 
+#if BLE_EXTENDED_LOGS == 1
     QS_BEGIN_ID(MAIN, 0)
         QS_STR("GATT Server Event: device=");
         QS_U8(0, deviceId);
         QS_STR(" type=");
         QS_U32(0, pServerEvent->eventType);
     QS_END()
+#endif // BLE_EXTENDED_LOGS
 
     switch (pServerEvent->eventType) {
+        case gEvtMtuChanged_c:
+        {
+            uint16_t newMtu = pServerEvent->eventData.mtuChangedEvent.newMtu;
+            QS_BEGIN_ID(MAIN, 0)
+                QS_STR("GATT MTU Changed to: ");
+                QS_U16(0, newMtu);
+                QS_STR(" bytes");
+            QS_END()
+            break;
+        }
+        
         case gEvtAttributeWritten_c:
         {
+#if BLE_EXTENDED_LOGS == 1
             QS_BEGIN_ID(MAIN, 0)
                 QS_STR("GATT Attribute Written: handle=");
                 QS_U16(0, pServerEvent->eventData.attributeWrittenEvent.handle);
                 QS_STR(" length=");
                 QS_U16(0, pServerEvent->eventData.attributeWrittenEvent.cValueLength);
             QS_END()
-            
-            // Handle CCCD writes for notifications/indications
-            uint16_t cccdValue = 0;
-            
-            if (pServerEvent->eventData.attributeWrittenEvent.cValueLength == 2) {
-                cccdValue = *(uint16_t*)pServerEvent->eventData.attributeWrittenEvent.aValue;
-                
-                QS_BEGIN_ID(MAIN, 0)
-                    QS_STR("CCCD Value: ");
-                    QS_U16(0, cccdValue);
-                    QS_STR(" (notifications ");
-                    QS_STR((cccdValue & gCccdNotification_c) ? "enabled" : "disabled");
-                    QS_STR(")");
-                QS_END()
-            }
+#endif // BLE_EXTENDED_LOGS
+            // Handle attribute write event
+            // TODO: implement attribute write handling
             break;
         }
-        
+
         case gEvtAttributeRead_c:
         {
+#if BLE_EXTENDED_LOGS == 1
             QS_BEGIN_ID(MAIN, 0)
                 QS_STR("GATT Attribute Read: handle=");
                 QS_U16(0, pServerEvent->eventData.attributeReadEvent.handle);
             QS_END()
-            
+#endif // BLE_EXTENDED_LOGS
+
+            // TODO: implement attribute read handling
             // Update battery level and other characteristics when read
             // You can update characteristic values here based on handle
             // Example: if this is battery level characteristic, read actual battery level
@@ -867,12 +1003,133 @@ static void BLE_GattServerCallback(deviceId_t deviceId, gattServerEvent_t* pServ
         
         case gEvtCharacteristicCccdWritten_c:
         {
+            uint16_t handle = pServerEvent->eventData.charCccdWrittenEvent.handle;
+            uint16_t cccdValue = pServerEvent->eventData.charCccdWrittenEvent.newCccd;
+
             QS_BEGIN_ID(MAIN, 0)
-                QS_STR("GATT CCCD Written: handle=");
-                QS_U16(0, pServerEvent->eventData.charCccdWrittenEvent.handle);
-                QS_STR(" cccd=");
-                QS_U16(0, pServerEvent->eventData.charCccdWrittenEvent.newCccd);
+                QS_STR("GATT CCCD Written: handle=0x");
+                QS_U16(0, handle);
+                QS_STR(" cccd=0x");
+                QS_U16(0, cccdValue);
             QS_END()
+
+            // Check if this is the Battery Level CCCD using discovered handle
+            if (handle == g_gattHandles.batteryLevelCccdHandle) {
+                // Battery Level CCCD was written
+                isBatteryServiceSubscribed = (cccdValue == gCccdNotification_c);
+                
+                // Save CCCD value to the device database (required by NXP stack)
+                bleResult_t saveResult = Gap_SaveCccd(deviceId, handle, cccdValue);
+                if (saveResult != gBleSuccess_c) {
+                    QS_BEGIN_ID(MAIN, 0)
+                        QS_STR("Failed to save CCCD: ");
+                        QS_U32(0, saveResult);
+                    QS_END()
+                }
+                
+                QS_BEGIN_ID(MAIN, 0)
+                    QS_STR("Battery Level CCCD updated: notifications ");
+                    QS_STR(isBatteryServiceSubscribed ? "ENABLED" : "DISABLED");
+                    QS_STR(" (saved to device DB)");
+                QS_END()
+                
+                // If notifications were enabled, verify CCCD is properly saved and send battery level
+                if (isBatteryServiceSubscribed && (client_deviceId != gInvalidDeviceId_c)) {
+                    // Use Gap_CheckNotificationStatus to verify CCCD is properly registered
+                    bool_t isNotifActive = FALSE;
+                    bleResult_t checkResult = Gap_CheckNotificationStatus(deviceId, handle, &isNotifActive);
+                    
+                    if ((checkResult == gBleSuccess_c) && (isNotifActive == TRUE)) {
+                        bleResult_t result = GattServer_SendNotification(client_deviceId, g_gattHandles.batteryLevelValueHandle);
+                        if (result == gBleSuccess_c) {
+                            QS_BEGIN_ID(MAIN, 0)
+                                QS_STR("Initial battery level notification sent: ");
+                                QS_U8(0, g_batteryLevel);
+                                QS_STR("%");
+                            QS_END()
+                        } else {
+                            QS_BEGIN_ID(MAIN, 0)
+                                QS_STR("Failed to send initial battery notification: ");
+                                QS_U32(0, result);
+                            QS_END()
+                        }
+                    } else {
+                        QS_BEGIN_ID(MAIN, 0)
+                            QS_STR("CCCD not yet active for notifications - check result: ");
+                            QS_U32(0, checkResult);
+                            QS_STR(" isActive: ");
+                            QS_U32(0, isNotifActive);
+                            QS_STR(" (will retry on next battery update)");
+                        QS_END()
+                    }
+                }
+            } else {
+                // Unknown CCCD handle - show discovered handle for comparison
+                QS_BEGIN_ID(MAIN, 0)
+                    QS_STR("Unknown CCCD handle: 0x");
+                    QS_U16(0, handle);
+                    QS_STR(" (expected battery CCCD: 0x");
+                    QS_U16(0, g_gattHandles.batteryLevelCccdHandle);
+                    QS_STR(")");
+                QS_END()
+            }
+            break;
+        }
+        
+        case gEvtError_c:
+        {
+            gattServerProcedureError_t* pError = &pServerEvent->eventData.procedureError;
+            
+            QS_BEGIN_ID(MAIN, 0)
+                QS_STR("GATT Server Procedure Error: type=");
+                QS_U32(0, pError->procedureType);
+                QS_STR(" error=");
+                QS_U32(0, pError->error);
+                // Decode specific error codes
+                if (pError->error == 2050) { // gDevDbCccdNotFound_c
+                    QS_STR(" (CCCD not found in device DB)");
+                }
+            QS_END()
+            
+            // Log specific procedure types that failed
+            switch (pError->procedureType) {
+                case gSendNotification_c:
+                    QS_BEGIN_ID(MAIN, 0)
+                        if (pError->error == 2050) { // gDevDbCccdNotFound_c
+                            QS_STR("Notification failed: CCCD not found in device DB - client may need to re-subscribe");
+                        } else {
+                            QS_STR("Notification procedure failed - client may have disconnected or CCCD not enabled");
+                        }
+                    QS_END()
+                    break;
+                case gSendIndication_c:
+                    QS_BEGIN_ID(MAIN, 0)
+                        QS_STR("Indication procedure failed");
+                    QS_END()
+                    break;
+                case gSendAttributeWrittenStatus_c:
+                    QS_BEGIN_ID(MAIN, 0)
+                        QS_STR("Send attribute written status failed");
+                    QS_END()
+                    break;
+                case gSendAttributeReadStatus_c:
+                    QS_BEGIN_ID(MAIN, 0)
+                        QS_STR("Send attribute read status failed");
+                    QS_END()
+                    break;
+                default:
+                    QS_BEGIN_ID(MAIN, 0)
+                        QS_STR("Unknown procedure type failed");
+                    QS_END()
+                    break;
+            }
+            
+            // Don't assert on notification errors as they can happen normally
+            // when client disconnects or has notifications disabled
+            if (pError->procedureType != gSendNotification_c) {
+                QS_FLUSH();
+                // HAL_ASSERT(0, __FILE__, __LINE__); // Uncomment for critical errors only
+            }
             break;
         }
         
@@ -889,52 +1146,69 @@ static void BLE_GattServerCallback(deviceId_t deviceId, gattServerEvent_t* pServ
 
 /*! *********************************************************************************
  * \brief  Update BMS Characteristics with Current Values
- * \param[in] deviceId Device ID of the connected peer (gInvalidDeviceId_c if not connected)
+ * \param[in] vbat Battery voltage level (0-100%
+ * 
+ * This function updates the battery level characteristic in the GATT database
+ * and sends a notification if the device is connected and notifications are enabled.
  * \return BLE_qn9080_status_t Status of the operation
  ********************************************************************************** */
-BLE_qn9080_status_t BLE_UpdateBMSCharacteristics(deviceId_t deviceId)
+BLE_qn9080_status_t BLE_UpdateBMSCharacteristics(uint8_t vbat)
 {
     bleResult_t result;
-    
-    // Update battery level characteristic using the handle from gatt_db.h
-    result = GattDb_WriteAttribute(value_battery_level, sizeof(g_batteryLevel), &g_batteryLevel);
-    if (result != gBleSuccess_c) {
-        QS_BEGIN_ID(MAIN, 0)
-            QS_STR("Failed to update battery level: ");
-            QS_U32(0, result);
-        QS_END()
-        return BLE_QN9080_STATUS_ERROR;
-    }
-    
-    // If device is connected and notifications are enabled, send notifications
-    if (deviceId != gInvalidDeviceId_c) {
-        // Send battery level notification
-        result = GattServer_SendNotification(deviceId, value_battery_level);
-        if (result == gBleSuccess_c) {
+
+    g_batteryLevel = vbat; // Update the global battery level variable
+
+    // Update battery level characteristic using the discovered handle
+    if ((client_deviceId != gInvalidDeviceId_c) && (isBatteryServiceSubscribed)) {
+        result = GattDb_WriteAttribute(g_gattHandles.batteryLevelValueHandle, sizeof(g_batteryLevel), &g_batteryLevel);
+        if (result != gBleSuccess_c) {
             QS_BEGIN_ID(MAIN, 0)
-                QS_STR("Battery level notification sent: ");
-                QS_U8(0, g_batteryLevel);
-                QS_STR("%");
+                QS_STR("Failed to update battery level (handle 0x");
+                QS_U16(0, g_gattHandles.batteryLevelValueHandle);
+                QS_STR("): ");
+                QS_U32(0, result);
+            QS_END()
+            return BLE_QN9080_STATUS_ERROR;
+        }
+    }
+
+    // If device is connected and notifications are enabled, send notifications
+    if ((client_deviceId != gInvalidDeviceId_c) && isBatteryServiceSubscribed) {
+        // Verify CCCD is properly registered before sending notification
+        bool_t isNotifActive = FALSE;
+        bleResult_t checkResult = Gap_CheckNotificationStatus(client_deviceId, g_gattHandles.batteryLevelCccdHandle, &isNotifActive);
+        
+        if ((checkResult == gBleSuccess_c) && (isNotifActive == TRUE)) {
+            // Send battery level notification using discovered handle
+            result = GattServer_SendNotification(client_deviceId, g_gattHandles.batteryLevelValueHandle);
+            if (result == gBleSuccess_c) {
+                QS_BEGIN_ID(MAIN, 0)
+                    QS_STR("Battery level notification sent: ");
+                    QS_U8(0, g_batteryLevel);
+                    QS_STR("% (handle 0x");
+                    QS_U16(0, g_gattHandles.batteryLevelValueHandle);
+                    QS_STR(")");
+                QS_END()
+            } else {
+                QS_BEGIN_ID(MAIN, 0)
+                    QS_STR("Failed to send battery notification (handle 0x");
+                    QS_U16(0, g_gattHandles.batteryLevelValueHandle);
+                    QS_STR("): ");
+                    QS_U32(0, result);
+                QS_END()
+            }
+        } else {
+            QS_BEGIN_ID(MAIN, 0)
+                QS_STR("CCCD not active - skipping notification (check result: ");
+                QS_U32(0, checkResult);
+                QS_STR(" isActive: ");
+                QS_U32(0, isNotifActive);
+                QS_STR(")");
             QS_END()
         }
     }
-    
-    return BLE_QN9080_STATUS_SUCCESS;
-}
 
-/*! *********************************************************************************
- * \brief  Set BMS Data Values
- * \param[in] batteryLevel Battery level percentage (0-100%)
- ********************************************************************************** */
-void BLE_SetBMSData(uint8_t batteryLevel)
-{
-    g_batteryLevel = batteryLevel;
-    
-    QS_BEGIN_ID(MAIN, 0)
-        QS_STR("BMS Data Updated: Level=");
-        QS_U8(0, g_batteryLevel);
-        QS_STR("%");
-    QS_END()
+    return BLE_QN9080_STATUS_SUCCESS;
 }
 
 /*! *********************************************************************************
@@ -966,5 +1240,507 @@ void BLE_SetBMSData(uint8_t batteryLevel)
 //     /* Signal application */
 //     (void)OSA_EventSet(mAppEvent, gAppEvtMsgFromHostStack_c);
 // }
+
+/*! *********************************************************************************
+* @}
+********************************************************************************** */
+
+/*! *********************************************************************************
+* \brief    NVM Application Layer Functions required by BLE host library
+********************************************************************************** */
+
+/* Global variable required by BLE host library */
+bool_t gHostInitResetController = TRUE;
+
+/* NVM Dataset identifiers */
+#if gAppUseNvm_d
+#define nvmId_BondingHeaderId_c          0x4011
+#define nvmId_BondingDataDynamicId_c     0x4012
+#define nvmId_BondingDataStaticId_c      0x4013
+#define nvmId_BondingDataDeviceInfoId_c  0x4014
+#define nvmId_BondingDataDescriptorId_c  0x4015
+#endif
+
+#if gAppUseNvm_d
+#if gUnmirroredFeatureSet_d == TRUE
+static bleBondIdentityHeaderBlob_t*  aBondingHeader[gMaxBondedDevices_c];
+static bleBondDataDynamicBlob_t*     aBondingDataDynamic[gMaxBondedDevices_c];
+static bleBondDataStaticBlob_t*      aBondingDataStatic[gMaxBondedDevices_c];
+static bleBondDataDeviceInfoBlob_t*  aBondingDataDeviceInfo[gMaxBondedDevices_c];
+static bleBondDataDescriptorBlob_t* aBondingDataDescriptor[gMaxBondedDevices_c * gcGapMaximumSavedCccds_c];
+
+NVM_RegisterDataSet(aBondingHeader, gMaxBondedDevices_c, gBleBondIdentityHeaderSize_c, nvmId_BondingHeaderId_c, (uint16_t)gNVM_NotMirroredInRamAutoRestore_c);
+NVM_RegisterDataSet(aBondingDataDynamic, gMaxBondedDevices_c, gBleBondDataDynamicSize_c, nvmId_BondingDataDynamicId_c, (uint16_t)gNVM_NotMirroredInRamAutoRestore_c);
+NVM_RegisterDataSet(aBondingDataStatic, gMaxBondedDevices_c, gBleBondDataStaticSize_c, nvmId_BondingDataStaticId_c, (uint16_t)gNVM_NotMirroredInRamAutoRestore_c);
+NVM_RegisterDataSet(aBondingDataDeviceInfo, gMaxBondedDevices_c, gBleBondDataDeviceInfoSize_c, nvmId_BondingDataDeviceInfoId_c, (uint16_t)gNVM_NotMirroredInRamAutoRestore_c);
+NVM_RegisterDataSet(aBondingDataDescriptor, gMaxBondedDevices_c * gcGapMaximumSavedCccds_c, gBleBondDataDescriptorSize_c, nvmId_BondingDataDescriptorId_c, (uint16_t)gNVM_NotMirroredInRamAutoRestore_c);
+#else /* mirrored dataset */
+static bleBondIdentityHeaderBlob_t  aBondingHeader[gMaxBondedDevices_c];
+static bleBondDataDynamicBlob_t     aBondingDataDynamic[gMaxBondedDevices_c];
+static bleBondDataStaticBlob_t      aBondingDataStatic[gMaxBondedDevices_c];
+static bleBondDataDeviceInfoBlob_t  aBondingDataDeviceInfo[gMaxBondedDevices_c];
+static bleBondDataDescriptorBlob_t  aBondingDataDescriptor[gMaxBondedDevices_c * gcGapMaximumSavedCccds_c];
+/* register datasets */
+NVM_RegisterDataSet(aBondingHeader, gMaxBondedDevices_c, gBleBondIdentityHeaderSize_c, nvmId_BondingHeaderId_c, (uint16_t)gNVM_MirroredInRam_c);
+NVM_RegisterDataSet(aBondingDataDynamic, gMaxBondedDevices_c, gBleBondDataDynamicSize_c, nvmId_BondingDataDynamicId_c, (uint16_t)gNVM_MirroredInRam_c);
+NVM_RegisterDataSet(aBondingDataStatic, gMaxBondedDevices_c, gBleBondDataStaticSize_c, nvmId_BondingDataStaticId_c, (uint16_t)gNVM_MirroredInRam_c);
+NVM_RegisterDataSet(aBondingDataDeviceInfo, gMaxBondedDevices_c, gBleBondDataDeviceInfoSize_c, nvmId_BondingDataDeviceInfoId_c, (uint16_t)gNVM_MirroredInRam_c);
+NVM_RegisterDataSet(aBondingDataDescriptor, gMaxBondedDevices_c * gcGapMaximumSavedCccds_c, gBleBondDataDescriptorSize_c, nvmId_BondingDataDescriptorId_c, (uint16_t)gNVM_MirroredInRam_c);
+#endif
+#else
+static bleBondDataBlob_t          maBondDataBlobs[gMaxBondedDevices_c] = {{{{0}}}};
+#endif
+
+/*! *********************************************************************************
+* \brief  Performs NVM read operation
+*
+* \param[in] mEntryIdx            Bonded device index
+* \param[in] pBondHeader          Bond Identity Header
+* \param[in] pBondDataDynamic     Bond Data Dynamic
+* \param[in] pBondDataStatic      Bond Data Static
+* \param[in] pBondDataDeviceInfo  Bond Data Device Info
+* \param[in] pBondDataDescriptor  Bond Data Descriptor
+* \param[in] mDescriptorIndex     Descriptor Index
+*
+* \return  none
+*
+********************************************************************************** */
+void App_NvmRead
+(
+    uint8_t  mEntryIdx,
+    void*    pBondHeader,
+    void*    pBondDataDynamic,
+    void*    pBondDataStatic,
+    void*    pBondDataDeviceInfo,
+    void*    pBondDataDescriptor,
+    uint8_t  mDescriptorIndex
+)
+{
+    if(mEntryIdx >= (uint8_t)gMaxBondedDevices_c)
+    {
+          return;
+    }
+#if gAppUseNvm_d
+    uint8_t  idx = 0;
+#if gUnmirroredFeatureSet_d == TRUE
+    uint32_t mSize = 0;
+    void**   ppNvmData = NULL;
+    void*    pRamData = NULL;
+#endif
+
+#if gUnmirroredFeatureSet_d == TRUE
+    for(idx = 0; idx < 5U; idx++)
+    {
+        ppNvmData = NULL;
+        switch(*(uint8_t*)&idx)
+        {
+        case 0:
+            if(pBondHeader != NULL)
+            {
+                ppNvmData = (void**)&aBondingHeader[mEntryIdx];
+                pRamData  = pBondHeader;
+                mSize     = gBleBondIdentityHeaderSize_c;
+            }
+            break;
+        case 1:
+            if(pBondDataDynamic != NULL)
+            {
+                ppNvmData = (void**)&aBondingDataDynamic[mEntryIdx];
+                pRamData  = pBondDataDynamic;
+                mSize     = gBleBondDataDynamicSize_c;
+            }
+            break;
+        case 2:
+            if(pBondDataStatic != NULL)
+            {
+                ppNvmData = (void**)&aBondingDataStatic[mEntryIdx];
+                pRamData  = pBondDataStatic;
+                mSize     = gBleBondDataStaticSize_c;
+            }
+            break;
+        case 3:
+            if(pBondDataDeviceInfo != NULL)
+            {
+                ppNvmData = (void**)&aBondingDataDeviceInfo[mEntryIdx];
+                pRamData  = pBondDataDeviceInfo;
+                mSize     = gBleBondDataDeviceInfoSize_c;
+            }
+            break;
+        case 4:
+            if(pBondDataDescriptor != NULL)
+            {
+                if(mDescriptorIndex < gcGapMaximumSavedCccds_c)
+                {
+                    ppNvmData = (void**)&aBondingDataDescriptor[mEntryIdx * gcGapMaximumSavedCccds_c + mDescriptorIndex];
+                    pRamData  = pBondDataDescriptor;
+                    mSize     = gBleBondDataDescriptorSize_c;
+                }
+            }
+            break;
+        default:
+            ; /* No action required */
+            break;
+        }
+
+        /* if ppNvmData is not NULL the same holds for pRamData */
+        if((NULL != ppNvmData) && (NULL != *ppNvmData))
+        {
+            FLib_MemCpy(pRamData, *ppNvmData, mSize);
+        }
+    }
+#else // gMirroredFeatureSet_d
+    for(idx = 0; idx < 5; idx++)
+    {
+        switch(idx)
+        {
+        case 0:
+            if(pBondHeader != NULL)
+            {
+                if(gNVM_OK_c == NvRestoreDataSet((void*)&aBondingHeader[mEntryIdx], FALSE))
+                {
+                  FLib_MemCpy(pBondHeader, (void*)&aBondingHeader[mEntryIdx], gBleBondIdentityHeaderSize_c);
+                }
+            }
+            break;
+        case 1:
+            if(pBondDataDynamic != NULL)
+            {
+                if(gNVM_OK_c == NvRestoreDataSet((void*)&aBondingDataDynamic[mEntryIdx], FALSE))
+                {
+                  FLib_MemCpy(pBondDataDynamic, (void*)&aBondingDataDynamic[mEntryIdx], gBleBondDataDynamicSize_c);
+                }
+            }
+            break;
+        case 2:
+            if(pBondDataStatic != NULL)
+            {
+                if(gNVM_OK_c == NvRestoreDataSet((void*)&aBondingDataStatic[mEntryIdx], FALSE))
+                {
+                  FLib_MemCpy(pBondDataStatic, (void*)&aBondingDataStatic[mEntryIdx], gBleBondDataStaticSize_c);
+                }
+            }
+            break;
+        case 3:
+            if(pBondDataDeviceInfo != NULL)
+            {
+                if(gNVM_OK_c == NvRestoreDataSet((void*)&aBondingDataDeviceInfo[mEntryIdx], FALSE))
+                {
+                  FLib_MemCpy(pBondDataDeviceInfo, (void*)&aBondingDataDeviceInfo[mEntryIdx], gBleBondDataDeviceInfoSize_c);
+                }
+            }
+            break;
+        case 4:
+            if(pBondDataDescriptor != NULL)
+            {
+                if(mDescriptorIndex < gcGapMaximumSavedCccds_c)
+                {
+                    if(gNVM_OK_c == NvRestoreDataSet((void*)&aBondingDataDescriptor[mEntryIdx * gcGapMaximumSavedCccds_c + mDescriptorIndex], FALSE))
+                    {
+                      FLib_MemCpy(pBondDataDescriptor, (void*)&aBondingDataDescriptor[mEntryIdx * gcGapMaximumSavedCccds_c + mDescriptorIndex], gBleBondDataDescriptorSize_c);
+                    }
+                }
+            }
+            break;
+        default:
+            ; /* No action required */
+            break;
+        }
+    }
+#endif
+
+#else
+
+    if(pBondHeader != NULL)
+    {
+        FLib_MemCpy(pBondHeader, &maBondDataBlobs[mEntryIdx].bondHeader, gBleBondIdentityHeaderSize_c);
+    }
+
+    if(pBondDataDynamic != NULL)
+    {
+        FLib_MemCpy(pBondDataDynamic,
+                    (uint8_t*)&maBondDataBlobs[mEntryIdx].bondDataBlobDynamic,
+                    gBleBondDataDynamicSize_c
+                        );
+    }
+
+    if(pBondDataStatic != NULL)
+    {
+        FLib_MemCpy(pBondDataStatic,
+                    (uint8_t*)&maBondDataBlobs[mEntryIdx].bondDataBlobStatic,
+                    gBleBondDataStaticSize_c
+                        );
+    }
+
+    if(pBondDataDeviceInfo != NULL)
+    {
+        FLib_MemCpy(pBondDataDeviceInfo,
+                    (uint8_t*)&maBondDataBlobs[mEntryIdx].bondDataBlobDeviceInfo,
+                    gBleBondDataDeviceInfoSize_c
+                        );
+    }
+
+    if(pBondDataDescriptor != NULL && mDescriptorIndex < gcGapMaximumSavedCccds_c)
+    {
+        FLib_MemCpy(pBondDataDescriptor,
+                    (uint8_t*)&(maBondDataBlobs[mEntryIdx].bondDataDescriptors[mDescriptorIndex]),
+                    gBleBondDataDescriptorSize_c
+                        );
+    }
+
+#endif
+}
+
+/*! *********************************************************************************
+* \brief  Performs NVM write operation
+*
+* \param[in] mEntryIdx            Bonded device index
+* \param[in] pBondHeader          Bond Identity Header
+* \param[in] pBondDataDynamic     Bond Data Dynamic
+* \param[in] pBondDataStatic      Bond Data Static
+* \param[in] pBondDataDeviceInfo  Bond Data Device Info
+* \param[in] pBondDataDescriptor  Bond Data Descriptor
+* \param[in] mDescriptorIndex     Descriptor Index
+*
+* \return    none
+*
+********************************************************************************** */
+void App_NvmWrite
+(
+    uint8_t  mEntryIdx,
+    void*    pBondHeader,
+    void*    pBondDataDynamic,
+    void*    pBondDataStatic,
+    void*    pBondDataDeviceInfo,
+    void*    pBondDataDescriptor,
+    uint8_t  mDescriptorIndex
+)
+{
+    if(mEntryIdx >= (uint8_t)gMaxBondedDevices_c)
+    {
+          return;
+    }
+#if gAppUseNvm_d
+    uint8_t  idx   = 0;
+
+#if gUnmirroredFeatureSet_d == TRUE
+    uint32_t mSize = 0;
+    void**   ppNvmData = NULL;
+    void*    pRamData = NULL;
+#endif
+
+#if gUnmirroredFeatureSet_d == TRUE
+
+    for(idx = 0; idx < 5U; idx++)
+    {
+        ppNvmData = NULL;
+        switch(*(uint8_t*)&idx)
+        {
+        case 0:
+            if(pBondHeader != NULL)
+            {
+                ppNvmData = (void**)&aBondingHeader[mEntryIdx];
+                pRamData  = pBondHeader;
+                mSize     = gBleBondIdentityHeaderSize_c;
+            }
+            break;
+        case 1:
+            if(pBondDataDynamic != NULL)
+            {
+                ppNvmData = (void**)&aBondingDataDynamic[mEntryIdx];
+                pRamData  = pBondDataDynamic;
+                mSize     = gBleBondDataDynamicSize_c;
+            }
+            break;
+        case 2:
+            if(pBondDataStatic != NULL)
+            {
+                ppNvmData = (void**)&aBondingDataStatic[mEntryIdx];
+                pRamData  = pBondDataStatic;
+                mSize     = gBleBondDataStaticSize_c;
+            }
+            break;
+        case 3:
+            if(pBondDataDeviceInfo != NULL)
+            {
+                ppNvmData = (void**)&aBondingDataDeviceInfo[mEntryIdx];
+                pRamData  = pBondDataDeviceInfo;
+                mSize     = gBleBondDataDeviceInfoSize_c;
+            }
+            break;
+        case 4:
+            if(pBondDataDescriptor != NULL)
+            {
+                if(mDescriptorIndex < gcGapMaximumSavedCccds_c)
+                {
+                    ppNvmData = (void**)&aBondingDataDescriptor[mEntryIdx * gcGapMaximumSavedCccds_c + mDescriptorIndex];
+                    pRamData  = pBondDataDescriptor;
+                    mSize     = gBleBondDataDescriptorSize_c;
+                }
+            }
+            break;
+        default:
+            ; /* No action required */
+            break;
+        }
+
+        if(ppNvmData != NULL)
+        {
+            if(gNVM_OK_c == NvMoveToRam(ppNvmData))
+            {
+                FLib_MemCpy(*ppNvmData, pRamData, mSize);
+                (void)NvSaveOnIdle(ppNvmData, FALSE);
+            }
+            else
+            {
+                *ppNvmData = pRamData;
+                (void)NvSyncSave(ppNvmData, FALSE);
+            }
+        }
+    }
+#else // gMirroredFeatureSet_d
+
+    for(idx = 0; idx < 5; idx++)
+    {
+        switch(idx)
+        {
+        case 0:
+            if(pBondHeader != NULL)
+            {
+                FLib_MemCpy((void*)&aBondingHeader[mEntryIdx], pBondHeader, gBleBondIdentityHeaderSize_c);
+                (void)NvSaveOnIdle((void*)&aBondingHeader[mEntryIdx], FALSE);
+            }
+            break;
+        case 1:
+            if(pBondDataDynamic != NULL)
+            {
+                FLib_MemCpy((void*)&aBondingDataDynamic[mEntryIdx], pBondDataDynamic, gBleBondDataDynamicSize_c);
+                (void)NvSaveOnIdle((void*)&aBondingDataDynamic[mEntryIdx], FALSE);
+            }
+            break;
+        case 2:
+            if(pBondDataStatic != NULL)
+            {
+                FLib_MemCpy((void*)&aBondingDataStatic[mEntryIdx], pBondDataStatic, gBleBondDataStaticSize_c);
+                (void)NvSaveOnIdle((void*)&aBondingDataStatic[mEntryIdx], FALSE);
+            }
+            break;
+        case 3:
+            if(pBondDataDeviceInfo != NULL)
+            {
+                FLib_MemCpy((void*)&aBondingDataDeviceInfo[mEntryIdx], pBondDataDeviceInfo, gBleBondDataDeviceInfoSize_c);
+                (void)NvSaveOnIdle((void*)&aBondingDataDeviceInfo[mEntryIdx], FALSE);
+            }
+            break;
+        case 4:
+            if(pBondDataDescriptor != NULL)
+            {
+                if(mDescriptorIndex < gcGapMaximumSavedCccds_c)
+                {
+                    FLib_MemCpy((void*)&aBondingDataDescriptor[mEntryIdx * gcGapMaximumSavedCccds_c + mDescriptorIndex], pBondDataDescriptor, gBleBondDataDescriptorSize_c);
+                    (void)NvSaveOnIdle((void*)&aBondingDataDescriptor[mEntryIdx * gcGapMaximumSavedCccds_c + mDescriptorIndex], FALSE);
+                }
+            }
+            break;
+        default:
+            ; /* No action required */
+            break;
+        }
+    }
+
+#endif //gUnmirroredFeatureSet_d
+
+#else
+
+    if(pBondHeader != NULL)
+    {
+        FLib_MemCpy(&maBondDataBlobs[mEntryIdx].bondHeader, pBondHeader, gBleBondIdentityHeaderSize_c);
+    }
+
+    if(pBondDataDynamic != NULL)
+    {
+        FLib_MemCpy((uint8_t*)&maBondDataBlobs[mEntryIdx].bondDataBlobDynamic,
+                    pBondDataDynamic,
+                    gBleBondDataDynamicSize_c
+                        );
+    }
+
+    if(pBondDataStatic != NULL)
+    {
+        FLib_MemCpy((uint8_t*)&maBondDataBlobs[mEntryIdx].bondDataBlobStatic,
+                    pBondDataStatic,
+                    gBleBondDataStaticSize_c
+                        );
+    }
+
+    if(pBondDataDeviceInfo != NULL)
+    {
+        FLib_MemCpy((uint8_t*)&maBondDataBlobs[mEntryIdx].bondDataBlobDeviceInfo,
+                    pBondDataDeviceInfo,
+                    gBleBondDataDeviceInfoSize_c
+                        );
+    }
+
+    if(pBondDataDescriptor != NULL && mDescriptorIndex != gcGapMaximumSavedCccds_c)
+    {
+        FLib_MemCpy((uint8_t*)&(maBondDataBlobs[mEntryIdx].bondDataDescriptors[mDescriptorIndex]),
+                    pBondDataDescriptor,
+                    gBleBondDataDescriptorSize_c
+                        );
+    }
+
+#endif
+}
+
+/*! *********************************************************************************
+* \brief  Performs NVM erase operation
+*
+* \param[in] mEntryIdx Bonded device index
+*
+* \return  none
+*
+********************************************************************************** */
+void App_NvmErase(uint8_t mEntryIdx)
+{
+    if(mEntryIdx >= (uint8_t)gMaxBondedDevices_c)
+    {
+          return;
+    }
+#if gAppUseNvm_d
+#if gUnmirroredFeatureSet_d == TRUE
+    (void)NvErase((void**)&aBondingHeader[mEntryIdx]);
+    (void)NvErase((void**)&aBondingDataDynamic[mEntryIdx]);
+    (void)NvErase((void**)&aBondingDataStatic[mEntryIdx]);
+    (void)NvErase((void**)&aBondingDataDeviceInfo[mEntryIdx]);
+
+    uint32_t mDescIdx;
+
+    for(mDescIdx = ((uint32_t)mEntryIdx * gcGapMaximumSavedCccds_c);
+        mDescIdx < ((uint32_t)mEntryIdx + 1U) * gcGapMaximumSavedCccds_c; mDescIdx++)
+    {
+        (void)NvErase((void**)&aBondingDataDescriptor[mDescIdx]);
+    }
+#else // mirrored
+    FLib_MemSet(&aBondingHeader[mEntryIdx], 0, gBleBondIdentityHeaderSize_c);
+    NvSaveOnIdle((void*)&aBondingHeader[mEntryIdx], FALSE);
+    FLib_MemSet(&aBondingDataDynamic[mEntryIdx], 0, gBleBondDataDynamicSize_c);
+    NvSaveOnIdle((void*)&aBondingDataDynamic[mEntryIdx], FALSE);
+    FLib_MemSet(&aBondingDataStatic[mEntryIdx], 0, gBleBondDataStaticSize_c);
+    NvSaveOnIdle((void*)&aBondingDataStatic[mEntryIdx], FALSE);
+    FLib_MemSet(&aBondingDataDeviceInfo[mEntryIdx], 0, gBleBondDataDeviceInfoSize_c);
+    NvSaveOnIdle((void*)&aBondingDataDeviceInfo[mEntryIdx], FALSE);
+
+    uint32_t mDescIdx;
+
+    for(mDescIdx = ((uint32_t)mEntryIdx * gcGapMaximumSavedCccds_c);
+        mDescIdx < ((uint32_t)mEntryIdx + 1U) * gcGapMaximumSavedCccds_c; mDescIdx++)
+    {
+        FLib_MemSet(&aBondingDataDescriptor[mDescIdx], 0, gBleBondDataDescriptorSize_c);
+        NvSaveOnIdle((void*)&aBondingDataDescriptor[mDescIdx], FALSE);
+    }
+#endif
+#else
+    FLib_MemSet(&maBondDataBlobs[mEntryIdx], 0, sizeof(bleBondDataBlob_t));
+#endif
+}
 
 /* [] END OF FILE */
