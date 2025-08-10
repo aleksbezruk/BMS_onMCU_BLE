@@ -77,7 +77,7 @@ else
   printf "${RED}The test_BLE_AIOS.py FAILED and returned the code $RETURN\n"
   exit $RETURN
 fi
-sleep 10  #delay to obtain QSPY logs before exit
+sleep 30  #delay to obtain QSPY logs before exit
 
 printf "${GREEN}===================================\n"
 printf "${GREEN}===================================\n"
