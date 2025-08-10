@@ -40,6 +40,10 @@
 #define gBleSig_CharPresFormatDescriptor_d      0x2904U
 /*! Valid Range Descriptor declaration UUID */
 #define gBleSig_ValidRangeDescriptor_d          0x2906U
+/*! Valid Range Descriptor declaration UUID (short name) */
+#define gBleSig_ValidRange_d                    0x2906U
+/*! Characteristic User Description Descriptor declaration UUID */
+#define gBleSig_CharUserDescriptor_d            0x2901U
 
 
 /*! GAP Service UUID */
@@ -78,6 +82,8 @@
 #define gBleSig_HidService_d                    0x1812U
 /*! Running Speed And Cadence Service UUID */
 #define gBleSig_RunningSpeedAndCadenceService_d 0x1814U
+/*! Automation IO Service UUID */
+#define gBleSig_AutomationIo_d                  0x1815U
 /*! Cycling Speed And Cadence Service UUID */
 #define gBleSig_CyclingSpeedAndCadenceService_d 0x1816U
 /*! Cycling Power Service UUID */
@@ -205,6 +211,10 @@
 #define gBleSig_RscFeature_d                    0x2A54U
 /*! SC Control Point UUID */
 #define gBleSig_ScControlPoint_d                0x2A55U
+/*! Digital Characteristic UUID */
+#define gBleSig_Digital_d                       0x2A56U
+/*! Analog Characteristic UUID */
+#define gBleSig_Analog_d                        0x2A58U
 /*! CSC Measurement Characteristic UUID */
 #define gBleSig_CscMeasurement_d                0x2A5BU
 /*! CSC Feature Characteristic UUID */

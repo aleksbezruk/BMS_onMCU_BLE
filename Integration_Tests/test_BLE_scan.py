@@ -1,7 +1,7 @@
 import simplepyble
 import pytest
 import time
-from testfixture_general import testfixture_resetDUT
+from testfixture_general import resetDUT
 
 pytest.ADAPTER = {}
 pytest.BMS = {}
@@ -17,8 +17,8 @@ def test_open_adapter(device_type):
     pytest.ADAPTER = adapters[choice]
     print(f"Selected adapter: {pytest.ADAPTER.identifier()} [{pytest.ADAPTER.address()}]")
     print("Preparing to test. It may takes up to 1 minute ...")
-    testfixture_resetDUT(device_type)
-    time.sleep(40)  # for synchronization purpose
+    resetDUT(device_type)
+    time.sleep(3)  # for synchronization purpose
     pytest.ADAPTER.set_callback_on_scan_start(lambda: print("Scan started."))
     pytest.ADAPTER.set_callback_on_scan_stop(lambda: print("Scan complete."))
     pytest.ADAPTER.set_callback_on_scan_found(lambda peripheral: print(f"Found {peripheral.identifier()} [{peripheral.address()}]"))
@@ -28,8 +28,8 @@ def test_find_bms(device_name):
     print("-------- test_find_bms ------------")
     print(f"Searching for device: {device_name}")
     try: 
-        # Scan for 40 seconds
-        pytest.ADAPTER.scan_for(40000)
+        # Scan for 25 seconds
+        pytest.ADAPTER.scan_for(25000)
         peripherals = pytest.ADAPTER.scan_get_results()
         is_bms_found = False
         for peripheral in peripherals:
@@ -39,7 +39,7 @@ def test_find_bms(device_name):
         assert is_bms_found == True, f"No {device_name} found"
     except:
         print("Retry scan")
-        pytest.ADAPTER.scan_for(40000)
+        pytest.ADAPTER.scan_for(25000)
         peripherals = pytest.ADAPTER.scan_get_results()
         is_bms_found = False
         for peripheral in peripherals:

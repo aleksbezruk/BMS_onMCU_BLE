@@ -19,7 +19,7 @@ DEVICE_CONFIGS = {
 }
 
 # reset DUT
-def testfixture_resetDUT(device_type="PSOC63"):
+def resetDUT(device_type="PSOC63"):
     """
     Reset the Device Under Test (DUT)
     
