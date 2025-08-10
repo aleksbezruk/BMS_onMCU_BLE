@@ -24,8 +24,8 @@ def test_open_adapter():
 def test_find_bms():
     print("-------- test_find_bms ------------")
     try: 
-        # Scan for 40 seconds
-        pytest.ADAPTER.scan_for(40000)
+        # Scan for 25 seconds
+        pytest.ADAPTER.scan_for(25000)
         peripherals = pytest.ADAPTER.scan_get_results()
         is_bms_found = False
         for peripheral in peripherals:
@@ -35,7 +35,7 @@ def test_find_bms():
         assert is_bms_found == True, "No BMS found"
     except:
         print("Retry scan")
-        pytest.ADAPTER.scan_for(40000)
+        pytest.ADAPTER.scan_for(25000)
         peripherals = pytest.ADAPTER.scan_get_results()
         is_bms_found = False
         for peripheral in peripherals:

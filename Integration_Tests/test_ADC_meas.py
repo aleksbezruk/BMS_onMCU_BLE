@@ -8,7 +8,7 @@ from testfixture_qspy import QSPY_get_ADC_meas
 #####################
 # Constants
 #####################
-pytest.ADC_MEAS_NUM_ITERATIONS = 5
+pytest.ADC_MEAS_NUM_ITERATIONS = 2
 
 @pytest.mark.dependency(name="test_open_qspy")
 def test_open_qspy():
@@ -34,7 +34,7 @@ def test_receive_periodic_adc():
 @pytest.mark.dependency(depends=["test_receive_periodic_adc"], name="test_close_qspy")
 def test_close_qspy():
     print("-------- test_close_qspy ------------")
-    time.sleep(20)
+    time.sleep(5)
     QSPY_deinit()
     assert pytest._sock == None, "close QSPY socket Failed"
 

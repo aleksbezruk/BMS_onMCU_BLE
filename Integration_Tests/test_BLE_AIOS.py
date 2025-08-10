@@ -25,8 +25,8 @@ def test_open_adapter():
 def test_find_bms():
     print("-------- test_find_bms ------------")
     try: 
-        # Scan for 40 seconds
-        pytest.ADAPTER.scan_for(40000)
+        # Scan for 25 seconds
+        pytest.ADAPTER.scan_for(25000)
         peripherals = pytest.ADAPTER.scan_get_results()
         is_bms_found = False
         for peripheral in peripherals:
@@ -36,7 +36,7 @@ def test_find_bms():
         assert is_bms_found == True, "No BMS found"
     except:
         print("Retry scan")
-        pytest.ADAPTER.scan_for(40000)
+        pytest.ADAPTER.scan_for(25000)
         peripherals = pytest.ADAPTER.scan_get_results()
         is_bms_found = False
         for peripheral in peripherals:
@@ -99,7 +99,7 @@ def test_enable_disable_switch():
         pytest.BMS.notify(service_uuid, characteristic_uuid, lambda data: swState.append(data[0]))
         bytes_array = str.encode("1000")
         pytest.BMS.write_request(service_uuid, characteristic_uuid, bytes_array)
-        time.sleep(60)
+        time.sleep(10)
         print("Switches state notif = %d" %(swState[0]))
         assert swState[0] == 0x01, "Discharge switch was not enabled"
 
@@ -109,7 +109,7 @@ def test_enable_disable_switch():
         pytest.BMS.notify(service_uuid, characteristic_uuid, lambda data: swState.append(data[0]))
         bytes_array = str.encode("0000")
         pytest.BMS.write_request(service_uuid, characteristic_uuid, bytes_array)
-        time.sleep(60)
+        time.sleep(10)
         print("Switches state notif = %d" %(swState[0]))
         assert swState[0] == 0x00, "Switches was not disabled"
 
@@ -120,6 +120,6 @@ def test_disconnect_bms():
     assert pytest.BMS.is_connected() == False, "BLE disconnect failed"
     print("Successfully disconnected.")
     print("Wait some time before shutdown test... It may takes up to 1 minute.")
-    time.sleep(10) # for synchronization purpose
+    time.sleep(5) # for synchronization purpose
 
 # END OF FILE
