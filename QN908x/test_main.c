@@ -254,7 +254,7 @@ int main(void)
     if (hwStatus != HAL_STATUS_OK) {
         HAL_ASSERT(0, __FILE__, __LINE__); // Hardware initialization failed
     }
-
+ 
     /** Initialize LED */
     HAL_LED_init_green();
     HAL_LED_init_red();

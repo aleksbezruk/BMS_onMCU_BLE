@@ -48,6 +48,7 @@
 #include "gatt_database.h"
 #include "gatt_db_app_interface.h"
 #include "ble_sig_defines.h"
+#include "att_errors.h"  // ATT error codes
 #include "gatt_db/gatt_db_handles.h"  // Include GATT database handle enums
 
 // ============================
@@ -155,15 +156,21 @@ static volatile uint32_t g_advertisingCallbackCount = 0;
 
 // BMS data for GATT characteristics
 static uint8_t g_batteryLevel = 90;    // Battery level percentage (0-100%)
+static volatile bool isSendAiosNotification = false; // Flag to track if AIO notifications should be sent
+static volatile uint8_t aiosSwitchState = 0; // switches state
 
 static deviceId_t client_deviceId = gInvalidDeviceId_c; // Device ID for the current connection
 static bool isBatteryServiceSubscribed = false; // Flag to track if Battery Service is subscribed
+static volatile bool isAIOServiceSubscribed = false; // Flag to track if Automation IO Service is subscribed
 
 // Structure to store discovered GATT handles
 typedef struct {
     uint16_t batteryServiceHandle;          // Battery Service declaration handle
     uint16_t batteryLevelValueHandle;       // Battery Level characteristic value handle
     uint16_t batteryLevelCccdHandle;        // Battery Level CCCD handle
+    uint16_t aiosServiceHandle;             // Automation IO Service declaration handle
+    uint16_t digitalIoValueHandle;          // Digital IO Value characteristic value handle
+    uint16_t digitalIoCccdHandle;           // Digital IO Value CCCD handle
     bool     handlesDiscovered;             // Flag indicating if handles were successfully discovered
 } gatt_handles_t;
 
@@ -172,6 +179,9 @@ static gatt_handles_t g_gattHandles = {
     .batteryServiceHandle = 0x0000,
     .batteryLevelValueHandle = 0x0000,
     .batteryLevelCccdHandle = 0x0000,
+    .aiosServiceHandle = 0x0000,
+    .digitalIoValueHandle = 0x0000,
+    .digitalIoCccdHandle = 0x0000,
     .handlesDiscovered = false
 };
 
@@ -221,6 +231,7 @@ static void BLE_DiscoverGattHandles(void)
 {
     bleResult_t result;
     bleUuid_t batteryLevelCharUuid;
+    bleUuid_t digitalIoCharUuid;
 
 #if (BLE_EXTENDED_LOGS == 1)
     QS_BEGIN_ID(MAIN, 0)
@@ -231,15 +242,20 @@ static void BLE_DiscoverGattHandles(void)
     // Reset handles
     g_gattHandles.batteryLevelValueHandle = 0x0000;
     g_gattHandles.batteryLevelCccdHandle = 0x0000;
+    g_gattHandles.digitalIoValueHandle = 0x0000;
+    g_gattHandles.digitalIoCccdHandle = 0x0000;
     g_gattHandles.handlesDiscovered = false;
     
-    // Use symbolic name from gatt_db.h for the service handle (NXP approach)
+    // Use symbolic names from gatt_db.h for the service handles (NXP approach)
     g_gattHandles.batteryServiceHandle = service_battery;
+    g_gattHandles.aiosServiceHandle = service_automation_io;
 
 #if (BLE_EXTENDED_LOGS == 1)
     QS_BEGIN_ID(MAIN, 0)
         QS_STR("Battery Service handle (symbolic): 0x");
         QS_U16(0, g_gattHandles.batteryServiceHandle);
+        QS_STR(" AIOS Service handle (symbolic): 0x");
+        QS_U16(0, g_gattHandles.aiosServiceHandle);
     QS_END()
 
 #endif // (BLE_EXTENDED_LOGS == 1)
@@ -289,6 +305,58 @@ static void BLE_DiscoverGattHandles(void)
     if (result != gBleSuccess_c) {
         QS_BEGIN_ID(MAIN, 0)
             QS_STR("CCCD discovery failed or returned invalid handle");
+        QS_END()
+        QS_FLUSH();
+        HAL_ASSERT(0, __FILE__, __LINE__);
+    }
+
+    // Set up Digital IO Characteristic UUID (128-bit PSOC63 compatible)
+    // PSOC63 UUID: 37AF9AE2-211D-4436-9D26-3A9ED02EFEEA
+    uint8_t digitalIoUuid128[] = {0xEA, 0xFE, 0x2E, 0xD0, 0x9E, 0x3A, 0x26, 0x9D, 0x36, 0x44, 0x1D, 0x21, 0xE2, 0x9A, 0xAF, 0x37};
+    FLib_MemCpy(digitalIoCharUuid.uuid128, digitalIoUuid128, 16);
+    
+    // Find Digital IO characteristic value handle using NXP API with 128-bit UUID
+    result = GattDb_FindCharValueHandleInService(
+        g_gattHandles.aiosServiceHandle,
+        gBleUuidType128_c,
+        &digitalIoCharUuid,
+        &g_gattHandles.digitalIoValueHandle
+    );
+    
+    if (result != gBleSuccess_c) {
+        QS_BEGIN_ID(MAIN, 0)
+            QS_STR("Failed to find Digital IO characteristic handle: ");
+            QS_U32(0, result);
+        QS_END()
+        return;
+    }
+
+#if (BLE_EXTENDED_LOGS == 1)
+    QS_BEGIN_ID(MAIN, 0)
+        QS_STR("Digital IO value handle found: 0x");
+        QS_U16(0, g_gattHandles.digitalIoValueHandle);
+    QS_END()
+
+#endif // (BLE_EXTENDED_LOGS == 1)
+
+    // Find Digital IO CCCD handle using the proper NXP API
+    result = GattDb_FindCccdHandleForCharValueHandle(
+        g_gattHandles.digitalIoValueHandle,
+        &g_gattHandles.digitalIoCccdHandle
+    );
+    
+#if (BLE_EXTENDED_LOGS == 1)
+    QS_BEGIN_ID(MAIN, 0)
+        QS_STR("Digital IO CCCD handle result: ");
+        QS_U32(0, result);
+        QS_STR(" handle: 0x");
+        QS_U16(0, g_gattHandles.digitalIoCccdHandle);
+    QS_END()
+#endif // (BLE_EXTENDED_LOGS == 1)
+
+    if (result != gBleSuccess_c) {
+        QS_BEGIN_ID(MAIN, 0)
+            QS_STR("Digital IO CCCD discovery failed or returned invalid handle");
         QS_END()
         QS_FLUSH();
         HAL_ASSERT(0, __FILE__, __LINE__);
@@ -1040,9 +1108,23 @@ static void BLE_InitializeGattDatabase(void)
         HAL_ASSERT(0, __FILE__, __LINE__); // Critical failure
     }
 
+    // Register char_digital_io_value characteristic for write notifications using discovered handle
+    result = GattServer_RegisterHandlesForWriteNotifications(1, &g_gattHandles.digitalIoValueHandle);
+    if (result != gBleSuccess_c) {
+        QS_BEGIN_ID(MAIN, 0)
+            QS_STR("Failed to register digital IO value handle for write notifications: ");
+            QS_U32(0, result);
+        QS_END()
+        QS_FLUSH();
+        HAL_ASSERT(0, __FILE__, __LINE__); // Critical failure
+    }
+
 #if BLE_EXTENDED_LOGS == 1
     QS_BEGIN_ID(MAIN, 0)
         QS_STR("GATT Database and Server initialized successfully");
+        QS_STR(" - Digital IO Value handle 0x");
+        QS_U16(0, g_gattHandles.digitalIoValueHandle);
+        QS_STR(" registered for write notifications");
     QS_END()
 #endif // BLE_EXTENDED_LOGS
 }
@@ -1084,16 +1166,95 @@ static void BLE_GattServerCallback(deviceId_t deviceId, gattServerEvent_t* pServ
         
         case gEvtAttributeWritten_c:
         {
+            uint16_t handle = pServerEvent->eventData.attributeWrittenEvent.handle;
+            uint16_t valueLength = pServerEvent->eventData.attributeWrittenEvent.cValueLength;
+            uint8_t* pValue = pServerEvent->eventData.attributeWrittenEvent.aValue;
+
 #if BLE_EXTENDED_LOGS == 1
             QS_BEGIN_ID(MAIN, 0)
-                QS_STR("GATT Attribute Written: handle=");
-                QS_U16(0, pServerEvent->eventData.attributeWrittenEvent.handle);
+                QS_STR("GATT Attribute Written: handle=0x");
+                QS_U16(0, handle);
                 QS_STR(" length=");
-                QS_U16(0, pServerEvent->eventData.attributeWrittenEvent.cValueLength);
+                QS_U16(0, valueLength);
+                QS_STR(" value=0x");
+                if (valueLength > 0) {
+                    QS_U8(0, pValue[0]);
+                }
             QS_END()
 #endif // BLE_EXTENDED_LOGS
-            // Handle attribute write event
-            // TODO: implement attribute write handling
+
+            // Check if this is the digital IO value characteristic
+            if (handle == g_gattHandles.digitalIoValueHandle) {
+                QS_BEGIN_ID(MAIN, 0)
+                    QS_STR("Digital IO Value characteristic written: ");
+                    if (valueLength > 0) {
+                        QS_STR("value=0x");
+                        QS_U8(0, pValue[0]);
+                    }
+                QS_END()
+
+                // Write the attribute value to the database
+                if ((valueLength > 0) && (pValue != NULL)) {
+                    // Store received data directly (now sending proper numeric values)
+                    uint8_t dbData[4] = {0};
+                    uint16_t storeLength = (valueLength > 4) ? 4 : valueLength;
+                    for (uint16_t i = 0; i < storeLength; i++) {
+                        dbData[i] = pValue[i];
+                    }
+                    
+                    QS_BEGIN_ID(MAIN, 0)
+                        QS_STR("Digital IO write: ");
+                        QS_U16(0, valueLength);
+                        QS_STR(" bytes [");
+                        for (uint16_t i = 0; i < storeLength; i++) {
+                            QS_U8(0, pValue[i]);
+                            if (i < storeLength - 1) QS_STR(",");
+                        }
+                        QS_STR("] -> switch state: ");
+                        QS_U8(0, pValue[0]);
+                    QS_END()
+                    
+                    // Write to database 
+                    bleResult_t writeResult = GattDb_WriteAttribute(handle, 4, dbData);
+                    if (writeResult != gBleSuccess_c) {
+                        QS_BEGIN_ID(MAIN, 0)
+                            QS_STR("Failed to write digital IO value to database: ");
+                            QS_U32(0, writeResult);
+                        QS_END()
+
+                        // Send error response
+                        GattServer_SendAttributeWrittenStatus(deviceId, handle, gAttErrCodeWriteNotPermitted_c);
+                        break;
+                    } else {
+                        // Database write successful - store switch state and trigger notification
+                        __disable_irq();
+                        aiosSwitchState = pValue[0]; // Use first byte as switch state
+                        isSendAiosNotification = true;
+                        __enable_irq();
+                    }
+                }
+
+                // Send success response
+                bleResult_t statusResult = GattServer_SendAttributeWrittenStatus(deviceId, handle, gAttErrCodeNoError_c);
+                if (statusResult != gBleSuccess_c) {
+                    QS_BEGIN_ID(MAIN, 0)
+                        QS_STR("Failed to send attribute written status: ");
+                        QS_U32(0, statusResult);
+                    QS_END()
+                }
+            } else {
+                // Unknown attribute handle
+                QS_BEGIN_ID(MAIN, 0)
+                    QS_STR("Unknown attribute handle written: 0x");
+                    QS_U16(0, handle);
+                    QS_STR(" (expected digital IO: 0x");
+                    QS_U16(0, g_gattHandles.digitalIoValueHandle);
+                    QS_STR(")");
+                QS_END()
+                
+                // Send error response for unknown handles
+                GattServer_SendAttributeWrittenStatus(deviceId, handle, gAttErrCodeWriteNotPermitted_c);
+            }
             break;
         }
 
@@ -1135,7 +1296,7 @@ static void BLE_GattServerCallback(deviceId_t deviceId, gattServerEvent_t* pServ
                 bleResult_t saveResult = Gap_SaveCccd(deviceId, handle, cccdValue);
                 if (saveResult != gBleSuccess_c) {
                     QS_BEGIN_ID(MAIN, 0)
-                        QS_STR("Failed to save CCCD: ");
+                        QS_STR("Failed to save Battery CCCD: ");
                         QS_U32(0, saveResult);
                     QS_END()
                 }
@@ -1179,13 +1340,40 @@ static void BLE_GattServerCallback(deviceId_t deviceId, gattServerEvent_t* pServ
                         QS_END()
                     }
                 }
-            } else {
-                // Unknown CCCD handle - show discovered handle for comparison
+            } 
+            // Check if this is the Digital IO Value CCCD
+            else if (handle == g_gattHandles.digitalIoCccdHandle) {
+                // Digital IO Value CCCD was written
+                bool isDigitalIoSubscribed = (cccdValue == gCccdNotification_c);
+                
+                // Save CCCD value to the device database (required by NXP stack)
+                bleResult_t saveResult = Gap_SaveCccd(deviceId, handle, cccdValue);
+                if (saveResult != gBleSuccess_c) {
+                    QS_BEGIN_ID(MAIN, 0)
+                        QS_STR("Failed to save Digital IO CCCD: ");
+                        QS_U32(0, saveResult);
+                    QS_END()
+                } else {
+                    isAIOServiceSubscribed = isDigitalIoSubscribed;
+                }
+                
+                QS_BEGIN_ID(MAIN, 0)
+                    QS_STR("Digital IO Value CCCD updated: notifications ");
+                    QS_STR(isDigitalIoSubscribed ? "ENABLED" : "DISABLED");
+                    QS_STR(" (saved to device DB)");
+                QS_END()
+                
+                // Note: Notification will be sent only when characteristic is written, not on subscription
+            } 
+            else {
+                // Unknown CCCD handle - show all known handles for comparison
                 QS_BEGIN_ID(MAIN, 0)
                     QS_STR("Unknown CCCD handle: 0x");
                     QS_U16(0, handle);
-                    QS_STR(" (expected battery CCCD: 0x");
+                    QS_STR(" (expected - battery: 0x");
                     QS_U16(0, g_gattHandles.batteryLevelCccdHandle);
+                    QS_STR(", digital IO: 0x");
+                    QS_U16(0, g_gattHandles.digitalIoCccdHandle);
                     QS_STR(")");
                 QS_END()
             }
@@ -1320,6 +1508,35 @@ BLE_qn9080_status_t BLE_UpdateBMSCharacteristics(uint8_t vbat)
                 QS_STR(")");
             QS_END()
 #endif // BLE_EXTENDED_LOGS
+        }
+    }
+
+    if ((client_deviceId != gInvalidDeviceId_c) && isAIOServiceSubscribed && isSendAiosNotification) {
+        // Send notification if client is subscribed to digital IO value notifications
+        bool_t isNotifActive = FALSE;
+        bleResult_t checkResult = Gap_CheckNotificationStatus(client_deviceId, g_gattHandles.digitalIoCccdHandle, &isNotifActive);
+        
+        if ((checkResult == gBleSuccess_c) && (isNotifActive == TRUE)) {
+            bleResult_t notifyResult = GattServer_SendNotification(client_deviceId, g_gattHandles.digitalIoValueHandle);
+            if (notifyResult == gBleSuccess_c) {
+                QS_BEGIN_ID(MAIN, 0)
+                    QS_STR("Digital IO Value notification sent successfully after write: ");
+                    QS_U8(0, aiosSwitchState);
+                QS_END()
+                __disable_irq();
+                isSendAiosNotification = false; // Reset flag after sending
+                __enable_irq();
+
+            } else {
+                QS_BEGIN_ID(MAIN, 0)
+                    QS_STR("Failed to send digital IO value notification: ");
+                    QS_U32(0, notifyResult);
+                QS_END()
+            }
+        } else {
+            QS_BEGIN_ID(MAIN, 0)
+                QS_STR("Digital IO Value successfully written - no notification (client not subscribed)");
+            QS_END()
         }
     }
 

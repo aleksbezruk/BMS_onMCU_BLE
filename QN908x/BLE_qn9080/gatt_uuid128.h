@@ -1,18 +1,19 @@
+#ifndef GATT_UUID128_H
+#define GATT_UUID128_H
+
+#include "ble_general.h"
+
 /* 
-* Declare all custom 128-bit UUIDs here using the format:
-*
-*  UUID128(name, bytes)
-*
-* where: 
-*	-name : an unique tag for the newly defined UUID;
-		will be used to reference this UUID when defining
-		services and characteristics in <<gattDb.h>>
-*	-bytes: 16 bytes, LSByte first, representing the 128-bit value
-*
-* One definition per line. No semicolon required after each definition.
-*
-* example:
-*  UUID128(uuid_service_robot_characteristics, 0x12, 0x34, 0x56, 0x78, 0x90, 0xAB, 0xCD, 0xEF, 0x12, 0x34, 0x56, 0x78, 0x90, 0xAB, 0xCD, 0xEF)
-*  UUID128(uuid_char_robot_direction, 0x12, 0x34, 0x50, 0x00, 0x90, 0xAB, 0xCD, 0xEF, 0x12, 0x34, 0x56, 0x78, 0x90, 0xAB, 0xCD, 0xEF)
-*	
+* Declare all custom 128-bit UUIDs here
+* Definitions are in gatt_uuid128_defs.c to avoid multiple definition errors
 */
+
+// Declare 128-bit UUIDs for PSOC63 compatibility
+extern uint8_t uuid_char_automation_io_digital_io[16];
+extern uint8_t uuid_char_automation_io_analog_full_vbat[16];
+extern uint8_t uuid_char_automation_io_analog_vbank1[16];
+extern uint8_t uuid_char_automation_io_analog_vbank2[16];
+extern uint8_t uuid_char_automation_io_analog_vbank3[16];
+extern uint8_t uuid_char_automation_io_analog_vbank4[16];
+
+#endif // GATT_UUID128_H
