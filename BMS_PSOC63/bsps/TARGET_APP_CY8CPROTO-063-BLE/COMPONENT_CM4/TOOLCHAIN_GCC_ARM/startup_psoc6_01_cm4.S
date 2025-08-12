@@ -456,6 +456,13 @@ Default_Handler:
 Cy_SysLib_FaultHandler:
     b    .
     .size    Cy_SysLib_FaultHandler, . - Cy_SysLib_FaultHandler
+
+    .weak    HardFault_Handler_C
+    .type    HardFault_Handler_C, %function
+
+HardFault_Handler_C:
+    b    .
+    .size    HardFault_Handler_C, . - HardFault_Handler_C
     .type Fault_Handler, %function
 
 Fault_Handler:
@@ -472,7 +479,7 @@ Fault_Handler:
     /* Compensation of stack pointer address due to pushing 4 bytes of LR */
     adds r0, r0, #4
 .L_API_call:
-    bl Cy_SysLib_FaultHandler
+    bl HardFault_Handler_C
     b   .
     .size    Fault_Handler, . - Fault_Handler
 

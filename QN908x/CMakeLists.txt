@@ -84,6 +84,11 @@ if(BUILD_CONFIG STREQUAL "Debug")
         framework/Panic/Source/Panic.c
         framework/NVM/Source/NV_Flash.c
         framework/Flash/Internal/Flash_Adapter.c
+        framework/FunctionLib/FunctionLib.c
+        framework/MemManager/Source/MemManager.c
+        framework/TimersManager/Source/TimersManager.c
+        framework/TimersManager/Source/TMR_Adapter.c
+        framework/RNG/Source/RNG.c
         ../source/HAL/QN9080/hal/hal.c
         ../source/HAL/QN9080/hal_led/hal_led.c
         ../source/HAL/QN9080/hal_gpio/hal_gpio.c
@@ -213,6 +218,7 @@ target_include_directories(${EXECUTABLE} PRIVATE
         ../source/HAL/QN9080/hal_uart
         ../source/HAL/QN9080/hal_adc
         ../source/HAL/QN9080/hal_time
+        ../source/HAL/QN9080/hal_nvm
         ../source/main
         ../source/qspy
         ../source/qspyHelper
