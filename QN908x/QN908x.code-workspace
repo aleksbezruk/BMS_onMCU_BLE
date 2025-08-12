@@ -65,7 +65,17 @@
 			"messaging.h": "c",
 			"flash_adapter.h": "c",
 			"serialmanager.h": "c",
-			"qn_ble_config.h": "c"
+			"qn_ble_config.h": "c",
+			"gatt_database.h": "c",
+			"ble_general.h": "c",
+			"gatt_db_handles.h": "c",
+			"gatt_db_x_macros.h": "c",
+			"gatt_db_macros.h": "c",
+			"gatt_uuid_decl_x.h": "c",
+			"gatt_db_app_interface.h": "c",
+			"gatt_client_interface.h": "c",
+			"gatt_interface.h": "c",
+			"gatt_server_interface.h": "c"
 		}
 	}
 }

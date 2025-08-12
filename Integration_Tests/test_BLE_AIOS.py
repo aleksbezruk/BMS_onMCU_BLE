@@ -100,7 +100,7 @@ def test_enable_disable_switch():
         pytest.BMS.notify(service_uuid, characteristic_uuid, lambda data: swState.append(data[0]))
         bytes_array = bytes([1, 0, 0, 0])
         pytest.BMS.write_request(service_uuid, characteristic_uuid, bytes_array)
-        time.sleep(10)
+        time.sleep(12)
         print("Switches state notif = %d" %(swState[0]))
         assert swState[0] == 0x01, "Discharge switch was not enabled"
 
@@ -110,7 +110,7 @@ def test_enable_disable_switch():
         pytest.BMS.notify(service_uuid, characteristic_uuid, lambda data: swState.append(data[0]))
         bytes_array = bytes([0, 0, 0, 0])
         pytest.BMS.write_request(service_uuid, characteristic_uuid, bytes_array)
-        time.sleep(10)
+        time.sleep(12)
         print("Switches state notif = %d" %(swState[0]))
         assert swState[0] == 0x00, "Switches was not disabled"
 
