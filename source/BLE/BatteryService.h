@@ -19,15 +19,15 @@
 
 #include <stdbool.h>
 
-///////////////////////
+// =======================
 // Defines
-///////////////////////
+// =======================
 
-///////////////////////
+// =======================
 // API
-///////////////////////
+// =======================
 void BAS_updateBatLevel(uint8_t batLvl);
-void BAS_handleCccdWritten(uint8_t* p_val);
+void BAS_handleCccdWritten(uint16_t cccd_val);
 void BAS_sendNotification(uint8_t batLvl, uint16_t conn_id);
 bool BAS_isNotifPending(void);
 

@@ -235,9 +235,47 @@ void QS_onCommand(uint8_t cmdId,
         case QS_CMD_BLE_START_ADV:
         {
             Ble_evt_t evt;
-            evt.advParam.periodicAdvIntMin = param1;
-            evt.advParam.periodicAdvIntMax = param2;
-            evt.advParam.periodicAdvProp = param3;
+            // param1 - choose local name option
+            switch (param1)
+            {
+                case 0:
+                {
+                    strncpy(evt.advParam.local_name, "BMS_MCU_1", sizeof(evt.advParam.local_name) - 1);
+                    evt.advParam.local_name[sizeof(evt.advParam.local_name) - 1] = '\0';
+                    break;
+                }
+                case 1:
+                {
+                    strncpy(evt.advParam.local_name, "BMS_MCU_2", sizeof(evt.advParam.local_name) - 1);
+                    evt.advParam.local_name[sizeof(evt.advParam.local_name) - 1] = '\0';
+                    break;
+                }
+                case 2:
+                {
+                    strncpy(evt.advParam.local_name, "BMS_MCU_x", sizeof(evt.advParam.local_name) - 1);
+                    evt.advParam.local_name[sizeof(evt.advParam.local_name) - 1] = '\0';
+                    break;
+                }
+                default:
+                {
+                    strncpy(evt.advParam.local_name, "BMS_MCU_x", sizeof(evt.advParam.local_name) - 1);
+                    evt.advParam.local_name[sizeof(evt.advParam.local_name) - 1] = '\0';
+                    break;
+                }
+            }
+            // param2 - UUID services
+            evt.advParam.services = HAL_BLE_AD_SERVICE_NONE;
+            if (param2 & HAL_BLE_AD_SERVICE_BAS) {
+                 evt.advParam.services |= HAL_BLE_AD_SERVICE_BAS;
+            }
+            if (param2 & HAL_BLE_AD_SERVICE_AIOS) {
+                 evt.advParam.services |= HAL_BLE_AD_SERVICE_AIOS;
+            }
+            // param3 - service data
+            evt.advParam.service_data = param3;
+
+            evt.advParam.advFlags = (HAL_BLE_AD_FLAG_GENERAL_DISCOVERABLE | 
+                                     HAL_BLE_AD_FLAG_BLE_BREDR_NOT_SUPPORTED);
             BLE_post_evt(&evt, EVT_BLE_ADV_ON);
             break;
         }
@@ -373,6 +411,11 @@ void QS_addUsrRecToDic(enum_t const rec)
         {
             // HAL records
             QS_USR_DICTIONARY(HAL);
+            break;
+        }
+        case BLE_HAL:
+        {
+            QS_USR_DICTIONARY(BLE_HAL);
             break;
         }
         default:

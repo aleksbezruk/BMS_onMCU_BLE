@@ -11,7 +11,9 @@
 
 #include <stdint.h>
 
-/** BMS events types */
+#include "hal_ble.h"
+
+/*! BMS events types */
 typedef enum {
     EVT_ADC,
     EVT_SYSTEM,
@@ -21,10 +23,10 @@ typedef enum {
     EVT_TYPE_MAX
 } Evt_types_t;
 
-///////////////////
+// ==================
 // ADC events
-///////////////////
-/** ADC measurement data event */
+// ==================
+/*! ADC measurement data event */
 typedef struct {
     int16_t bank1_mv;
     int16_t bank2_mv;
@@ -33,10 +35,10 @@ typedef struct {
     int16_t full_mv;
 } Evt_adc_data_t;
 
-///////////////////
+// ==================
 // System events
-///////////////////
-/** System event data */
+// ==================
+/*! System event data */
 typedef union {
     struct {
         uint8_t setDischState: 1;
@@ -52,45 +54,46 @@ typedef union {
 
 typedef Evt_sys_data_t Switch_state_t;
 
-///////////////////
+// ==================
 // BLE events
-///////////////////
-/** BLE advertsing paramaters event */
+// ==================
+/*! BLE advertsing paramaters event */
 typedef struct {
-    uint16_t periodicAdvIntMin;
-    uint16_t periodicAdvIntMax;
-    uint16_t periodicAdvProp;
+    HAL_BLE_adFlags_t advFlags;
+    char local_name[HAL_BLE_LOCAL_NAME_MAX_LEN];
+    HAL_BLE_adServicesList_t services;
+    HAL_BLE_adServiceData_t service_data;
 } Evt_ble_adv_param_t;
 
-/** BLE battery measurement data event */
+/*! BLE battery measurement data event */
 typedef struct {
     uint8_t batLvlPercent;
     Evt_adc_data_t adcData;
 } Evt_ble_vbat_t;
 
-//////////////////////////////////////////////
+// =========================================
 // Tasks' queues & generic event structure
-//////////////////////////////////////////////
-/** Main task generic event type */
+// =========================================
+/*! Main task generic event type */
 typedef union {
     Evt_adc_data_t adcData;
     Evt_sys_data_t sysEvtData;
 } Main_evt_t;
 
-/** BLE task generic event type */
+/*! BLE task generic event type */
 typedef union {
     Evt_ble_adv_param_t advParam;
     Evt_ble_vbat_t vbat;
     Evt_sys_data_t sysData;
 } Ble_evt_t;
 
-/** Main task queue's item data structure */
+/*! Main task queue's item data structure */
 typedef struct {
     Evt_types_t evtType;
     Main_evt_t evtData;
 } Main_queue_data_t;
 
-/** BLE task queue's item data structure */
+/*! BLE task queue's item data structure */
 typedef struct {
     Evt_types_t evtType;
     Ble_evt_t evtData;

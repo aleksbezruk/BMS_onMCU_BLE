@@ -25,18 +25,18 @@
 
 #include "bms_events.h"
 
-///////////////////////
+// =======================
 // Defines
-///////////////////////
+// =======================
 
-///////////////////////
+// =======================
 // API
-///////////////////////
+// =======================
 void AIOS_updateVbat(Evt_ble_vbat_t* vbatEvt);
 void AIOS_updateSwitchState(uint8_t swStates);
 void AIOS_sendNotification(uint8_t swState, uint16_t conn_id);
-void AIOS_handleCccdWritten(uint8_t* p_val);
-void AIOS_handleSetSwicthWritten(uint8_t* p_val);
+void AIOS_handleCccdWritten(uint16_t cccd_val);
+void AIOS_handleSetSwicthWritten(uint8_t swState_val);
 
 #endif //BLE_AIOS_MODULE_H
 

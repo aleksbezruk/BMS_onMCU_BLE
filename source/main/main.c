@@ -182,6 +182,7 @@ int main(void)
     QS_addUsrRecToDic(BLE_BAS);
     QS_addUsrRecToDic(BLE_AIOS);
     QS_addUsrRecToDic(HAL);
+    QS_addUsrRecToDic(BLE_HAL);
 #if defined(Q_UTEST)
     QS_addUsrRecToDic(UTEST);
     QS_addUsrRecToDic(BSP);

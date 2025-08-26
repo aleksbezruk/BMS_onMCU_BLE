@@ -31,6 +31,7 @@ enum AppRecords {
     BLE_TRACE,
     BLE_BAS,
     BLE_AIOS,
+    BLE_HAL,
     HAL
 };
 

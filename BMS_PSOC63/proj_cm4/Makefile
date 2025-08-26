@@ -86,6 +86,7 @@ SOURCES=    ../../source/main/main.c	\
 			../../source/HAL/PSOC63/hal_gpio/hal_gpio.c	\
 			../../source/HAL/PSOC63/hal_uart/hal_uart.c	\
 			../../source/HAL/PSOC63/hal_adc/hal_adc.c	\
+			../../source/HAL/PSOC63/hal_ble/hal_ble.c	\
 			../../source/HAL/PSOC63/hal_time/hal_time.c
 else ifeq ($(BUILD_CONFIG), Release)
 SOURCES=
@@ -134,6 +135,7 @@ INCLUDES=SOURCES= ../BSP/ \
 				  ../../source/HAL/PSOC63/hal_adc	\
 				  ../../source/HAL/PSOC63/hal_time	\
 				  ../../source/HAL/PSOC63/hal_nvm	\
+				  ../../source/HAL/PSOC63/hal_ble	\
 				  ../../source/OSAL/PSOC63
 
 # Add additional defines to the build process (without a leading -D).

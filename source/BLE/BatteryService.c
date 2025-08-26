@@ -13,17 +13,18 @@
 
 // HAL
 #include "hal.h"
+#include "hal_ble.h"
 
-///////////////////////
+// =======================
 // Private data
-///////////////////////
+// =======================
 static volatile uint8_t batLevel_;
 static volatile bool clientSubscribed;
 static volatile bool forceNotification;
 
-///////////////////////
+// =======================
 // Public APIs
-///////////////////////
+// =======================
 /**
  * @brief Update battery percent level for Battery_Level characteristic.
  * 
@@ -38,15 +39,14 @@ static volatile bool forceNotification;
  */
 void BAS_updateBatLevel(uint8_t batLvl)
 {
-    uint8_t* pBasValDB;
-
     /** Update attribute value in GATT DB */
     if (batLevel_ != batLvl) {
         batLevel_ = batLvl;
-        pBasValDB = app_gatt_db_ext_attr_tbl[2].p_data;
-        __disable_irq();    // short critical section to avoid race condition with BLE stack
-        pBasValDB[0] = batLvl;
-        __enable_irq();
+        HAL_BLE_attribute_t attr;
+        attr.attribute = HAL_BLE_ATTR_BATTERY_LEVEL;
+        attr.p_value = (uint8_t *) &batLevel_;
+        attr.length = sizeof(batLevel_);
+        HAL_BLE_updateAttribute(&attr);
     }
 }
 
@@ -66,19 +66,14 @@ void BAS_sendNotification(uint8_t batLvl, uint16_t conn_id)
             forceNotification = false;
         }
         /** Send notification to Client */
-        wiced_bt_gatt_status_t status = wiced_bt_gatt_server_send_notification(
-            conn_id, 
-            HDLC_BAS_BATTERY_LEVEL_VALUE,       //attr_handle
-            1U,                                 // val_len 
-            (uint8_t *) &batLevel_,             // p_app_buffer 
-            NULL                                // p_app_ctxt
-        );
-        if (WICED_BT_SUCCESS != status) {
+        HAL_BLE_attribute_t attr;
+        attr.attribute = HAL_BLE_ATTR_BATTERY_LEVEL;
+        attr.p_value = &batLvl;
+        attr.length = sizeof(batLvl);
+        if (HAL_BLE_send_notif(&attr, conn_id) != HAL_BLE_SUCCESS) {
             QS_BEGIN_ID(BLE_BAS, 0 /*prio/ID for local Filters*/)
-                QS_STR("Send notif error: ");
-                QS_U16(0, status);
+                QS_STR("Send notif error");
             QS_END()
-            QS_FLUSH();
             HAL_ASSERT(0, __FILE__, __LINE__);
         }
     }
@@ -87,21 +82,19 @@ void BAS_sendNotification(uint8_t batLvl, uint16_t conn_id)
 /**
  * @brief Handle CCCD written event.
  * 
- * @param[in] p_val - CCCD value requested by Client.
+ * @param[in] cccd_val - CCCD value requested by Client.
  * 
  * @retval None
  */
-void BAS_handleCccdWritten(uint8_t* p_val)
-{                                                                                                                                                                                                                                                                                                                                                                                                                               
-    uint16_t cccd = ((uint16_t) p_val[0]) | (((uint16_t) p_val[1]) << 8);
-
-    if (cccd == 0x0001U) {
+void BAS_handleCccdWritten(uint16_t cccd_val)
+{
+    if (cccd_val == 0x0001U) {
         QS_BEGIN_ID(BLE_BAS, 0 /*prio/ID for local Filters*/)
             QS_STR("Client subscribed to notif");                                                                                                                                                                                                           
         QS_END()
         clientSubscribed = true;
         forceNotification = true;                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                               
-    } else if (cccd == 0x0000U) {
+    } else if (cccd_val == 0x0000U) {
         QS_BEGIN_ID(BLE_BAS, 0 /*prio/ID for local Filters*/)
             QS_STR("Client unsubscribed from notif");
         QS_END()
@@ -111,14 +104,19 @@ void BAS_handleCccdWritten(uint8_t* p_val)
         // Just ignore
         QS_BEGIN_ID(BLE_BAS, 0 /*prio/ID for local Filters*/)
             QS_STR("Unexpected CCCD val:");
-            QS_U16(0, cccd);
-        QS_END()                            
+            QS_U16(0, cccd_val);
+        QS_END()
     }
 }
 
+/**
+ * @brief Check if a notification is pending.
+ *
+ * @retval true if notification is pending, false otherwise.
+ */
 bool BAS_isNotifPending(void)
-{                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                     
-    return ((forceNotification == true)? true: false);
+{
+    return forceNotification;
 }
 
 /* [] END OF FILE */

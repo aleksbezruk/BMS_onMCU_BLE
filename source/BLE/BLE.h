@@ -9,23 +9,29 @@
 #ifndef BLE_MODULE_H
 #define BLE_MODULE_H
 
+// Temporary includes, remove later
 #include "wiced_bt_stack.h"
 #include "wiced_bt_dev.h"
 #include "wiced_bt_ble.h"
 #include "wiced_bt_gatt.h"
+
+#include "hal_ble.h"
 
 #include "bms_events.h"
 
 // ===========================
 // Defines
 // ===========================
-/** BLE status */
+/*! BLE status */
 typedef enum {
-    BLE_STATUS_OK,
-    BLE_STATUS_FAIL
+    BLE_STATUS_OK,              /**< Success */
+    BLE_STATUS_FAIL,            /**< General failure */
+    BLE_STATUS_START_ADV_FAIL,  /**< Start advertisement failure */
+    BLE_STATUS_STOP_ADV_FAIL     /**< Stop advertisement failure */
 } BLE_status_t;
 
-/** This enumeration combines the advertising, connection states from two different
+/*!
+ * This enumeration combines the advertising, connection states from two different
  * callbacks to maintain the status in a single state variable.
  */
 typedef enum
@@ -39,8 +45,8 @@ typedef enum
 // API
 // ===========================
 BLE_status_t BLE_init(void);
-wiced_bt_dev_status_t BLE_startAdvertisement(uint16_t periodic_adv_int_min, uint16_t periodic_adv_int_max, wiced_bt_ble_periodic_adv_prop_t periodic_adv_properties);
-wiced_bt_dev_status_t BLE_stopAdvertisement(void);
+BLE_status_t BLE_startAdvertisement(HAL_BLE_adv_data_t *p_adv_data);
+BLE_status_t BLE_stopAdvertisement(void);
 void BLE_post_evt(Ble_evt_t* evt, Evt_types_t eventType);
 
 #endif //BLE_MODULE_H
