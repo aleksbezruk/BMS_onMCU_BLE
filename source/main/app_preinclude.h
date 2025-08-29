@@ -21,8 +21,8 @@
  */
 // #define BMS_DISABLE_RTOS // uncomment to disable RTOS
 
-#define BMS_DISABLE_BLE // uncomment to disable BLE stack
-#define BMS_DISABLE_LP  // uncomment to disable Low Power modes
+// #define BMS_DISABLE_BLE // uncomment to disable BLE stack
+#define BMS_DISABLE_LP   // uncomment to disable Low Power modes
 #define BMS_DISABLE_OSAL_STATIC_ALL  // uncomment to disable OSAL static allocation
 
 /*! Enable QSPY */

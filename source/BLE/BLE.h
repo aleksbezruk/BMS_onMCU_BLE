@@ -9,12 +9,6 @@
 #ifndef BLE_MODULE_H
 #define BLE_MODULE_H
 
-// Temporary includes, remove later
-#include "wiced_bt_stack.h"
-#include "wiced_bt_dev.h"
-#include "wiced_bt_ble.h"
-#include "wiced_bt_gatt.h"
-
 #include "hal_ble.h"
 
 #include "bms_events.h"

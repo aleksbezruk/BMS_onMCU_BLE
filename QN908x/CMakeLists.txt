@@ -47,6 +47,7 @@ if(BUILD_CONFIG STREQUAL "Debug")
         startup/startup_qn908x.S
         CMSIS/system_QN908XC.c
         drivers/fsl_adc.c
+        drivers/fsl_aes.c
         drivers/fsl_calibration.c
         drivers/fsl_clock.c
         drivers/fsl_common.c
@@ -88,19 +89,32 @@ if(BUILD_CONFIG STREQUAL "Debug")
         framework/MemManager/Source/MemManager.c
         framework/TimersManager/Source/TimersManager.c
         framework/TimersManager/Source/TMR_Adapter.c
+        framework/SecLib/SecLib.c
         framework/RNG/Source/RNG.c
+        framework/Messaging/Source/Messaging.c
         ../source/HAL/QN9080/hal/hal.c
         ../source/HAL/QN9080/hal_led/hal_led.c
         ../source/HAL/QN9080/hal_gpio/hal_gpio.c
         ../source/HAL/QN9080/hal_uart/hal_uart.c
         ../source/HAL/QN9080/hal_adc/hal_adc.c
         ../source/HAL/QN9080/hal_time/hal_time.c
+        ../source/HAL/QN9080/hal_ble/hal_ble.c
         ../source/qspy/qs_64bit.c
         ../source/qspy/qs_fp.c
         ../source/qspy/qs_rx.c
         ../source/qspy/qs.c
         ../source/qspy/qstamp.c
         ../source/qspyHelper/qspyHelper.c
+        bluetooth/controller/interface/controller_config.c
+        bluetooth/host/config/ble_globals.c
+        bluetooth/hci_transport/source/hcit_serial_interface.c
+        BLE_qn9080/ble_controller_task.c
+        BLE_qn9080/ble_host_tasks.c
+        BLE_qn9080/gatt_db/gatt_database.c
+        BLE_qn9080/gatt_uuid128_defs.c
+        ../source/BLE/BLE.c
+        ../source/BLE/BatteryService.c
+        ../source/BLE/AIOService.c
     )
 elseif(BUILD_CONFIG STREQUAL "Test")
     set(SRC_FILES
@@ -219,6 +233,7 @@ target_include_directories(${EXECUTABLE} PRIVATE
         ../source/HAL/QN9080/hal_adc
         ../source/HAL/QN9080/hal_time
         ../source/HAL/QN9080/hal_nvm
+        ../source/HAL/QN9080/hal_ble
         ../source/main
         ../source/qspy
         ../source/qspyHelper
@@ -244,6 +259,7 @@ target_include_directories(${EXECUTABLE} PRIVATE
         BLE_qn9080
         BLE_qn9080/gatt_db
         BLE_qn9080/gatt_db/macros
+        ../source/BLE
         )
 
 # Compiler options

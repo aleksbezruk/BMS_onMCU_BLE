@@ -199,6 +199,9 @@ typedef enum {
 static adv_update_state_t advUpdateState = ADV_UPDATE_IDLE;
 static uint8_t pendingBatteryLevel = 0; // Battery level waiting to be updated
 
+/*! Global variable required by BLE host library */
+bool_t gHostInitResetController = TRUE;
+
 // ========================
 // Function Prototypes
 // ========================
@@ -219,7 +222,7 @@ static bleResult_t BLE_StartAdvertisingDataUpdate(uint8_t batteryLevel);
 // Forward declarations for GATT functions
 static void BLE_GattServerCallback(deviceId_t deviceId, gattServerEvent_t* pServerEvent);
 static void BLE_InitializeGattDatabase(void);
-static void BLE_DiscoverGattHandles(void);
+static void _HAL_BLE_DiscoverGattHandles(void);
 
 /*! *********************************************************************************
  * \brief  Discover GATT Handles using NXP symbolic names and API functions
@@ -227,7 +230,7 @@ static void BLE_DiscoverGattHandles(void);
  * This function uses the symbolic service name from gatt_db.h for the service handle,
  * then uses NXP API functions to discover characteristic and CCCD handles.
  ********************************************************************************** */
-static void BLE_DiscoverGattHandles(void)
+static void _HAL_BLE_DiscoverGattHandles(void)
 {
     bleResult_t result;
     bleUuid_t batteryLevelCharUuid;
@@ -884,6 +887,7 @@ static void BLE_AdvertisingCallback(gapAdvertisingEvent_t* pAdvertisingEvent)
  * \brief  Connection Event Callback
  * \param[in] peerDeviceId Device ID of the peer
  * \param[in] pConnectionEvent Connection Event
+ * \return None
  ********************************************************************************** */
 static void BLE_ConnectionCallback(deviceId_t peerDeviceId, gapConnectionEvent_t* pConnectionEvent)
 {
@@ -1095,7 +1099,7 @@ static void BLE_InitializeGattDatabase(void)
     }
 
     // Discover GATT handles after database initialization
-    BLE_DiscoverGattHandles();
+    _HAL_BLE_DiscoverGattHandles();
 
     // Register GATT server callback
     result = GattServer_RegisterCallback(BLE_GattServerCallback);
@@ -1133,6 +1137,7 @@ static void BLE_InitializeGattDatabase(void)
  * \brief  GATT Server Event Callback
  * \param[in] deviceId Device ID of the peer
  * \param[in] pServerEvent GATT Server Event
+ * \return None
  ********************************************************************************** */
 static void BLE_GattServerCallback(deviceId_t deviceId, gattServerEvent_t* pServerEvent)
 {
@@ -1213,7 +1218,7 @@ static void BLE_GattServerCallback(deviceId_t deviceId, gattServerEvent_t* pServ
                         QS_STR("] -> switch state: ");
                         QS_U8(0, pValue[0]);
                     QS_END()
-                    
+
                     // Write to database 
                     bleResult_t writeResult = GattDb_WriteAttribute(handle, 4, dbData);
                     if (writeResult != gBleSuccess_c) {
@@ -1598,9 +1603,6 @@ BLE_qn9080_status_t BLE_UpdateBMSCharacteristics(uint8_t vbat)
 /*! *********************************************************************************
 * \brief    NVM Application Layer Functions required by BLE host library
 ********************************************************************************** */
-
-/* Global variable required by BLE host library */
-bool_t gHostInitResetController = TRUE;
 
 /* NVM Dataset identifiers */
 #if gAppUseNvm_d

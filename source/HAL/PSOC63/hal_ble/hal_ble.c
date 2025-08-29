@@ -442,6 +442,10 @@ static void le_app_init(void)
     }
 }
 
+// **********************************
+// Register callbacks APIs
+// **********************************/
+
 /**
  * @brief Register a callback function to be called on BLE connection events
  *

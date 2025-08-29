@@ -6,6 +6,10 @@
  * @version 0.4.0
  */
 
+// standard includes
+#include <string.h>
+#include <stdint.h>
+
 // QSPY includes
 #include "qspyHelper.h"
 
@@ -32,6 +36,8 @@
 #define BLE_TASK_STACK_SIZE 1600U   /**< bytes, aligned to 8 bytes */
 #define BLE_QUEUE_SIZE 8U
 
+#define BLE_INVALID_CONN_ID 255U
+
 // =======================
 // Functions prototype
 // =======================
@@ -50,11 +56,17 @@ void ble_mtu_changed_callback(uint16_t mtu);
 // =======================
 /** BLE task */
 OSAL_TASK_DEFINE(bleTask);
+
+#if !defined(BMS_DISABLE_OSAL_STATIC_ALL)
 /** 
  *  @note In stack words because stack pointer should be aligned to 
  *  8 bytes boundary per the RTOS requirements.
  */
 static uint64_t bleTaskStack_[BLE_TASK_STACK_SIZE/8U];
+#else
+/*! For some ports (e.g. QN908x) the OSAL static allocation is not supported */
+#define bleTaskStack_ NULL
+#endif  // !BMS_DISABLE_OSAL_STATIC_ALL
 
 /** Event queue */
 OSAL_QUEUE_DEFINE(bleTaskQueueHandle);
@@ -64,13 +76,18 @@ OSAL_QUEUE_DEFINE(bleTaskQueueHandle);
  *        in the worst case scenario.
  */
 #define BLE_QUEUE_SIZE 8U
+#if !defined(BMS_DISABLE_OSAL_STATIC_ALL)
 static Ble_queue_data_t bleQueueSto[BLE_QUEUE_SIZE];
+#else
+/*! For some ports (e.g. QN908x) the OSAL static allocation is not supported */
+#define bleQueueSto NULL
+#endif  // !BMS_DISABLE_OSAL_STATIC_ALL
 
 /** BLE advertisement data */
 static volatile uint8_t adv_battery_service_data = 0x64;    // 100% start value at initialization
 
 /** BLE state variables */
-static volatile uint16_t client_id;
+static volatile uint16_t client_id = BLE_INVALID_CONN_ID;
 static volatile BLE_adv_conn_mode_t ble_adv_conn_state = BLE_ADV_OFF_CONN_OFF;
 
 // =======================
@@ -374,8 +391,8 @@ void ble_conn_callback(uint16_t connId, bool connected, uint16_t disconnectReaso
             QS_U8(0, disconnectReason);
         QS_END()
 
-        /** Set the connection id to zero to indicate disconnected state */
-        client_id = 0;
+        /** Invalidate the connection id to indicate disconnected state */
+        client_id = BLE_INVALID_CONN_ID;
 
         /** Restart the advertisements */
         HAL_BLE_status_t advStatus = HAL_BLE_startAdvertisement(NULL, NULL);

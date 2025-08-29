@@ -75,7 +75,9 @@
 			"gatt_db_app_interface.h": "c",
 			"gatt_client_interface.h": "c",
 			"gatt_interface.h": "c",
-			"gatt_server_interface.h": "c"
+			"gatt_server_interface.h": "c",
+			"qs.h": "c",
+			"hal_ble.h": "c"
 		}
 	}
 }

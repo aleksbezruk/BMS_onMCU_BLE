@@ -7,6 +7,8 @@
  * @version 0.4.0
  */
 
+#include <string.h>
+
 #include "qspyHelper.h"
 #include "qutestHelper.h"
 
@@ -276,13 +278,17 @@ void QS_onCommand(uint8_t cmdId,
 
             evt.advParam.advFlags = (HAL_BLE_AD_FLAG_GENERAL_DISCOVERABLE | 
                                      HAL_BLE_AD_FLAG_BLE_BREDR_NOT_SUPPORTED);
+#if !defined(TEST_BUILD)
             BLE_post_evt(&evt, EVT_BLE_ADV_ON);
+#endif  // !defined(TEST_BUILD)
             break;
         }
         case QS_CMD_BLE_STOP_ADV:
         {
+#if !defined(TEST_BUILD)
             Ble_evt_t evt;
             BLE_post_evt(&evt, EVT_BLE_ADV_OFF);
+#endif  // !defined(TEST_BUILD)
             break;
         }
 #endif  // BMS_DISABLE_BLE

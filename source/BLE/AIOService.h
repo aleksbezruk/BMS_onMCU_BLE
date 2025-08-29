@@ -17,11 +17,6 @@
 #ifndef BLE_AIOS_MODULE_H
 #define BLE_AIOS_MODULE_H
 
-#include "wiced_bt_stack.h"
-#include "wiced_bt_dev.h"
-#include "wiced_bt_ble.h"
-#include "wiced_bt_gatt.h"
-#include "cycfg_gatt_db.h"
 
 #include "bms_events.h"
 
