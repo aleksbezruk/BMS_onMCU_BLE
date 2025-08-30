@@ -1,6 +1,9 @@
 
 cmake_minimum_required(VERSION 3.15.3)
 
+# Export compile commands for IDE integration (generates compile_commands.json)
+set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
+
 # Optional: print out extra messages to see what is going on. Comment it to have less verbose messages
 set(CMAKE_VERBOSE_MAKEFILE ON)
 
