@@ -118,7 +118,7 @@ static cy_stc_syspm_callback_t _pmBeforeDeepSlpCallback = {
     .type = CY_SYSPM_DEEPSLEEP,
     .skipMode = CY_SYSPM_SKIP_CHECK_READY | CY_SYSPM_SKIP_CHECK_FAIL | CY_SYSPM_SKIP_AFTER_TRANSITION, // only before transition
     .callbackParams = &_beforeDeepSleepCallbackParams,
-    .prevItm = NULL,    // for CY driver intranal usage
+    .prevItm = NULL,    // for CY driver internal usage
     .nextItm = NULL,    // for CY driver intranal usage
     .order = 0U
 };
@@ -357,14 +357,14 @@ static void blockSleepTimerCallback_(cy_timer_callback_arg_t arg)
 
 #if defined(ENABLE_DEBUG_PRINTS)
     QS_BEGIN_ID(HAL, 0 /*prio/ID for local Filters*/)
-        QS_STR("SLP blcock end");
+        QS_STR("SLP block end");
     QS_END()
     QS_FLUSH();
 #endif
 }
 
 /**
- * @brief Get BMS peripherals rediness status for Low Power mode
+ * @brief Get BMS peripherals readiness status for Low Power mode
  * 
  * @param None
  * 
@@ -390,11 +390,11 @@ LP_periph_ready_t LP_getPeriphStatus(void)
 }
 
 /**
- * @brief Get BMS peripherals rediness status for Low Power mode
+ * @brief Set the Low Power mode for the BMS system
  * 
  * @param[in] mode - Low Power mode to set, see @LP_modes_t
  * 
- * @retval see @LP_periph_ready_t
+ * @retval None
  */
 void LP_setMode(LP_modes_t mode)
 {
@@ -403,11 +403,13 @@ void LP_setMode(LP_modes_t mode)
 }
 
 /**
- * @brief Get BMS peripherals rediness status for Low Power mode
+ * @brief Enter low power sleep or deep sleep mode for a specified duration
  * 
  * @param[in] xExpectedIdleTime - expected time to sleep [RTOS ticks]
  * 
  * @retval None
+ * @details This function puts the system into sleep or deep sleep mode based on the current low power mode setting,
+ *          for the duration specified by xExpectedIdleTime.
  */
 void LP_enterSleep(TickType_t xExpectedIdleTime)
 {
