@@ -169,9 +169,10 @@ subsequent connections over the LE transport */
 /*! *********************************************************************************
  * 	BLE Stack Configuration
  ********************************************************************************** */
-
 #define gMaxBondedDevices_c         16
 #define gMaxResolvingListSize_c     16
+#define gControllerTaskPriority_c   0U    /* see OSA_PRIORITY_REAL_TIME */
+#define gHost_TaskPriority_c        1U    /* see OSA_PRIORITY_HIGH */
 
 /*! *********************************************************************************
  * 	Memory Pools Configuration

@@ -106,6 +106,15 @@ BLE_status_t BLE_init(void)
 {
     BLE_status_t status = BLE_STATUS_OK;
 
+    /** Register BLE connection callback */
+    HAL_BLE_registerConnectionCallback(ble_conn_callback);
+    /** Register BLE stack initialization callback */
+    HAL_BLE_registerStackInitCallback(ble_init_callback);
+    /** Register BLE advertising state callback */
+    HAL_BLE_registerAdvertisingStateChangedCallback(ble_adv_state_callback);
+    /** Register BLE MTU changed callback */
+    HAL_BLE_registerMtuChangedCallback(ble_mtu_changed_callback);
+
     /** Init BLE stack */
     HAL_BLE_init();
 
@@ -128,18 +137,6 @@ BLE_status_t BLE_init(void)
         QS_END()
         status = BLE_STATUS_FAIL;
     }
-
-    /** Register BLE connection callback */
-    HAL_BLE_registerConnectionCallback(ble_conn_callback);
-
-    /** Register BLE stack initialization callback */
-    HAL_BLE_registerStackInitCallback(ble_init_callback);
-
-    /** Register BLE advertising state callback */
-    HAL_BLE_registerAdvertisingStateChangedCallback(ble_adv_state_callback);
-
-    /** Register BLE MTU changed callback */
-    HAL_BLE_registerMtuChangedCallback(ble_mtu_changed_callback);
 
     return status;
 }
