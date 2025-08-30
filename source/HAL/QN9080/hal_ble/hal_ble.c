@@ -651,14 +651,16 @@ HAL_BLE_status_t HAL_BLE_updateAdvertisingData(HAL_BLE_adServiceData_t advData)
     // Check if advertising is currently active
     if (!isAdvertising) {
         QS_BEGIN_ID(BLE_HAL, 0)
-            QS_STR("Advertising not active - updating data directly");
+            QS_STR("Adv not active, postpone updating data");
         QS_END()
 
-        // Update data directly and start advertising
-        adData3[2] = advData;
-        advUpdateState = ADV_UPDATE_SETTING_DATA;
-        result = Gap_SetAdvertisingData(&g_advData, &g_scanRspData);
-        return (result == gBleSuccess_c) ? HAL_BLE_SUCCESS : HAL_BLE_ERROR;
+        pendingBatteryLevel = advData;
+        return HAL_BLE_SUCCESS;
+        // // Update data directly and start advertising
+        // adData3[2] = advData;
+        // advUpdateState = ADV_UPDATE_SETTING_DATA;
+        // result = Gap_SetAdvertisingData(&g_advData, &g_scanRspData);
+        // return (result == gBleSuccess_c) ? HAL_BLE_SUCCESS : HAL_BLE_ERROR;
     }
 
 #if BLE_EXTENDED_LOGS == 1
@@ -1057,7 +1059,9 @@ void HAL_BLE_updateAttribute(HAL_BLE_attribute_t *attr)
         case HAL_BLE_ATTR_AIOS_DIGITAL_IO_VALUE:
         {
             // Update AIOS Digital IO characteristic
-            bleResult_t writeResult = GattDb_WriteAttribute(g_gattHandles.digitalIoValueHandle, attr->length, (uint8_t *)attr->p_value);
+            uint8_t digitalIoValue[4] = { 0 };
+            digitalIoValue[0] = *(uint8_t *)attr->p_value;
+            bleResult_t writeResult = GattDb_WriteAttribute(g_gattHandles.digitalIoValueHandle, sizeof(digitalIoValue), (uint8_t *)&digitalIoValue);
             HAL_ASSERT((writeResult == gBleSuccess_c), __FILE__, __LINE__);
             break;
         }
@@ -1325,11 +1329,9 @@ static void _HAL_BLE_AdvertisingCallback(gapAdvertisingEvent_t* pAdvertisingEven
                 QS_END()
             } else {
                 // Normal advertising state change
-#if BLE_EXTENDED_LOGS == 1
                 QS_BEGIN_ID(BLE_HAL, 0)
                     QS_STR("Adv State Changed");
                 QS_END()
-#endif // BLE_EXTENDED_LOGS
                 if (isAdvertising) {
                     ble_advertising_state_changed_callback(HAL_BLE_ADV_STATE_ON);   // registered callback
                 } else {
@@ -1385,6 +1387,10 @@ static void _HAL_BLE_ConnectionCallback(deviceId_t peerDeviceId, gapConnectionEv
                 QS_STR("BLE Device Connected!");
             QS_END()
             isAdvertising = false; // Advertising automatically stops when connected
+
+            /** Reset advertising update state */
+            advUpdateState = ADV_UPDATE_IDLE;
+
             /** Call registered connection callback */
             ble_connection_callback((uint16_t)peerDeviceId, true, 0U);
             break;
@@ -1400,22 +1406,6 @@ static void _HAL_BLE_ConnectionCallback(deviceId_t peerDeviceId, gapConnectionEv
 
             /** Call registered connection callback */
             ble_connection_callback((uint16_t)peerDeviceId, false, pConnectionEvent->eventData.disconnectedEvent.reason);
-
-            // Restart advertising after disconnect
-            bleResult_t result = Gap_StartAdvertising(_HAL_BLE_AdvertisingCallback, _HAL_BLE_ConnectionCallback);
-            if (result != gBleSuccess_c) {
-                QS_BEGIN_ID(BLE_HAL, 0)
-                    QS_STR("Failed to restart advertising after disconnect: ");
-                    QS_U32(0, result);
-                QS_END()
-                QS_FLUSH();
-                isAdvertising = false; // Ensure state is correct on failure
-            } else {
-                QS_BEGIN_ID(BLE_HAL, 0)
-                    QS_STR("Advertising restarted successfully after disconnect");
-                QS_END()
-                isAdvertising = true; // Set state on successful restart
-            }
             break;
         }
         
@@ -1548,7 +1538,7 @@ static void _HAL_BLE_GattServerCallback(deviceId_t deviceId, gattServerEvent_t* 
                         break;
                     } else {
                         // Database write successful - notify AIOS
-                        AIOS_updateSwitchState(pValue[0]);
+                        AIOS_handleSetSwicthWritten(pValue[0]);
                     }
                 }
 

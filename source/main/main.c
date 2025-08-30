@@ -241,12 +241,6 @@ static void mainTask_(OSAL_arg_t arg)
     /** Start hardware timer for ticks count */
     hal_time_init();
 
-    /** Init ADC peripheral & create ADC task */
-    ADC_status_t adcStatus = ADC_init();
-    if (adcStatus != ADC_STATUS_OK) {
-        HAL_ASSERT(0, __FILE__, __LINE__);
-    }
-
 #if !defined(BMS_DISABLE_BLE)
     /** Init BLE peripheral & create BLE tasks */
     BLE_status_t bleStatus = BLE_init();
@@ -254,6 +248,17 @@ static void mainTask_(OSAL_arg_t arg)
         HAL_ASSERT(0, __FILE__, __LINE__);
     }
 #endif // !BMS_DISABLE_BLE
+
+    /** 
+     * Init ADC peripheral & create ADC task.
+     * @attention ADC_init() should be called after BLE_init() because
+     *            RNG_Init() overwrites the ADC configuration during
+     *            BLE_init() call.
+     */
+    ADC_status_t adcStatus = ADC_init();
+    if (adcStatus != ADC_STATUS_OK) {
+        HAL_ASSERT(0, __FILE__, __LINE__);
+    }
 
 #if !defined(BMS_DISABLE_LP)
     /** Init Low Power modes */

@@ -143,8 +143,8 @@ subsequent connections over the LE transport */
 /* Defines controller task stack size */
 #define gControllerTaskStackSize_c 2048
 
-/* Defines total heap size used by the OS - 11k */
-#define gTotalHeapSize_c        11264 
+/* Defines total heap size used by the OS - 12k */
+#define gTotalHeapSize_c        12288
 
 /*! *********************************************************************************
  * 	NVM Module Configuration - gAppUseNvm_d shall be defined aboved as 1 or 0
