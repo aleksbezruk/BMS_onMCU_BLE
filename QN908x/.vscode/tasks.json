@@ -4,33 +4,128 @@
     "version": "2.0.0",
     "tasks": [
         {
+            "label": "CMake: configure (Test)",
             "type": "shell",
-            "label": "Build Project",
-            "command": "cmake --build .",
+            "command": "cmake",
+            "args": [
+                "-S", ".",
+                "-B", "./build-test",
+                "-DBUILD_CONFIG=Test"
+            ],
             "options": {
-                "cwd": "./build"
+                "cwd": "${workspaceFolder}"
             },
-            "group": { 
+            "group": "build"
+        },
+        {
+            "label": "Build Project (Test)",
+            "type": "shell",
+            "command": "cmake --build . 2>&1 | tee build.log; echo 'Error count:'; grep -i 'error:' build.log | wc -l; echo 'Warning count:'; grep -i 'warning:' build.log | wc -l",
+            "options": {
+                "cwd": "./build-test"
+            },
+            "group": {
                 "kind": "build",
                 "isDefault": true
-            },
-            "problemMatcher": {
-                "base": "$gcc", 
-                "fileLocation": ["relative", "./build"]
             }
         },
         {
+            "label": "clean & build (Test)",
             "type": "shell",
-            "label": "clean & build",
-            "command": "cmake --build . --clean-first",
+            "command": "rm -rf ./build-test && mkdir -p ./build-test && cd ./build-test && cmake -DBUILD_CONFIG=Test .. && cmake --build . 2>&1 | tee build.log; echo 'Error count:'; grep -i 'error:' build.log | wc -l; echo 'Warning count:'; grep -i 'warning:' build.log | wc -l",
             "options": {
-                "cwd": "./build"
+                "cwd": "${workspaceFolder}"
             },
-            "group": "build",
-            "problemMatcher": {
-                "base": "$gcc", 
-                "fileLocation": ["relative", "./build"]
-            }
-        }
+            "group": "build"
+        },
+        {
+            "label": "CMake: clean (Test)",
+            "type": "shell",
+            "command": "cmake",
+            "args": [
+                "--build", "./build-test",
+                "--target", "clean"
+            ],
+            "options": {
+                "cwd": "${workspaceFolder}"
+            },
+            "group": "build"
+        },
+        {
+            "label": "CMake: rebuild (Test)",
+            "dependsOrder": "sequence",
+            "dependsOn": [
+                "CMake: configure (Test)",
+                "clean & build (Test)"
+            ],
+            "type": "shell",
+            "command": "echo Rebuild complete.",
+            "options": {
+                "cwd": "${workspaceFolder}"
+            },
+            "group": "build"
+        },
+    {
+      "label": "CMake: configure (Debug)",
+      "type": "shell",
+      "command": "cmake",
+      "args": [
+        "-S", ".",
+        "-B", "./build-debug",
+        "-DBUILD_CONFIG=Debug"
+      ],
+      "options": {
+        "cwd": "${workspaceFolder}"
+      },
+      "group": "build"
+    },
+    {
+      "label": "Build Project (Debug)",
+      "type": "shell",
+      "command": "cmake --build . 2>&1 | tee build.log; echo 'Error count:'; grep -i 'error:' build.log | wc -l; echo 'Warning count:'; grep -i 'warning:' build.log | wc -l",
+      "options": {
+        "cwd": "./build-debug"
+      },
+      "group": {
+        "kind": "build",
+        "isDefault": false
+      }
+    },
+    {
+      "label": "clean & build (Debug)",
+      "type": "shell",
+      "command": "rm -rf ./build-debug && mkdir -p ./build-debug && cd ./build-debug && cmake -DBUILD_CONFIG=Debug .. && cmake --build . 2>&1 | tee build.log; echo 'Error count:'; grep -i 'error:' build.log | wc -l; echo 'Warning count:'; grep -i 'warning:' build.log | wc -l",
+      "options": {
+        "cwd": "${workspaceFolder}"
+      },
+      "group": "build"
+    },
+    {
+      "label": "CMake: clean (Debug)",
+      "type": "shell",
+      "command": "cmake",
+      "args": [
+        "--build", "./build-debug",
+        "--target", "clean"
+      ],
+      "options": {
+        "cwd": "${workspaceFolder}"
+      },
+      "group": "build"
+    },
+    {
+      "label": "CMake: rebuild (Debug)",
+      "dependsOrder": "sequence",
+      "dependsOn": [
+        "CMake: configure (Debug)",
+        "clean & build (Debug)"
+      ],
+      "type": "shell",
+      "command": "echo Rebuild complete.",
+      "options": {
+        "cwd": "${workspaceFolder}"
+      },
+      "group": "build"
+    }
     ]
 }

@@ -1,1 +1,1 @@
-python3 ./qutest.py ../BMS_PSOC63/source/CM4/qspyHelper/test_qspyHelper.py
+python3 ./qutest.py ../BMS_PSOC63/source/qspyHelper/test_qspyHelper.py

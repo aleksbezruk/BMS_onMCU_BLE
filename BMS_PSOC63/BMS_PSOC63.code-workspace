@@ -1,18 +1,20 @@
 {
     "folders": [
-
-		{
-			"path": "."
-		},
-		{
-			"path": "proj_cm0p"
-		},
-		{
-			"path": "proj_cm4"
-		},
-		{
-			"path": "../mtb_shared"
-		}
+        {
+            "path": "."
+        },
+        {
+            "path": "proj_cm0p"
+        },
+        {
+            "path": "proj_cm4"
+        },
+        {
+            "path": "../mtb_shared"
+        },
+        {
+            "path": "../source"
+        }
     ],
     "settings": {
         //mtb//  If this project will be shared with multiple users, the
@@ -75,7 +77,25 @@
             "tuple": "cpp",
             "type_traits": "cpp",
             "utility": "cpp",
-            "cstdint": "cpp"
+            "cstdint": "cpp",
+            "string.h": "c",
+            "aioservice.h": "c",
+            "hal.h": "c",
+            "hal_led.h": "c",
+            "bms_events.h": "c",
+            "cyhal_drivers.h": "c",
+            "hal_gpio.h": "c",
+            "cy_device_headers.h": "c",
+            "stdio.h": "c",
+            "qequeue.h": "c",
+            "qmpool.h": "c",
+            "qp.h": "c",
+            "hal_adc.h": "c",
+            "hal_uart.h": "c",
+            "random": "cpp",
+            "adc.h": "c",
+            "osal.h": "c",
+            "osal_task_config.h": "c"
         },
         "clangd.arguments": [
             "--query-driver=${config:modustoolbox.toolsPath}/gcc/bin/arm-none-eabi-gcc",

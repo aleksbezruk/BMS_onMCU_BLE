@@ -5,14 +5,14 @@ RED='\033[0;31m'
 
 cd ./Integration_Tests
 
-sleep 30  # synchronization with QSPY
+sleep 10  # synchronization with QSPY
 
 # Run tests suit
 pytest --version
 printf "=== Reboot DUT ===\n"
 pyocd reset --target cy8c6xx7_nosmif --uid 1714186503068400 # reset/boot target before run tests
 
-sleep 10  #delay between tests to obtain QSPY logs
+sleep 5  #delay between tests to obtain QSPY logs
 
 pytest -s ./test_ADC_meas.py
 RETURN=$?
@@ -25,7 +25,7 @@ else
   printf "${RED}The test_ADC_meas.py FAILED and returned the code $RETURN\n"
   exit $RETURN
 fi
-sleep 10  #delay between tests to obtain QSPY logs
+sleep 5  #delay between tests to obtain QSPY logs
 
 pytest -s ./test_BLE_scan.py
 RETURN=$?
@@ -39,7 +39,7 @@ else
   exit $RETURN
 fi
 
-sleep 10  #delay between tests to obtain QSPY logs
+sleep 5  #delay between tests to obtain QSPY logs
 pytest -s ./test_BLE_connect.py
 RETURN=$?
 if [ $RETURN -eq 0 ];
@@ -52,7 +52,7 @@ else
   exit $RETURN
 fi
 
-sleep 10  #delay between tests to obtain QSPY logs
+sleep 5  #delay between tests to obtain QSPY logs
 pytest -s ./test_BLE_BAS.py
 RETURN=$?
 if [ $RETURN -eq 0 ];
@@ -65,7 +65,7 @@ else
   exit $RETURN
 fi
 
-sleep 10  #delay between tests to obtain QSPY logs
+sleep 5  #delay between tests to obtain QSPY logs
 pytest -s ./test_BLE_AIOS.py
 RETURN=$?
 if [ $RETURN -eq 0 ];
@@ -77,7 +77,7 @@ else
   printf "${RED}The test_BLE_AIOS.py FAILED and returned the code $RETURN\n"
   exit $RETURN
 fi
-sleep 60  #delay to obtain QSPY logs before exit
+sleep 30  #delay to obtain QSPY logs before exit
 
 printf "${GREEN}===================================\n"
 printf "${GREEN}===================================\n"

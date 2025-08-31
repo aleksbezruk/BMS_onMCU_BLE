@@ -108,8 +108,13 @@ m_flash_end     = 0x0007FFFF;
 m_flash_size    = 0x00080000;
 m_sector_size   = 2048; /* 2k  */
 
-/* User custom/temporary solution to link the project */
-gNVMSectorCountLink_d = 4;
+/* User custom/temporary solution to link the project
+ * BMS NVM Configuration: 4 sectors × 2KB = 8KB total
+ * - fNVM_region: 4KB (active storage)
+ * - sNVM_region: 4KB (backup/wear leveling)
+ * Used for: battery params, config data, history, BLE bonding 
+ */
+/* gNVMSectorCountLink_d = 4; */
 
 /****************************************************
  *******         User Defines                 *******
@@ -121,8 +126,8 @@ ram_vector_table        = DEFINED(__ram_vector_table__)     ? __ram_vector_table
 UseBootloaderLink       = DEFINED(gUseBootloaderLink_d)     ? gUseBootloaderLink_d      : 0;
 UseInternalStorageLink  = DEFINED(gUseInternalStorageLink_d)? gUseInternalStorageLink_d : 0;
 
-HEAP_SIZE               = DEFINED(__heap_size__)            ? __heap_size__             : 0;
-STACK_SIZE              = DEFINED(__stack_size__)           ? __stack_size__            : 0x0800;
+HEAP_SIZE               = DEFINED(__heap_size__)            ? __heap_size__             : 0x3C00;  /* 15KB heap */
+STACK_SIZE              = DEFINED(__stack_size__)           ? __stack_size__            : 0x2000;  /* 8KB stack */
 vector_table_size       = 0x114;
 
 

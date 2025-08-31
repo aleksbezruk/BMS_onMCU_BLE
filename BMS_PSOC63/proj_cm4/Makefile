@@ -68,38 +68,51 @@ CORE_NAME=CM4_0
 
 $(info Set BUILD CONFIGURATION IS -> $(BUILD_CONFIG)) 
 ifeq ($(BUILD_CONFIG), Debug)
-SOURCES=    ../source/CM4/main/main.c	\
-			../source/BSP/BSP.c \
-			../source/CM4/qspy/qs_64bit.c \
-			../source/CM4/qspy/qs_fp.c \
-			../source/CM4/qspy/qs_rx.c \
-			../source/CM4/qspy/qs.c \
-			../source/CM4/qspy/qstamp.c \
-			../source/CM4/qspyHelper/qspyHelper.c \
-			../source/CM4/ADC/ADC.c	\
-			../source/CM4/BLE/BLE.c	\
-			../source/CM4/LP/LP.c	\
-			../source/CM4/BLE/BatteryService.c	\
-			../source/CM4/BLE/AIOService.c
+SOURCES=    ../../source/main/main.c	\
+			../BSP/BSP.c \
+			../../source/qspy/qs_64bit.c \
+			../../source/qspy/qs_fp.c \
+			../../source/qspy/qs_rx.c \
+			../../source/qspy/qs.c \
+			../../source/qspy/qstamp.c \
+			../../source/qspyHelper/qspyHelper.c \
+			../../source/ADC/ADC.c	\
+			../../source/BLE/BLE.c	\
+			../../source/LP/LP.c	\
+			../../source/BLE/BatteryService.c	\
+			../../source/BLE/AIOService.c	\
+			../../source/HAL/PSOC63/hal/hal.c	\
+			../../source/HAL/PSOC63/hal_led/hal_led.c	\
+			../../source/HAL/PSOC63/hal_gpio/hal_gpio.c	\
+			../../source/HAL/PSOC63/hal_uart/hal_uart.c	\
+			../../source/HAL/PSOC63/hal_adc/hal_adc.c	\
+			../../source/HAL/PSOC63/hal_ble/hal_ble.c	\
+			../../source/HAL/PSOC63/hal_time/hal_time.c
 else ifeq ($(BUILD_CONFIG), Release)
 SOURCES=
 else ifeq ($(BUILD_CONFIG), Qutest)
-SOURCES=    ../source/CM4/qspy/qutest.c \
-		    ../source/CM4/qutestHelper/qutestHelper.c	\
-			../source/CM4/main/main.c	\
-		    ../source/BSP/BSP.c \
-			../source/BSP/test_BSP.c \
-			../source/CM4/qspy/qs_64bit.c \
-			../source/CM4/qspy/qs_fp.c \
-			../source/CM4/qspy/qs_rx.c \
-			../source/CM4/qspy/qs.c \
-			../source/CM4/qspy/qstamp.c \
-			../source/CM4/qspyHelper/qspyHelper.c \
-			../source/CM4/ADC/ADC.c	\
-			../source/CM4/BLE/BLE.c	\
-			../source/CM4/LP/LP.c	\
-			../source/CM4/BLE/BatteryService.c	\
-			../source/CM4/BLE/AIOService.c
+SOURCES=    ../../source/qspy/qutest.c \
+		    ../../source/qutestHelper/qutestHelper.c	\
+			../../source/main/main.c	\
+		    ../BSP/BSP.c \
+			../BSP/test_BSP.c \
+			../../source/qspy/qs_64bit.c \
+			../../source/qspy/qs_fp.c \
+			../../source/qspy/qs_rx.c \
+			../../source/qspy/qs.c \
+			../../source/qspy/qstamp.c \
+			../../source/qspyHelper/qspyHelper.c \
+			../../source/ADC/ADC.c	\
+			../../source/BLE/BLE.c	\
+			../../source/LP/LP.c	\
+			../../source/BLE/BatteryService.c	\
+			../../source/BLE/AIOService.c	\
+			../../source/HAL/PSOC63/hal/hal.c	\
+			../../source/HAL/PSOC63/hal_led/hal_led.c	\
+			../../source/HAL/PSOC63/hal_gpio/hal_gpio.c	\
+			../../source/HAL/PSOC63/hal_uart/hal_uart.c	\
+			../../source/HAL/PSOC63/hal_adc/hal_adc.c	\
+			../../source/HAL/PSOC63/hal_time/hal_time.c
 else
 # $(error !!! BUILD CONFIGURATION IS udefined !!!. Please set Debug or Qutest or Release)
 $(info Set BUILD CONFIGURATION IS nor defined. Please doublecheck. Maybe it's Cypress Device Confidurator running) 
@@ -107,14 +120,23 @@ endif	# BUILD configuration
 
 # Like SOURCES, but for include directories. Value should be paths to
 # directories (without a leading -I).
-INCLUDES=SOURCES= ../source/BSP/ \
-				  ../source/CM4/qspy/ \
-				  ../source/CM4/qspyHelper \
-				  ../source/CM4/qutestHelper \
-				  ../source/CM4/ADC	\
-				  ../source/CM4/BLE	\
-				  ../source/CM4/main \
-				  ../source/CM4/LP
+INCLUDES=SOURCES= ../BSP/ \
+				  ../../source/qspy/ \
+				  ../../source/qspyHelper \
+				  ../../source/qutestHelper \
+				  ../../source/ADC	\
+				  ../../source/BLE	\
+				  ../../source/main \
+				  ../../source/LP	\
+				  ../../source/HAL/PSOC63/hal	\
+				  ../../source/HAL/PSOC63/hal_led	\
+				  ../../source/HAL/PSOC63/hal_gpio	\
+				  ../../source/HAL/PSOC63/hal_uart	\
+				  ../../source/HAL/PSOC63/hal_adc	\
+				  ../../source/HAL/PSOC63/hal_time	\
+				  ../../source/HAL/PSOC63/hal_nvm	\
+				  ../../source/HAL/PSOC63/hal_ble	\
+				  ../../source/OSAL/PSOC63
 
 # Add additional defines to the build process (without a leading -D).
 ifeq ($(BUILD_CONFIG), Debug)

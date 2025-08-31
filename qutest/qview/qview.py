@@ -1567,12 +1567,14 @@ class QSpy:
         try:
             if enWakeup == True:
                 print("Send Traget wakeup")
-                wakeUp_packet = pack("<BBIII", QSpy._TRGT_COMMAND,
-                                     255, 0xAAAAAAAA, 0xAAAAAAAA, 0xAAAAAAAA)
+                # wakeUp_packet = pack("<BBIII", QSpy._TRGT_COMMAND,
+                #                      255, 0xAAAAAAAA, 0xAAAAAAAA, 0xAAAAAAAA)
+                wakeUp_packet = pack("<B", QSpy._TRGT_INFO)
                 tx_wakeUp_packet = bytearray([QSpy._tx_seq & 0xFF])
                 tx_wakeUp_packet.extend(wakeUp_packet)
                 QSpy._sock.sendto(tx_wakeUp_packet, QSpy._host_addr)
                 QSpy._tx_seq += 1
+                # time.sleep(0.1) # wait for the Target to wake up
             else:
                 print("No Traget wakeup")
             print("_sock.sendto: " "%s, %d"%(QSpy._host_addr[0], QSpy._host_addr[1]))

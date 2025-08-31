@@ -8,9 +8,12 @@
 *.svg
 *.js
 *.bin
+*.bak
 
 # ignore folders
 doxygen/
 docs/
 mtb_shared/
 build/
+build-debug/
+build-test/

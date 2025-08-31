@@ -1,0 +1,709 @@
+<?xml version="1.0" encoding= "UTF-8" ?>
+<configuration name="QN908XC" xsi:schemaLocation="http://mcuxpresso.nxp.com/XSD/mex_configuration_17 http://mcuxpresso.nxp.com/XSD/mex_configuration_17.xsd" uuid="55616174-0c4d-47ea-acb6-e5752fada39d" version="17" xmlns="http://mcuxpresso.nxp.com/XSD/mex_configuration_17" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
+   <common>
+      <processor>QN908XC</processor>
+      <package>QN9080C</package>
+      <mcu_data>ksdk2_0</mcu_data>
+      <cores selected="cm4">
+         <core name="Cortex-M4F" id="cm4" description="M4 core"/>
+      </cores>
+      <description>Configuration imported from qn908xcdk_wireless_examples_bluetooth_blood_pressure_sensor_freertos</description>
+   </common>
+   <preferences>
+      <validate_boot_init_only>true</validate_boot_init_only>
+      <generate_code_modified_registers_only>false</generate_code_modified_registers_only>
+      <update_include_paths>true</update_include_paths>
+      <generate_registers_defines>false</generate_registers_defines>
+   </preferences>
+   <tools>
+      <pins name="Pins" version="17.0" enabled="true" update_project_code="true">
+         <generated_project_files>
+            <file path="board/pin_mux.c" update_enabled="true"/>
+            <file path="board/pin_mux.h" update_enabled="true"/>
+         </generated_project_files>
+         <pins_profile>
+            <processor_version>24.12.0</processor_version>
+            <pin_labels>
+               <pin_label pin_num="11" pin_signal="GPIOA0/ADC0/SCT0_OUT0/CTIMER0_CAP0/FC0_RTS/FC2_SSEL3/WLAN_TX" label="BANK1_ADC"/>
+               <pin_label pin_num="10" pin_signal="GPIOA1/ADC1/SCT0_OUT1/CTIMER0_CAP1/FC0_CTS/FC2_SSEL2/WLAN_RX" label="BANK2_ADC"/>
+               <pin_label pin_num="46" pin_signal="GPIOA8/ADC4/SCT0_IN0/CTIMER1_CAP1/FC1_TXD_SCL/BLE_PTI2/SPIFI_IO2" label="BANK3_ADC"/>
+               <pin_label pin_num="45" pin_signal="GPIOA9/ADC5/SCT0_IN1/CTIMER1_MAT0/FC1_RXD_SDA/BLE_PTI3/SPIFI_IO3" label="BANK4_ADC"/>
+               <pin_label pin_num="42" pin_signal="GPIOA12/SCT0_OUT5/ACMP0_OUT/FC1_TXD_SCL/SD_DAC/ANT_SW" label="DISCH_SW"/>
+               <pin_label pin_num="44" pin_signal="GPIOA10/ADC6/SCT0_IN2/CTIMER1_MAT1/FC1_SCK/ACMP0_OUT/BLE_TX" label="CHRG_SW"/>
+               <pin_label pin_num="29" pin_signal="GPIOA16/CS2/SCT0_OUT1/CTIMER2_MAT0/FC0_TXD/FC3_MOSI/QDEC0_A" label="UART_TX"/>
+               <pin_label pin_num="28" pin_signal="GPIOA17/CS3/SD_DAC/CTIMER2_MAT1/FC0_RXD/FC3_MISO/QDEC0_B" label="UART_RX"/>
+               <pin_label pin_num="9" pin_signal="GPIOA2/QDEC0_A/SCT0_OUT2/CTIMER0_MAT0/FC2_SCL_SSEL1/RFE_RX_EN" label="BAL1"/>
+               <pin_label pin_num="25" pin_signal="GPIOA20/QDEC1_A/SCT0_OUT1/CTIMER2_MAT0/SWO/FC1_RTS_SCL/SPIFI_CLK" label="BAL2"/>
+               <pin_label pin_num="27" pin_signal="GPIOA18/CS4/SCT0_OUT3/CTIMER2_MAT2/FC0_SCK/FC3_SSEL2/BLE_SYNC" label="BAL3"/>
+               <pin_label pin_num="30" pin_signal="GPIOA15/CS1/SCT0_OUT0/CTIMER2_CAP1/FC0_CTS/FC3_SCK/QDEC1_B" label="BAL4"/>
+            </pin_labels>
+         </pins_profile>
+         <functions_list>
+            <function name="BOARD_InitPins">
+               <description>Configures pin routing and optionally pin electrical features.</description>
+               <options>
+                  <callFromInitBoot>true</callFromInitBoot>
+                  <prefix>BOARD_</prefix>
+                  <coreID>cm4</coreID>
+               </options>
+               <dependencies>
+                  <dependency resourceType="Peripheral" resourceId="FLEXCOMM0" description="Peripheral FLEXCOMM0 signals are routed in the Pins Tool, but the peripheral is not initialized in the Peripherals Tool." problem_level="1" source="Pins:BOARD_InitPins">
+                     <feature name="initialized" evaluation="equal">
+                        <data>true</data>
+                     </feature>
+                  </dependency>
+                  <dependency resourceType="Peripheral" resourceId="ADC" description="Peripheral ADC signals are routed in the Pins Tool, but the peripheral is not initialized in the Peripherals Tool." problem_level="1" source="Pins:BOARD_InitPins">
+                     <feature name="initialized" evaluation="equal">
+                        <data>true</data>
+                     </feature>
+                  </dependency>
+                  <dependency resourceType="SWComponent" resourceId="platform.drivers.qn_iocon" description="Pins initialization requires the QN_IOCON Driver in the project." problem_level="2" source="Pins:BOARD_InitPins">
+                     <feature name="enabled" evaluation="equal" configuration="cm4">
+                        <data>true</data>
+                     </feature>
+                  </dependency>
+               </dependencies>
+               <pins>
+                  <pin peripheral="FLEXCOMM0" signal="RXD" pin_num="28" pin_signal="GPIOA17/CS3/SD_DAC/CTIMER2_MAT1/FC0_RXD/FC3_MISO/QDEC0_B"/>
+                  <pin peripheral="FLEXCOMM0" signal="TXD" pin_num="29" pin_signal="GPIOA16/CS2/SCT0_OUT1/CTIMER2_MAT0/FC0_TXD/FC3_MOSI/QDEC0_A"/>
+                  <pin peripheral="ADC" signal="CH, 0" pin_num="11" pin_signal="GPIOA0/ADC0/SCT0_OUT0/CTIMER0_CAP0/FC0_RTS/FC2_SSEL3/WLAN_TX"/>
+                  <pin peripheral="ADC" signal="CH, 4" pin_num="46" pin_signal="GPIOA8/ADC4/SCT0_IN0/CTIMER1_CAP1/FC1_TXD_SCL/BLE_PTI2/SPIFI_IO2"/>
+                  <pin peripheral="ADC" signal="CH, 5" pin_num="45" pin_signal="GPIOA9/ADC5/SCT0_IN1/CTIMER1_MAT0/FC1_RXD_SDA/BLE_PTI3/SPIFI_IO3"/>
+                  <pin peripheral="GPIOA" signal="GPIOA, 12" pin_num="42" pin_signal="GPIOA12/SCT0_OUT5/ACMP0_OUT/FC1_TXD_SCL/SD_DAC/ANT_SW"/>
+                  <pin peripheral="GPIOA" signal="GPIOA, 10" pin_num="44" pin_signal="GPIOA10/ADC6/SCT0_IN2/CTIMER1_MAT1/FC1_SCK/ACMP0_OUT/BLE_TX"/>
+                  <pin peripheral="GPIOA" signal="GPIOA, 2" pin_num="9" pin_signal="GPIOA2/QDEC0_A/SCT0_OUT2/CTIMER0_MAT0/FC2_SCL_SSEL1/RFE_RX_EN"/>
+                  <pin peripheral="GPIOA" signal="GPIOA, 20" pin_num="25" pin_signal="GPIOA20/QDEC1_A/SCT0_OUT1/CTIMER2_MAT0/SWO/FC1_RTS_SCL/SPIFI_CLK"/>
+                  <pin peripheral="GPIOA" signal="GPIOA, 18" pin_num="27" pin_signal="GPIOA18/CS4/SCT0_OUT3/CTIMER2_MAT2/FC0_SCK/FC3_SSEL2/BLE_SYNC"/>
+                  <pin peripheral="GPIOA" signal="GPIOA, 15" pin_num="30" pin_signal="GPIOA15/CS1/SCT0_OUT0/CTIMER2_CAP1/FC0_CTS/FC3_SCK/QDEC1_B"/>
+                  <pin peripheral="ADC" signal="CH, 1" pin_num="10" pin_signal="GPIOA1/ADC1/SCT0_OUT1/CTIMER0_CAP1/FC0_CTS/FC2_SSEL2/WLAN_RX"/>
+               </pins>
+            </function>
+            <function name="BOARD_InitButtons">
+               <description>Configures pin routing and optionally pin electrical features.</description>
+               <options>
+                  <prefix>BOARD_</prefix>
+                  <coreID>cm4</coreID>
+               </options>
+               <dependencies>
+                  <dependency resourceType="SWComponent" resourceId="platform.drivers.qn_iocon" description="Pins initialization requires the QN_IOCON Driver in the project." problem_level="2" source="Pins:BOARD_InitButtons">
+                     <feature name="enabled" evaluation="equal" configuration="cm4">
+                        <data>true</data>
+                     </feature>
+                  </dependency>
+                  <dependency resourceType="SWComponent" resourceId="platform.drivers.qn_gpio" description="Pins initialization requires the QN_GPIO Driver in the project." problem_level="2" source="Pins:BOARD_InitButtons">
+                     <feature name="enabled" evaluation="equal" configuration="cm4">
+                        <data>true</data>
+                     </feature>
+                  </dependency>
+               </dependencies>
+               <pins>
+                  <pin peripheral="GPIOA" signal="GPIOA, 24" pin_num="21" pin_signal="GPIOA24/ACMP0N/CS6/ETM_TRACEDAT0/CTIMER3_CAP0/RFE_RX_EN/FC3_SSEL1/SPIFI_IO0">
+                     <pin_features>
+                        <pin_feature name="direction" value="INPUT"/>
+                        <pin_feature name="pull_control" value="Pull_up"/>
+                        <pin_feature name="drive_strength" value="low"/>
+                     </pin_features>
+                  </pin>
+                  <pin peripheral="GPIOA" signal="GPIOA, 19" pin_num="26" pin_signal="GPIOA19/CS5/SCT0_OUT2/RFE_EN/FC0_SCK/FC3_SSEL3/BLE_IN_PROC">
+                     <pin_features>
+                        <pin_feature name="direction" value="INPUT"/>
+                        <pin_feature name="pull_control" value="Pull_up"/>
+                        <pin_feature name="drive_strength" value="low"/>
+                        <pin_feature name="drive_extra" value="disabled"/>
+                     </pin_features>
+                  </pin>
+               </pins>
+            </function>
+            <function name="BOARD_InitLEDs">
+               <description>Configures pin routing and optionally pin electrical features.</description>
+               <options>
+                  <prefix>BOARD_</prefix>
+                  <coreID>cm4</coreID>
+               </options>
+               <dependencies>
+                  <dependency resourceType="SWComponent" resourceId="platform.drivers.qn_iocon" description="Pins initialization requires the QN_IOCON Driver in the project." problem_level="2" source="Pins:BOARD_InitLEDs">
+                     <feature name="enabled" evaluation="equal" configuration="cm4">
+                        <data>true</data>
+                     </feature>
+                  </dependency>
+                  <dependency resourceType="SWComponent" resourceId="platform.drivers.qn_gpio" description="Pins initialization requires the QN_GPIO Driver in the project." problem_level="2" source="Pins:BOARD_InitLEDs">
+                     <feature name="enabled" evaluation="equal" configuration="cm4">
+                        <data>true</data>
+                     </feature>
+                  </dependency>
+               </dependencies>
+               <pins>
+                  <pin peripheral="GPIOA" signal="GPIOA, 31" pin_num="12" pin_signal="GPIOA31/DAC/RTC_CAP/CTIMER3_MAT2/SWO/FC3_SCK/SPIFI_CLK">
+                     <pin_features>
+                        <pin_feature name="direction" value="OUTPUT"/>
+                        <pin_feature name="pull_control" value="Pull_up"/>
+                        <pin_feature name="drive_strength" value="low"/>
+                     </pin_features>
+                  </pin>
+                  <pin peripheral="GPIOA" signal="GPIOA, 13" pin_num="32" pin_signal="GPIOA13/SCT0_OUT4/ACMP1_OUT/FC1_RXD_SDA/FC3_SSEL1/RFE_EN">
+                     <pin_features>
+                        <pin_feature name="direction" value="OUTPUT"/>
+                        <pin_feature name="pull_control" value="Pull_up"/>
+                        <pin_feature name="drive_strength" value="low"/>
+                     </pin_features>
+                  </pin>
+                  <pin peripheral="GPIOA" signal="GPIOA, 25" pin_num="20" pin_signal="GPIOA25/ACMP0P/CS7/ETM_TRACEDAT1/CTIMER3_CAP1/RFE_TX_EN/FC3_SSEL0/SPIFI_IO1">
+                     <pin_features>
+                        <pin_feature name="direction" value="OUTPUT"/>
+                        <pin_feature name="pull_control" value="Pull_up"/>
+                        <pin_feature name="drive_strength" value="low"/>
+                     </pin_features>
+                  </pin>
+               </pins>
+            </function>
+            <function name="BOARD_InitDEBUG_UART">
+               <description>Configures pin routing and optionally pin electrical features.</description>
+               <options>
+                  <prefix>BOARD_</prefix>
+                  <coreID>cm4</coreID>
+               </options>
+               <dependencies>
+                  <dependency resourceType="Peripheral" resourceId="FLEXCOMM0" description="Peripheral FLEXCOMM0 signals are routed in the Pins Tool, but the peripheral is not initialized in the Peripherals Tool." problem_level="1" source="Pins:BOARD_InitDEBUG_UART">
+                     <feature name="initialized" evaluation="equal">
+                        <data>true</data>
+                     </feature>
+                  </dependency>
+                  <dependency resourceType="SWComponent" resourceId="platform.drivers.qn_iocon" description="Pins initialization requires the QN_IOCON Driver in the project." problem_level="2" source="Pins:BOARD_InitDEBUG_UART">
+                     <feature name="enabled" evaluation="equal" configuration="cm4">
+                        <data>true</data>
+                     </feature>
+                  </dependency>
+               </dependencies>
+               <pins>
+                  <pin peripheral="FLEXCOMM0" signal="TXD" pin_num="29" pin_signal="GPIOA16/CS2/SCT0_OUT1/CTIMER2_MAT0/FC0_TXD/FC3_MOSI/QDEC0_A">
+                     <pin_features>
+                        <pin_feature name="pull_control" value="High_Z"/>
+                        <pin_feature name="drive_strength" value="low"/>
+                     </pin_features>
+                  </pin>
+                  <pin peripheral="FLEXCOMM0" signal="RXD" pin_num="28" pin_signal="GPIOA17/CS3/SD_DAC/CTIMER2_MAT1/FC0_RXD/FC3_MISO/QDEC0_B">
+                     <pin_features>
+                        <pin_feature name="pull_control" value="High_Z"/>
+                        <pin_feature name="drive_strength" value="low"/>
+                     </pin_features>
+                  </pin>
+               </pins>
+            </function>
+            <function name="BOARD_InitPMod_SPI_I2C">
+               <description>Configures pin routing and optionally pin electrical features.</description>
+               <options>
+                  <prefix>BOARD_</prefix>
+                  <coreID>cm4</coreID>
+               </options>
+               <dependencies>
+                  <dependency resourceType="Peripheral" resourceId="FLEXCOMM1" description="Peripheral FLEXCOMM1 signals are routed in the Pins Tool, but the peripheral is not initialized in the Peripherals Tool." problem_level="1" source="Pins:BOARD_InitPMod_SPI_I2C">
+                     <feature name="initialized" evaluation="equal">
+                        <data>true</data>
+                     </feature>
+                  </dependency>
+                  <dependency resourceType="Peripheral" resourceId="FLEXCOMM2" description="Peripheral FLEXCOMM2 signals are routed in the Pins Tool, but the peripheral is not initialized in the Peripherals Tool." problem_level="1" source="Pins:BOARD_InitPMod_SPI_I2C">
+                     <feature name="initialized" evaluation="equal">
+                        <data>true</data>
+                     </feature>
+                  </dependency>
+                  <dependency resourceType="Peripheral" resourceId="FLEXCOMM3" description="Peripheral FLEXCOMM3 signals are routed in the Pins Tool, but the peripheral is not initialized in the Peripherals Tool." problem_level="1" source="Pins:BOARD_InitPMod_SPI_I2C">
+                     <feature name="initialized" evaluation="equal">
+                        <data>true</data>
+                     </feature>
+                  </dependency>
+                  <dependency resourceType="SWComponent" resourceId="platform.drivers.qn_iocon" description="Pins initialization requires the QN_IOCON Driver in the project." problem_level="2" source="Pins:BOARD_InitPMod_SPI_I2C">
+                     <feature name="enabled" evaluation="equal" configuration="cm4">
+                        <data>true</data>
+                     </feature>
+                  </dependency>
+               </dependencies>
+               <pins>
+                  <pin peripheral="FLEXCOMM1" signal="CTS_SDA" pin_num="4" pin_signal="GPIOA7/ADC_VREFI/SCT0_OUT2/CTIMER1_CAP0/FC1_CTS_SDA/BLE_PTI1/SPIFI_CSN">
+                     <pin_features>
+                        <pin_feature name="pull_control" value="High_Z"/>
+                        <pin_feature name="drive_strength" value="low"/>
+                     </pin_features>
+                  </pin>
+                  <pin peripheral="FLEXCOMM1" signal="RTS_SCL" pin_num="5" pin_signal="GPIOA6/SCT0_OUT3/CTIMER0_MAT2/FC1_RTS_SCL/BLE_PTI0/SPIFI_CLK">
+                     <pin_features>
+                        <pin_feature name="pull_control" value="High_Z"/>
+                        <pin_feature name="drive_strength" value="low"/>
+                        <pin_feature name="drive_extra" value="disabled"/>
+                     </pin_features>
+                  </pin>
+                  <pin peripheral="FLEXCOMM2" signal="SCL_MISO" pin_num="6" pin_signal="GPIOA5/ADC3/SCT0_OUT5/CTIMER0_MAT1/FC0_RXD/FC2_SCL_MISO/SPIFI_IO1">
+                     <pin_features>
+                        <pin_feature name="pull_control" value="High_Z"/>
+                        <pin_feature name="drive_strength" value="low"/>
+                     </pin_features>
+                  </pin>
+                  <pin peripheral="FLEXCOMM2" signal="SDA_MOSI" pin_num="7" pin_signal="GPIOA4/ADC2/SCT0_OUT4/CTIMER0_MAT0/FC0_TXD/FC2_SDA_MOSI/SPIFI_IO0">
+                     <pin_features>
+                        <pin_feature name="pull_control" value="High_Z"/>
+                        <pin_feature name="drive_strength" value="low"/>
+                     </pin_features>
+                  </pin>
+                  <pin peripheral="FLEXCOMM2" signal="SDA_SSEL0" pin_num="8" pin_signal="GPIOA3/QDEC0_B/SCT0_OUT3/CTIMER0_MAT1/FC2_SDA_SSEL0/RFE_TX_EN">
+                     <pin_features>
+                        <pin_feature name="pull_control" value="High_Z"/>
+                        <pin_feature name="drive_strength" value="low"/>
+                     </pin_features>
+                  </pin>
+                  <pin peripheral="FLEXCOMM2" signal="SCK" pin_num="15" pin_signal="GPIOA30/ACMP1P/ETM_TRACEDAT3/CTIMER3_MAT1/FC2_SCK/FC3_MOSI/SPIFI_IO3">
+                     <pin_features>
+                        <pin_feature name="pull_control" value="High_Z"/>
+                        <pin_feature name="drive_strength" value="low"/>
+                     </pin_features>
+                  </pin>
+                  <pin peripheral="GPIOB" signal="GPIOB, 2" pin_num="33" pin_signal="GPIOB2/ANT_SW">
+                     <pin_features>
+                        <pin_feature name="pull_control" value="High_Z"/>
+                        <pin_feature name="drive_strength" value="low"/>
+                     </pin_features>
+                  </pin>
+                  <pin peripheral="FLEXCOMM3" signal="SCK" pin_num="12" pin_signal="GPIOA31/DAC/RTC_CAP/CTIMER3_MAT2/SWO/FC3_SCK/SPIFI_CLK">
+                     <pin_features>
+                        <pin_feature name="pull_control" value="High_Z"/>
+                        <pin_feature name="drive_strength" value="low"/>
+                     </pin_features>
+                  </pin>
+               </pins>
+            </function>
+            <function name="BOARD_InitSWD_DEBUG">
+               <description>Configures pin routing and optionally pin electrical features.</description>
+               <options>
+                  <prefix>BOARD_</prefix>
+                  <coreID>cm4</coreID>
+               </options>
+               <dependencies>
+                  <dependency resourceType="Peripheral" resourceId="SWD" description="Peripheral SWD signals are routed in the Pins Tool, but the peripheral is not initialized in the Peripherals Tool." problem_level="1" source="Pins:BOARD_InitSWD_DEBUG">
+                     <feature name="initialized" evaluation="equal">
+                        <data>true</data>
+                     </feature>
+                  </dependency>
+                  <dependency resourceType="SWComponent" resourceId="platform.drivers.qn_iocon" description="Pins initialization requires the QN_IOCON Driver in the project." problem_level="2" source="Pins:BOARD_InitSWD_DEBUG">
+                     <feature name="enabled" evaluation="equal" configuration="cm4">
+                        <data>true</data>
+                     </feature>
+                  </dependency>
+               </dependencies>
+               <pins>
+                  <pin peripheral="SWD" signal="SWCLK" pin_num="23" pin_signal="SWCLK/GPIOA22/SCT0_IN2/CTIMER3_MAT0/FC2_SDA_SSEL0/FC3_SSEL3/QDEC1_A">
+                     <pin_features>
+                        <pin_feature name="pull_control" value="Pull_down"/>
+                        <pin_feature name="drive_strength" value="low"/>
+                     </pin_features>
+                  </pin>
+                  <pin peripheral="SWD" signal="SWDIO" pin_num="22" pin_signal="SWDIO/GPIOA23/SCT0_IN3/CTIMER3_MAT1/FC2_SCL_SSEL1/FC3_SSEL2/QDEC1_B">
+                     <pin_features>
+                        <pin_feature name="pull_control" value="High_Z"/>
+                        <pin_feature name="drive_strength" value="low"/>
+                     </pin_features>
+                  </pin>
+                  <pin peripheral="SWD" signal="SWO" pin_num="12" pin_signal="GPIOA31/DAC/RTC_CAP/CTIMER3_MAT2/SWO/FC3_SCK/SPIFI_CLK">
+                     <pin_features>
+                        <pin_feature name="pull_control" value="High_Z"/>
+                        <pin_feature name="drive_strength" value="low"/>
+                     </pin_features>
+                  </pin>
+               </pins>
+            </function>
+            <function name="BOARD_InitETM_TRACE">
+               <description>Configures pin routing and optionally pin electrical features.</description>
+               <options>
+                  <prefix>BOARD_</prefix>
+                  <coreID>cm4</coreID>
+               </options>
+               <dependencies>
+                  <dependency resourceType="Peripheral" resourceId="ETM" description="Peripheral ETM signals are routed in the Pins Tool, but the peripheral is not initialized in the Peripherals Tool." problem_level="1" source="Pins:BOARD_InitETM_TRACE">
+                     <feature name="initialized" evaluation="equal">
+                        <data>true</data>
+                     </feature>
+                  </dependency>
+                  <dependency resourceType="SWComponent" resourceId="platform.drivers.qn_iocon" description="Pins initialization requires the QN_IOCON Driver in the project." problem_level="2" source="Pins:BOARD_InitETM_TRACE">
+                     <feature name="enabled" evaluation="equal" configuration="cm4">
+                        <data>true</data>
+                     </feature>
+                  </dependency>
+               </dependencies>
+               <pins>
+                  <pin peripheral="ETM" signal="ETM_TRACEDATA, 2" pin_num="16" pin_signal="GPIOA29/ACMP1N/ETM_TRACEDAT2/CTIMER3_MAT0/FC2_SCK/FC3_MISO/SPIFI_IO2">
+                     <pin_features>
+                        <pin_feature name="pull_control" value="High_Z"/>
+                        <pin_feature name="drive_strength" value="low"/>
+                     </pin_features>
+                  </pin>
+                  <pin peripheral="ETM" signal="ETM_TRACECLK" pin_num="17" pin_signal="GPIOA28/CLK_AHB/ETM_TRACECLK/RTC_CAP/FC1_SCK/SD_DAC/SPIFI_CSN">
+                     <pin_features>
+                        <pin_feature name="pull_control" value="High_Z"/>
+                        <pin_feature name="drive_strength" value="low"/>
+                     </pin_features>
+                  </pin>
+                  <pin peripheral="ETM" signal="ETM_TRACEDATA, 3" pin_num="15" pin_signal="GPIOA30/ACMP1P/ETM_TRACEDAT3/CTIMER3_MAT1/FC2_SCK/FC3_MOSI/SPIFI_IO3">
+                     <pin_features>
+                        <pin_feature name="pull_control" value="High_Z"/>
+                        <pin_feature name="drive_strength" value="low"/>
+                     </pin_features>
+                  </pin>
+                  <pin peripheral="ETM" signal="ETM_TRACEDATA, 0" pin_num="21" pin_signal="GPIOA24/ACMP0N/CS6/ETM_TRACEDAT0/CTIMER3_CAP0/RFE_RX_EN/FC3_SSEL1/SPIFI_IO0">
+                     <pin_features>
+                        <pin_feature name="pull_control" value="High_Z"/>
+                        <pin_feature name="drive_strength" value="low"/>
+                     </pin_features>
+                  </pin>
+                  <pin peripheral="ETM" signal="ETM_TRACEDATA, 1" pin_num="20" pin_signal="GPIOA25/ACMP0P/CS7/ETM_TRACEDAT1/CTIMER3_CAP1/RFE_TX_EN/FC3_SSEL0/SPIFI_IO1">
+                     <pin_features>
+                        <pin_feature name="pull_control" value="High_Z"/>
+                        <pin_feature name="drive_strength" value="low"/>
+                     </pin_features>
+                  </pin>
+               </pins>
+            </function>
+            <function name="BOARD_InitUSB">
+               <description>Configures pin routing and optionally pin electrical features.</description>
+               <options>
+                  <prefix>BOARD_</prefix>
+                  <coreID>cm4</coreID>
+               </options>
+               <dependencies>
+                  <dependency resourceType="Peripheral" resourceId="USB0" description="Peripheral USB0 signals are routed in the Pins Tool, but the peripheral is not initialized in the Peripherals Tool." problem_level="1" source="Pins:BOARD_InitUSB">
+                     <feature name="initialized" evaluation="equal">
+                        <data>true</data>
+                     </feature>
+                  </dependency>
+                  <dependency resourceType="SWComponent" resourceId="platform.drivers.qn_iocon" description="Pins initialization requires the QN_IOCON Driver in the project." problem_level="2" source="Pins:BOARD_InitUSB">
+                     <feature name="enabled" evaluation="equal" configuration="cm4">
+                        <data>true</data>
+                     </feature>
+                  </dependency>
+               </dependencies>
+               <pins>
+                  <pin peripheral="USB0" signal="USB_DM" pin_num="18" pin_signal="GPIOA27/USB_DM/SCT0_IN1/CTIMER1_MAT2/FC2_SCL_MISO/QDEC0_B/BLE_IN_PROC">
+                     <pin_features>
+                        <pin_feature name="pull_control" value="High_Z"/>
+                        <pin_feature name="drive_strength" value="low"/>
+                        <pin_feature name="drive_extra" value="disabled"/>
+                     </pin_features>
+                  </pin>
+                  <pin peripheral="USB0" signal="USB_DP" pin_num="19" pin_signal="GPIOA26/USB_DP/SCT0_IN0/CTIMER1_MAT0/FC2_SDA_MOSI/QDEC0_A/BLE_SYNC">
+                     <pin_features>
+                        <pin_feature name="pull_control" value="High_Z"/>
+                        <pin_feature name="drive_strength" value="low"/>
+                        <pin_feature name="drive_extra" value="disabled"/>
+                     </pin_features>
+                  </pin>
+               </pins>
+            </function>
+            <function name="BOARD_InitG_Sensor">
+               <description>Configures pin routing and optionally pin electrical features.</description>
+               <options>
+                  <prefix>BOARD_</prefix>
+                  <coreID>cm4</coreID>
+               </options>
+               <dependencies>
+                  <dependency resourceType="Peripheral" resourceId="FLEXCOMM1" description="Peripheral FLEXCOMM1 signals are routed in the Pins Tool, but the peripheral is not initialized in the Peripherals Tool." problem_level="1" source="Pins:BOARD_InitG_Sensor">
+                     <feature name="initialized" evaluation="equal">
+                        <data>true</data>
+                     </feature>
+                  </dependency>
+                  <dependency resourceType="SWComponent" resourceId="platform.drivers.qn_iocon" description="Pins initialization requires the QN_IOCON Driver in the project." problem_level="2" source="Pins:BOARD_InitG_Sensor">
+                     <feature name="enabled" evaluation="equal" configuration="cm4">
+                        <data>true</data>
+                     </feature>
+                  </dependency>
+               </dependencies>
+               <pins>
+                  <pin peripheral="FLEXCOMM1" signal="RTS_SCL" pin_num="5" pin_signal="GPIOA6/SCT0_OUT3/CTIMER0_MAT2/FC1_RTS_SCL/BLE_PTI0/SPIFI_CLK">
+                     <pin_features>
+                        <pin_feature name="pull_control" value="High_Z"/>
+                        <pin_feature name="drive_strength" value="low"/>
+                        <pin_feature name="drive_extra" value="disabled"/>
+                     </pin_features>
+                  </pin>
+                  <pin peripheral="FLEXCOMM1" signal="CTS_SDA" pin_num="4" pin_signal="GPIOA7/ADC_VREFI/SCT0_OUT2/CTIMER1_CAP0/FC1_CTS_SDA/BLE_PTI1/SPIFI_CSN">
+                     <pin_features>
+                        <pin_feature name="pull_control" value="High_Z"/>
+                        <pin_feature name="drive_strength" value="low"/>
+                     </pin_features>
+                  </pin>
+                  <pin peripheral="GPIOA" signal="GPIOA, 14" pin_num="31" pin_signal="GPIOA14/CS0/ANT_SW/CTIMER2_CAP0/FC0_RTS/FC3_SSEL0/QDEC1_A">
+                     <pin_features>
+                        <pin_feature name="pull_control" value="High_Z"/>
+                        <pin_feature name="drive_strength" value="low"/>
+                     </pin_features>
+                  </pin>
+               </pins>
+            </function>
+            <function name="BOARD_InitSPI_FLASH">
+               <description>Configures pin routing and optionally pin electrical features.</description>
+               <options>
+                  <prefix>BOARD_</prefix>
+                  <coreID>cm4</coreID>
+               </options>
+               <dependencies>
+                  <dependency resourceType="Peripheral" resourceId="FLEXCOMM2" description="Peripheral FLEXCOMM2 signals are routed in the Pins Tool, but the peripheral is not initialized in the Peripherals Tool." problem_level="1" source="Pins:BOARD_InitSPI_FLASH">
+                     <feature name="initialized" evaluation="equal">
+                        <data>true</data>
+                     </feature>
+                  </dependency>
+                  <dependency resourceType="SWComponent" resourceId="platform.drivers.qn_iocon" description="Pins initialization requires the QN_IOCON Driver in the project." problem_level="2" source="Pins:BOARD_InitSPI_FLASH">
+                     <feature name="enabled" evaluation="equal" configuration="cm4">
+                        <data>true</data>
+                     </feature>
+                  </dependency>
+               </dependencies>
+               <pins>
+                  <pin peripheral="FLEXCOMM2" signal="SDA_SSEL0" pin_num="8" pin_signal="GPIOA3/QDEC0_B/SCT0_OUT3/CTIMER0_MAT1/FC2_SDA_SSEL0/RFE_TX_EN">
+                     <pin_features>
+                        <pin_feature name="pull_control" value="High_Z"/>
+                        <pin_feature name="drive_strength" value="low"/>
+                     </pin_features>
+                  </pin>
+                  <pin peripheral="FLEXCOMM2" signal="SCL_MISO" pin_num="6" pin_signal="GPIOA5/ADC3/SCT0_OUT5/CTIMER0_MAT1/FC0_RXD/FC2_SCL_MISO/SPIFI_IO1">
+                     <pin_features>
+                        <pin_feature name="pull_control" value="High_Z"/>
+                        <pin_feature name="drive_strength" value="low"/>
+                     </pin_features>
+                  </pin>
+                  <pin peripheral="FLEXCOMM2" signal="SDA_MOSI" pin_num="7" pin_signal="GPIOA4/ADC2/SCT0_OUT4/CTIMER0_MAT0/FC0_TXD/FC2_SDA_MOSI/SPIFI_IO0">
+                     <pin_features>
+                        <pin_feature name="pull_control" value="High_Z"/>
+                        <pin_feature name="drive_strength" value="low"/>
+                     </pin_features>
+                  </pin>
+                  <pin peripheral="FLEXCOMM2" signal="SCK" pin_num="15" pin_signal="GPIOA30/ACMP1P/ETM_TRACEDAT3/CTIMER3_MAT1/FC2_SCK/FC3_MOSI/SPIFI_IO3">
+                     <pin_features>
+                        <pin_feature name="pull_control" value="High_Z"/>
+                        <pin_feature name="drive_strength" value="low"/>
+                     </pin_features>
+                  </pin>
+               </pins>
+            </function>
+            <function name="BOARD_InitSPI">
+               <description>Configures pin routing and optionally pin electrical features.</description>
+               <options>
+                  <coreID>cm4</coreID>
+               </options>
+               <dependencies>
+                  <dependency resourceType="Peripheral" resourceId="FLEXCOMM2" description="Peripheral FLEXCOMM2 signals are routed in the Pins Tool, but the peripheral is not initialized in the Peripherals Tool." problem_level="1" source="Pins:BOARD_InitSPI">
+                     <feature name="initialized" evaluation="equal">
+                        <data>true</data>
+                     </feature>
+                  </dependency>
+                  <dependency resourceType="SWComponent" resourceId="platform.drivers.qn_iocon" description="Pins initialization requires the QN_IOCON Driver in the project." problem_level="2" source="Pins:BOARD_InitSPI">
+                     <feature name="enabled" evaluation="equal" configuration="cm4">
+                        <data>true</data>
+                     </feature>
+                  </dependency>
+               </dependencies>
+               <pins>
+                  <pin peripheral="FLEXCOMM2" signal="SCK" pin_num="16" pin_signal="GPIOA29/ACMP1N/ETM_TRACEDAT2/CTIMER3_MAT0/FC2_SCK/FC3_MISO/SPIFI_IO2"/>
+                  <pin peripheral="FLEXCOMM2" signal="SCL_MISO" pin_num="18" pin_signal="GPIOA27/USB_DM/SCT0_IN1/CTIMER1_MAT2/FC2_SCL_MISO/QDEC0_B/BLE_IN_PROC"/>
+                  <pin peripheral="FLEXCOMM2" signal="SCL_SSEL1" pin_num="22" pin_signal="SWDIO/GPIOA23/SCT0_IN3/CTIMER3_MAT1/FC2_SCL_SSEL1/FC3_SSEL2/QDEC1_B"/>
+                  <pin peripheral="FLEXCOMM2" signal="SDA_MOSI" pin_num="19" pin_signal="GPIOA26/USB_DP/SCT0_IN0/CTIMER1_MAT0/FC2_SDA_MOSI/QDEC0_A/BLE_SYNC"/>
+                  <pin peripheral="FLEXCOMM2" signal="SDA_SSEL0" pin_num="23" pin_signal="SWCLK/GPIOA22/SCT0_IN2/CTIMER3_MAT0/FC2_SDA_SSEL0/FC3_SSEL3/QDEC1_A"/>
+                  <pin peripheral="FLEXCOMM2" signal="SSEL2" pin_num="43" pin_signal="GPIOA11/ADC7/SCT0_IN3/CTIMER1_MAT2/FC2_SSEL2/ACMP1_OUT/BLE_RX"/>
+                  <pin peripheral="FLEXCOMM2" signal="SSEL3" pin_num="24" pin_signal="GPIOA21/QDEC1_B/SCT0_OUT0/CTIMER2_MAT1/FC2_SSEL3/FC1_CTS_SDA/SPIFI_CSN"/>
+               </pins>
+            </function>
+         </functions_list>
+      </pins>
+      <clocks name="Clocks" version="15.0" enabled="true" update_project_code="true">
+         <generated_project_files>
+            <file path="board/clock_config.c" update_enabled="true"/>
+            <file path="board/clock_config.h" update_enabled="true"/>
+         </generated_project_files>
+         <clocks_profile>
+            <processor_version>24.12.0</processor_version>
+         </clocks_profile>
+         <clock_configurations>
+            <clock_configuration name="BOARD_BootClockLSRUN" id_prefix="" prefix_user_defined="false">
+               <description></description>
+               <options/>
+               <dependencies>
+                  <dependency resourceType="PinSignal" resourceId="SYSCON.XTAL32_IN" description="&apos;XTAL32_IN&apos; (Pins tool id: SYSCON.XTAL32_IN, Clocks tool id: SYSCON.XTAL32_IN) needs to be routed" problem_level="1" source="Clocks:BOARD_BootClockLSRUN">
+                     <feature name="routed" evaluation="">
+                        <data>true</data>
+                     </feature>
+                  </dependency>
+                  <dependency resourceType="PinSignal" resourceId="SYSCON.XTAL32_OUT" description="&apos;XTAL32_OUT&apos; (Pins tool id: SYSCON.XTAL32_OUT, Clocks tool id: SYSCON.XTAL32_OUT) needs to be routed" problem_level="1" source="Clocks:BOARD_BootClockLSRUN">
+                     <feature name="routed" evaluation="">
+                        <data>true</data>
+                     </feature>
+                  </dependency>
+                  <dependency resourceType="PinSignal" resourceId="SYSCON.XTAL_IN" description="&apos;XTAL_IN&apos; (Pins tool id: SYSCON.XTAL_IN, Clocks tool id: SYSCON.XTAL_IN) needs to be routed" problem_level="1" source="Clocks:BOARD_BootClockLSRUN">
+                     <feature name="routed" evaluation="">
+                        <data>true</data>
+                     </feature>
+                  </dependency>
+                  <dependency resourceType="PinSignal" resourceId="SYSCON.XTAL_OUT" description="&apos;XTAL_OUT&apos; (Pins tool id: SYSCON.XTAL_OUT, Clocks tool id: SYSCON.XTAL_OUT) needs to be routed" problem_level="1" source="Clocks:BOARD_BootClockLSRUN">
+                     <feature name="routed" evaluation="">
+                        <data>true</data>
+                     </feature>
+                  </dependency>
+                  <dependency resourceType="SWComponent" resourceId="platform.drivers.common" description="Clocks initialization requires the COMMON Driver in the project." problem_level="2" source="Clocks:BOARD_BootClockLSRUN">
+                     <feature name="enabled" evaluation="equal" configuration="cm4">
+                        <data>true</data>
+                     </feature>
+                  </dependency>
+               </dependencies>
+               <clock_sources>
+                  <clock_source id="SYSCON.XTAL.outFreq" value="32 MHz" locked="false" enabled="true"/>
+                  <clock_source id="SYSCON.XTAL32K.outFreq" value="32.768 kHz" locked="false" enabled="true"/>
+               </clock_sources>
+               <clock_outputs>
+                  <clock_output id="AHB_clock.outFreq" value="8 MHz" locked="false" accuracy=""/>
+                  <clock_output id="APB_clock.outFreq" value="8 MHz" locked="false" accuracy=""/>
+                  <clock_output id="CLK_32K_clock.outFreq" value="32.768 kHz" locked="false" accuracy=""/>
+                  <clock_output id="CLK_XIN_clock.outFreq" value="16 MHz" locked="false" accuracy=""/>
+                  <clock_output id="RTC_clock.outFreq" value="8 MHz" locked="false" accuracy=""/>
+                  <clock_output id="WDT_clock.outFreq" value="8 MHz" locked="false" accuracy=""/>
+               </clock_outputs>
+               <clock_settings>
+                  <setting id="SYSCON.AHB_DIV.scale" value="2" locked="true"/>
+                  <setting id="SYSCON.AUTO_M_MULT.scale" value="6" locked="false"/>
+                  <setting id="SYSCON.BLE_DIV.scale" value="1" locked="false"/>
+                  <setting id="SYSCON.CLK_32K_SEL.sel" value="SYSCON.XTAL32K" locked="false"/>
+                  <setting id="SYSCON.CLK_SYS_SEL.sel" value="SYSCON.XTAL_DIV" locked="false"/>
+                  <setting id="SYSCON.XTAL_DIV.scale" value="2" locked="true"/>
+               </clock_settings>
+               <called_from_default_init>false</called_from_default_init>
+            </clock_configuration>
+            <clock_configuration name="BOARD_BootClockRUN" id_prefix="" prefix_user_defined="false">
+               <description></description>
+               <options/>
+               <dependencies>
+                  <dependency resourceType="PinSignal" resourceId="SYSCON.XTAL32_IN" description="&apos;XTAL32_IN&apos; (Pins tool id: SYSCON.XTAL32_IN, Clocks tool id: SYSCON.XTAL32_IN) needs to be routed" problem_level="1" source="Clocks:BOARD_BootClockRUN">
+                     <feature name="routed" evaluation="">
+                        <data>true</data>
+                     </feature>
+                  </dependency>
+                  <dependency resourceType="PinSignal" resourceId="SYSCON.XTAL32_OUT" description="&apos;XTAL32_OUT&apos; (Pins tool id: SYSCON.XTAL32_OUT, Clocks tool id: SYSCON.XTAL32_OUT) needs to be routed" problem_level="1" source="Clocks:BOARD_BootClockRUN">
+                     <feature name="routed" evaluation="">
+                        <data>true</data>
+                     </feature>
+                  </dependency>
+                  <dependency resourceType="PinSignal" resourceId="SYSCON.XTAL_IN" description="&apos;XTAL_IN&apos; (Pins tool id: SYSCON.XTAL_IN, Clocks tool id: SYSCON.XTAL_IN) needs to be routed" problem_level="1" source="Clocks:BOARD_BootClockRUN">
+                     <feature name="routed" evaluation="">
+                        <data>true</data>
+                     </feature>
+                  </dependency>
+                  <dependency resourceType="PinSignal" resourceId="SYSCON.XTAL_OUT" description="&apos;XTAL_OUT&apos; (Pins tool id: SYSCON.XTAL_OUT, Clocks tool id: SYSCON.XTAL_OUT) needs to be routed" problem_level="1" source="Clocks:BOARD_BootClockRUN">
+                     <feature name="routed" evaluation="">
+                        <data>true</data>
+                     </feature>
+                  </dependency>
+                  <dependency resourceType="SWComponent" resourceId="platform.drivers.common" description="Clocks initialization requires the COMMON Driver in the project." problem_level="2" source="Clocks:BOARD_BootClockRUN">
+                     <feature name="enabled" evaluation="equal" configuration="cm4">
+                        <data>true</data>
+                     </feature>
+                  </dependency>
+               </dependencies>
+               <clock_sources>
+                  <clock_source id="SYSCON.XTAL.outFreq" value="32 MHz" locked="false" enabled="true"/>
+                  <clock_source id="SYSCON.XTAL32K.outFreq" value="32.768 kHz" locked="false" enabled="true"/>
+               </clock_sources>
+               <clock_outputs>
+                  <clock_output id="AHB_clock.outFreq" value="32 MHz" locked="true" accuracy="0.001"/>
+                  <clock_output id="APB_clock.outFreq" value="32 MHz" locked="true" accuracy="0.001"/>
+                  <clock_output id="BLE_clock.outFreq" value="8 MHz" locked="true" accuracy="0.001"/>
+                  <clock_output id="CLK_32K_clock.outFreq" value="32.768 kHz" locked="false" accuracy=""/>
+                  <clock_output id="CLK_XIN_clock.outFreq" value="32 MHz" locked="true" accuracy="0.001"/>
+                  <clock_output id="GPIO_clock.outFreq" value="32 MHz" locked="true" accuracy="0.001"/>
+                  <clock_output id="RTC_clock.outFreq" value="32 MHz" locked="true" accuracy="0.001"/>
+                  <clock_output id="WDT_clock.outFreq" value="32.768 kHz" locked="false" accuracy=""/>
+               </clock_outputs>
+               <clock_settings>
+                  <setting id="BLECLK_OUTPUT_ENDI" value="Enabled" locked="false"/>
+                  <setting id="Data_Path_ENDI" value="Enabled" locked="false"/>
+                  <setting id="GPIOCLK_OUTPUT_ENDI" value="Enabled" locked="false"/>
+                  <setting id="SYSCON.BLE_DIV.scale" value="4" locked="false"/>
+                  <setting id="SYSCON.CLK_32K_SEL.sel" value="SYSCON.XTAL32K" locked="false"/>
+                  <setting id="SYSCON.CLK_SYS_SEL.sel" value="SYSCON.XTAL_DIV" locked="false"/>
+                  <setting id="SYSCON.CLK_WDT_SEL.sel" value="SYSCON.CLK_32K_SEL" locked="false"/>
+                  <setting id="SYSCON.XTAL_DIV.scale" value="1" locked="true"/>
+               </clock_settings>
+               <called_from_default_init>true</called_from_default_init>
+            </clock_configuration>
+            <clock_configuration name="BOARD_BootClockHSRUN" id_prefix="" prefix_user_defined="false">
+               <description></description>
+               <options/>
+               <dependencies>
+                  <dependency resourceType="PinSignal" resourceId="SYSCON.XTAL32_IN" description="&apos;XTAL32_IN&apos; (Pins tool id: SYSCON.XTAL32_IN, Clocks tool id: SYSCON.XTAL32_IN) needs to be routed" problem_level="1" source="Clocks:BOARD_BootClockHSRUN">
+                     <feature name="routed" evaluation="">
+                        <data>true</data>
+                     </feature>
+                  </dependency>
+                  <dependency resourceType="PinSignal" resourceId="SYSCON.XTAL32_OUT" description="&apos;XTAL32_OUT&apos; (Pins tool id: SYSCON.XTAL32_OUT, Clocks tool id: SYSCON.XTAL32_OUT) needs to be routed" problem_level="1" source="Clocks:BOARD_BootClockHSRUN">
+                     <feature name="routed" evaluation="">
+                        <data>true</data>
+                     </feature>
+                  </dependency>
+                  <dependency resourceType="PinSignal" resourceId="SYSCON.XTAL_IN" description="&apos;XTAL_IN&apos; (Pins tool id: SYSCON.XTAL_IN, Clocks tool id: SYSCON.XTAL_IN) needs to be routed" problem_level="1" source="Clocks:BOARD_BootClockHSRUN">
+                     <feature name="routed" evaluation="">
+                        <data>true</data>
+                     </feature>
+                  </dependency>
+                  <dependency resourceType="PinSignal" resourceId="SYSCON.XTAL_OUT" description="&apos;XTAL_OUT&apos; (Pins tool id: SYSCON.XTAL_OUT, Clocks tool id: SYSCON.XTAL_OUT) needs to be routed" problem_level="1" source="Clocks:BOARD_BootClockHSRUN">
+                     <feature name="routed" evaluation="">
+                        <data>true</data>
+                     </feature>
+                  </dependency>
+                  <dependency resourceType="SWComponent" resourceId="platform.drivers.common" description="Clocks initialization requires the COMMON Driver in the project." problem_level="2" source="Clocks:BOARD_BootClockHSRUN">
+                     <feature name="enabled" evaluation="equal" configuration="cm4">
+                        <data>true</data>
+                     </feature>
+                  </dependency>
+               </dependencies>
+               <clock_sources>
+                  <clock_source id="SYSCON.XTAL.outFreq" value="32 MHz" locked="false" enabled="true"/>
+                  <clock_source id="SYSCON.XTAL32K.outFreq" value="32.768 kHz" locked="false" enabled="true"/>
+               </clock_sources>
+               <clock_outputs>
+                  <clock_output id="AHB_clock.outFreq" value="32 MHz" locked="false" accuracy=""/>
+                  <clock_output id="APB_clock.outFreq" value="32 MHz" locked="false" accuracy=""/>
+                  <clock_output id="BLE_clock.outFreq" value="16 MHz" locked="false" accuracy=""/>
+                  <clock_output id="CLK_32K_clock.outFreq" value="32.768 kHz" locked="false" accuracy=""/>
+                  <clock_output id="CLK_XIN_clock.outFreq" value="32 MHz" locked="false" accuracy=""/>
+                  <clock_output id="GPIO_clock.outFreq" value="32 MHz" locked="false" accuracy=""/>
+                  <clock_output id="RTC_clock.outFreq" value="32 MHz" locked="false" accuracy=""/>
+                  <clock_output id="WDT_clock.outFreq" value="32 MHz" locked="false" accuracy=""/>
+               </clock_outputs>
+               <clock_settings>
+                  <setting id="BLECLK_OUTPUT_ENDI" value="Enabled" locked="false"/>
+                  <setting id="BLECLK_OUTPUT_SEL" value="_16MHz" locked="false"/>
+                  <setting id="Data_Path_ENDI" value="Enabled" locked="false"/>
+                  <setting id="GPIOCLK_OUTPUT_ENDI" value="Enabled" locked="false"/>
+                  <setting id="SYSCON.AHB_DIV.scale" value="1" locked="true"/>
+                  <setting id="SYSCON.BLE_DIV.scale" value="2" locked="true"/>
+                  <setting id="SYSCON.CLK_32K_SEL.sel" value="SYSCON.XTAL32K" locked="false"/>
+                  <setting id="SYSCON.CLK_SYS_SEL.sel" value="SYSCON.XTAL_DIV" locked="false"/>
+                  <setting id="SYSCON.XTAL_DIV.scale" value="1" locked="true"/>
+               </clock_settings>
+               <called_from_default_init>false</called_from_default_init>
+            </clock_configuration>
+         </clock_configurations>
+      </clocks>
+      <dcdx name="DCDx" version="4.0" enabled="false" update_project_code="true">
+         <generated_project_files/>
+         <dcdx_profile>
+            <processor_version>N/A</processor_version>
+         </dcdx_profile>
+         <dcdx_configurations/>
+      </dcdx>
+      <periphs name="Peripherals" version="15.0" enabled="false" update_project_code="true">
+         <generated_project_files/>
+         <peripherals_profile>
+            <processor_version>N/A</processor_version>
+         </peripherals_profile>
+         <functional_groups/>
+         <components/>
+      </periphs>
+      <tee name="TEE" version="8.0" enabled="false" update_project_code="true">
+         <generated_project_files/>
+         <tee_profile>
+            <processor_version>N/A</processor_version>
+         </tee_profile>
+      </tee>
+   </tools>
+</configuration>
