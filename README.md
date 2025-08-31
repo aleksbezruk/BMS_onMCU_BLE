@@ -32,7 +32,9 @@ In general, It's preferrable to use framework based on scripting language like P
 pytest framework is used: <br>
 > pip install -U pytest <br>
 > pip install pytest-dependency <br>
-For BLE test the SimpleBLE library is used.
+For BLE test the SimpleBLE library is used: <br>
+> check installed version: pip show simplepyble <br>
+> install: pip install simplepyble==0.10.3 OR pip install simplepyble==0.10.3 --break-system-packages <br>
 
 ### VI. Code coverage
 1. __*gcov*__ code instrumentation feature of GCC compiler is used in order to collect a coverage data. <br>
