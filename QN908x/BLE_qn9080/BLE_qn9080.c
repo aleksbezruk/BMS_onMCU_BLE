@@ -4,7 +4,7 @@
  * @note The BLE_qn9080 module is used to evaluate and bring up the BLE functionality
  *       on the QN9080 platform.
  * @details The module uses the QN9080's BLE stack and its APIs to manage advertisements and connections.
- * @version 0.1.0
+ * @version 0.5.0
  */
 
 #include "BLE_qn9080.h"

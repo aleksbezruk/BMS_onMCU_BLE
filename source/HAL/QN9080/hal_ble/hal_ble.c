@@ -1,7 +1,7 @@
 /**
  * @file hal_ble.c
  * @brief Source file for BLE (Bluetooth Low Energy) HAL (Hardware Abstraction Layer) functions.
- * @version 0.1.0
+ * @version 0.5.0
  * @note QN9080 specific implementation
  *
  */

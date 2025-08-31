@@ -3,7 +3,7 @@
  *
  * @brief Main task data & API definition.
  *
- * @version 0.4.0
+ * @version 0.5.0
  */
 
 #ifndef MAIN_MODULE_H
@@ -11,9 +11,9 @@
 
 #include "bms_events.h"
 
-////////////////////////////
+// ==========================
 /// BMS states definition
-////////////////////////////
+// ==========================
 /*! BMS states */
 typedef enum {
     BMS_STATE_IDLE,
@@ -23,9 +23,9 @@ typedef enum {
     BMS_STATE_SHELF
 } BMS_state_t;
 
-////////////////////////////
+// ========================
 /// API
-////////////////////////////
+// ========================
 void MAIN_post_evt(Main_evt_t* evt, Evt_types_t eventType);
 
 #endif // MAIN_MODULE_H

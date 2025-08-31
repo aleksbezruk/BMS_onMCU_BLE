@@ -67,7 +67,7 @@
  *                    3.1 Advertising interval - 3 seconds
  *                    3.2 ADC measurements duration - 5 measurements to avreage result
  * 
- * @version 0.4.0
+ * @version 0.5.0
  */
 
 #include <stdbool.h>

@@ -3,15 +3,15 @@
  *
  * @brief Defines Low Power modes and tickless mode of the BMS/MCU.
  *
- * @version 0.4.0
+ * @version 0.5.0
  */
 
 #ifndef LP_MODULE_H
 #define LP_MODULE_H
 
-///////////////////////
+// =====================
 // Defines
-///////////////////////
+// =====================
 /** BMS Low Power modes definitiom. 
  * @note 1. The modes introduce Abstarcted low power modes of BMS
  *          that allow to abstract BMS power model across different
@@ -36,9 +36,9 @@ typedef enum {
     LP_INIT_STATUS_FAIL
 } LP_status_t;
 
-///////////////////////
+// ======================
 // API
-///////////////////////
+// ======================
 LP_status_t LP_init(void);
 void LP_setMode(LP_modes_t mode);
 LP_periph_ready_t LP_getPeriphStatus(void);

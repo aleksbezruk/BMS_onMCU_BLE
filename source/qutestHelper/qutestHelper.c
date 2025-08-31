@@ -2,20 +2,20 @@
  * @file qutestHelper.c
  * @brief Implements helper functions for QUtest. 
  * 
- * @version 0.4.0
+ * @version 0.5.0
  */
 
 #include "qspyHelper.h"
 
-///////////////////////
+// ======================
 // Data
-///////////////////////
+// ======================
 uint32_t errCode    __attribute__((section(".noinit")));
 uint32_t errCodeStatus  __attribute__((section(".noinit")));
 
-///////////////////////
+// ======================
 // Code
-///////////////////////
+// ======================
 void QS_onTestEvt(QEvt * e) {
     // TODO: implement
 }

@@ -4,7 +4,7 @@
  * @details This file contains the configuration for OSAL IRQ priorities, including priority levels
  *          and other IRQ-related settings.
  * @note PSOC63 specific implementation details.
- * @version 0.1.0
+ * @version 0.5.0
  */
 
 #ifndef OSAL_IRQ_PRIO_H

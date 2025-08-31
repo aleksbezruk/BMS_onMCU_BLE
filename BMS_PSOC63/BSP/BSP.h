@@ -5,7 +5,7 @@
  *        The board contains CYBLE-416045-02 chip based on 
  *        PSoC 6 MCU CY8C6347BZI-BLD53
  * 
- * @version 0.4.0
+ * @version 0.5.0
  */
 
 #ifndef __BSP_H__

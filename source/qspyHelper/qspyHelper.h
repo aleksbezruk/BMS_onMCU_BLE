@@ -3,7 +3,7 @@
  * 
  * @brief Helper functions for QSPY & QUtest framework. Also includes API for Application
  * 
- * @version 0.4.0
+ * @version 0.5.0
  */
 
 #ifndef QSPYHELPER_MODULE_H
@@ -12,9 +12,9 @@
 #include <stdint.h>
 #include "qpc.h"
 
-///////////////////
+// =================
 // Definitions
-///////////////////
+// =================
 
 /*! QSPY status */
 typedef enum {
@@ -60,9 +60,9 @@ typedef enum {
     QSPY_TX_NOT_EMPTY
 } QSPY_tx_status_t;
 
-///////////////////
+// =================
 // API 
-///////////////////
+// =================
 uint8_t QS_onStartup(void const *arg);
 void QS_onIdle(void);
 void QS_onFlush(void);

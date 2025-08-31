@@ -3,7 +3,7 @@
  *
  * @brief SIG Standard Battery service functions implementation
  *
- * @version 0.4.0
+ * @version 0.5.0
  */
 
 #include <stdbool.h>

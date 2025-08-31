@@ -3,7 +3,7 @@
  *
  * @brief SIG Standard Battery service functions declaration
  *
- * @version 0.4.0
+ * @version 0.5.0
  */
 
 #ifndef BLE_BAS_MODULE_H
