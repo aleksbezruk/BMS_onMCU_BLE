@@ -49,9 +49,9 @@ static void handleAdcEvt_(Evt_adc_data_t* evt);
 static void handleSystemEvt_(Evt_sys_data_t* evt);
 
 static void MAIN_SM_handleSysEvt(Evt_sys_data_t* evt);
-static void MAIN_SM_charge_setBal(Evt_sys_data_t* evt);
 static void MAIN_SM_print_onStateChange(void);
 static void MAIN_SM_handleAdcEvt(Evt_adc_data_t* evt);
+static void MAIN_balanceBanks(Evt_adc_data_t* evt);
 
 static void MAIN_initDischargeSw(void);
 static void MAIN_initChargeSw(void);
@@ -82,6 +82,13 @@ void vApplicationIdleHook(void);
 // ================
 #define MAIN_TASK_STACK_SIZE 1024U   /**< size in bytes, aligned to 8 bytes */
 #define MAIN_QUEUE_SIZE 5U
+
+// Balancing algorithm constants
+#define MAIN_BALANCE_THRESHOLD_MV 30  /**< Maximum allowed voltage difference between banks in mV */
+#define MAIN_BALANCE_HYSTERESIS_MV 10  /**< Hysteresis band around threshold to prevent bouncing */
+
+/* Static variables */
+static bool s_balancing_active = false;  /**< Track if balancing is currently active */
 
 // ================
 // Private data
@@ -732,6 +739,149 @@ static void MAIN_disableBalancerSw(uint8_t balBanksDisMask)
  * @todo Implement banks balancing algorithm based on banks' voltage
  */
 
+/**
+ * @brief Banks balancing algorithm for 4S Li-Ion accumulator with hysteresis
+ * 
+ * @param[in] evt Pointer to ADC event containing bank voltages
+ * 
+ * @retval None
+ * 
+ * @details This function implements cell balancing with hysteresis to prevent
+ *          oscillation of balancer switches. When balancing is not active and
+ *          voltage difference exceeds MAIN_BALANCE_THRESHOLD_MV (30mV), 
+ *          balancing is enabled. When balancing is active, it continues until
+ *          voltage difference drops below (MAIN_BALANCE_THRESHOLD_MV - 
+ *          MAIN_BALANCE_HYSTERESIS_MV), providing 10mV of hysteresis.
+ */
+static void MAIN_balanceBanks(Evt_adc_data_t* evt)
+{
+    HAL_ASSERT(evt != NULL, __FILE__, __LINE__);
+
+    // Array of bank voltages for easier processing
+    int16_t bankVoltages[4] = {
+        evt->bank1_mv,
+        evt->bank2_mv,
+        evt->bank3_mv,
+        evt->bank4_mv
+    };
+
+    // Find the minimum and maximum voltage among all banks
+    int16_t minVoltage = bankVoltages[0];
+    int16_t maxVoltage = bankVoltages[0];
+    for (uint8_t i = 1; i < 4; i++) {
+        if (bankVoltages[i] < minVoltage) {
+            minVoltage = bankVoltages[i];
+        }
+        if (bankVoltages[i] > maxVoltage) {
+            maxVoltage = bankVoltages[i];
+        }
+    }
+
+    // Calculate voltage spread
+    int16_t voltageDiff = maxVoltage - minVoltage;
+    
+    // Implement hysteresis logic
+    bool shouldBalance = false;
+    
+    if (!s_balancing_active) {
+        // Start balancing if voltage difference exceeds threshold
+        if (voltageDiff > MAIN_BALANCE_THRESHOLD_MV) {
+            shouldBalance = true;
+            s_balancing_active = true;
+        }
+    } else {
+        // Continue balancing until voltage difference drops below (threshold - hysteresis)
+        if (voltageDiff > (MAIN_BALANCE_THRESHOLD_MV - MAIN_BALANCE_HYSTERESIS_MV)) {
+            shouldBalance = true;
+        } else {
+            s_balancing_active = false;
+        }
+    }
+
+    // Check each bank against minimum voltage and enable/disable balancing
+    uint8_t banksToBalance = 0;
+    uint8_t banksToDisable = 0;
+
+    if (shouldBalance) {
+        for (uint8_t i = 0; i < 4; i++) {
+            int16_t bankVoltageDiff = bankVoltages[i] - minVoltage;
+            
+            // Individual bank hysteresis logic
+            // Check current balancer state for this bank from switch state
+            Switch_state_t* sw_state = (Switch_state_t *) &swState_;
+            bool bankCurrentlyBalancing = false;
+            
+            switch (i) {
+                case 0: bankCurrentlyBalancing = (sw_state->setBank1Balancer == 1); break;
+                case 1: bankCurrentlyBalancing = (sw_state->setBank2Balancer == 1); break;
+                case 2: bankCurrentlyBalancing = (sw_state->setBank3Balancer == 1); break;
+                case 3: bankCurrentlyBalancing = (sw_state->setBank4Balancer == 1); break;
+            }
+            
+            if (!bankCurrentlyBalancing) {
+                // Start balancing this bank if voltage difference exceeds hysteresis threshold
+                if (bankVoltageDiff > MAIN_BALANCE_HYSTERESIS_MV) {
+                    banksToBalance |= (1U << i);
+                } else {
+                    banksToDisable |= (1U << i);
+                }
+            } else {
+                // Continue balancing this bank until voltage difference drops to 0
+                if (bankVoltageDiff > 0) {
+                    banksToBalance |= (1U << i);
+                } else {
+                    banksToDisable |= (1U << i);
+                }
+            }
+        }
+    } else {
+        // Disable all balancing when not in balancing mode
+        banksToDisable = 0x0F; // All 4 banks
+    }
+
+    // Apply balancing decisions using existing mask definitions
+    if (banksToBalance & 0x01) {
+        MAIN_enableBalancerSw(HAL_BMS_BANK1_MASK);
+    }
+    if (banksToBalance & 0x02) {
+        MAIN_enableBalancerSw(HAL_BMS_BANK2_MASK);
+    }
+    if (banksToBalance & 0x04) {
+        MAIN_enableBalancerSw(HAL_BMS_BANK3_MASK);
+    }
+    if (banksToBalance & 0x08) {
+        MAIN_enableBalancerSw(HAL_BMS_BANK4_MASK);
+    }
+
+    // Disable balancing for banks that don't need it
+    if (banksToDisable & 0x01) {
+        MAIN_disableBalancerSw(HAL_BMS_BANK1_MASK);
+    }
+    if (banksToDisable & 0x02) {
+        MAIN_disableBalancerSw(HAL_BMS_BANK2_MASK);
+    }
+    if (banksToDisable & 0x04) {
+        MAIN_disableBalancerSw(HAL_BMS_BANK3_MASK);
+    }
+    if (banksToDisable & 0x08) {
+        MAIN_disableBalancerSw(HAL_BMS_BANK4_MASK);
+    }
+
+    // Log balancing decisions for debugging
+    QS_BEGIN_ID(MAIN, 0 /*prio/ID for local Filters*/)
+        QS_STR("Banks balancing: min_mv=");
+        QS_I16(0, minVoltage);
+        QS_STR(" max_mv=");
+        QS_I16(0, maxVoltage);
+        QS_STR(" diff_mv=");
+        QS_I16(0, voltageDiff);
+        QS_STR(" active=");
+        QS_U8(0, s_balancing_active ? 1 : 0);
+        QS_STR(" balance_mask=");
+        QS_U8(0, banksToBalance);
+    QS_END()
+}
+
 // ===========================
 // State machine functions
 // ===========================
@@ -776,9 +926,12 @@ static void MAIN_SM_handleSysEvt(Evt_sys_data_t* evt)
                 MAIN_setChargeSw(HAL_BMS_CHARGE_OFF);
                 bmsState_ = BMS_STATE_IDLE;
                 MAIN_SM_print_onStateChange();
-            } else {
-                MAIN_SM_charge_setBal(evt);
+                // Reset balancing state when exiting charge mode
+                s_balancing_active = false;
+                MAIN_disableBalancerSw(HAL_BMS_ALL_BANKS);
             }
+            // Note: Manual balancer control removed - now using automatic balancing
+            // based on ADC measurements in MAIN_SM_handleAdcEvt()
             break;
         }
 
@@ -804,13 +957,16 @@ static void MAIN_SM_handleSysEvt(Evt_sys_data_t* evt)
 }
 
 /**
- * @brief Sets balancing switches based on the event data
+ * @brief Sets balancing switches based on the event data (for manual/debug control)
  * 
  * @param[in] evt Pointer to incoming event
  * 
  * @retval None
+ * 
+ * @note This function is now exposed for debugging/testing purposes.
+ *       It can be called from qspyHelper.c or other modules for manual balancer control.
  */
-static void MAIN_SM_charge_setBal(Evt_sys_data_t* evt)
+void MAIN_SM_charge_setBal(Evt_sys_data_t* evt)
 {
     if (evt->setBank1Balancer == 1U) {
         MAIN_enableBalancerSw(HAL_BMS_BANK1_MASK);
@@ -883,10 +1039,18 @@ static void MAIN_SM_handleAdcEvt(Evt_adc_data_t* evt)
 
         case BMS_STATE_CHARGE:
         {
-            if (evt->full_mv > ADC_BMS_FULL_VBAT_MAX) {
+            // Stop charging if total voltage exceeds maximum OR any bank exceeds 4200mV
+            if ((evt->full_mv > ADC_BMS_FULL_VBAT_MAX) ||
+                (evt->bank1_mv > 4200) ||
+                (evt->bank2_mv > 4200) ||
+                (evt->bank3_mv > 4200) ||
+                (evt->bank4_mv > 4200)) {
                 Evt_sys_data_t evt = {0};
                 evt.setChargeState = 0;
                 MAIN_post_evt((Main_evt_t*) &evt, EVT_SYSTEM);
+            } else {
+                // Perform banks balancing during charging
+                MAIN_balanceBanks(evt);
             }
 #if !defined(BMS_DISABLE_BLE)
             /** Update VBAT via BLE */
