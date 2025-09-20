@@ -1115,6 +1115,95 @@ void vApplicationStackOverflowHook( TaskHandle_t xTask, char *pcTaskName )
     QS_FLUSH(); // Flush QSPY output
 }
 
+// =========================
+// Cells balancing control
+// =========================
+/** 
+ * @brief Enable balancer banks by mask
+ * 
+ * @param[in] balBanksEnMask  mask that defines Banks to enable
+ * 
+ * @retval None
+ * 
+ */
+static void MAIN_enableBalancerSw(uint8_t balBanksEnMask)
+{
+    HAL_ASSERT((balBanksEnMask > 0) && (balBanksEnMask <= HAL_BMS_ALL_BANKS), __FILE__, __LINE__);
+
+    if (balBanksEnMask & HAL_BMS_BANK1_MASK) {
+        HAL_GPIO_set_pin(HAL_BAL_BANK1_PORT, HAL_BAL_BANK1_PIN, HAL_BAL_BANK1_ON);
+    }
+    if (balBanksEnMask & HAL_BMS_BANK2_MASK) {
+        HAL_GPIO_set_pin(HAL_BAL_BANK2_PORT, HAL_BAL_BANK2_PIN, HAL_BAL_BANK2_ON);
+    }
+    if (balBanksEnMask & HAL_BMS_BANK3_MASK) {
+        HAL_GPIO_set_pin(HAL_BAL_BANK3_PORT, HAL_BAL_BANK3_PIN, HAL_BAL_BANK3_ON);
+    }
+    if (balBanksEnMask & HAL_BMS_BANK4_MASK) {
+        HAL_GPIO_set_pin(HAL_BAL_BANK4_PORT, HAL_BAL_BANK4_PIN, HAL_BAL_BANK4_ON);
+    }
+}
+
+/** 
+ * @brief Disnable balancer banks by mask
+ * 
+ * @param[in] balBanksDisMask  mask that defines Banks to disable
+ * 
+ * @retval None
+ * 
+ */
+static void MAIN_disableBalancerSw(uint8_t balBanksDisMask)
+{
+    HAL_ASSERT((balBanksDisMask > 0) && (balBanksDisMask <= HAL_BMS_ALL_BANKS), __FILE__, __LINE__);
+
+    if (balBanksDisMask & HAL_BMS_BANK1_MASK) {
+        HAL_GPIO_set_pin(HAL_BAL_BANK1_PORT, HAL_BAL_BANK1_PIN, HAL_BAL_BANK1_OFF);
+    }
+    if (balBanksDisMask & HAL_BMS_BANK2_MASK) {
+        HAL_GPIO_set_pin(HAL_BAL_BANK2_PORT, HAL_BAL_BANK2_PIN, HAL_BAL_BANK2_OFF);
+    }
+    if (balBanksDisMask & HAL_BMS_BANK3_MASK) {
+        HAL_GPIO_set_pin(HAL_BAL_BANK3_PORT, HAL_BAL_BANK3_PIN, HAL_BAL_BANK3_OFF);
+    }
+    if (balBanksDisMask & HAL_BMS_BANK4_MASK) {
+        HAL_GPIO_set_pin(HAL_BAL_BANK4_PORT, HAL_BAL_BANK4_PIN, HAL_BAL_BANK4_OFF);
+    }
+}
+
+/**
+ * @brief Sets balancing switches based on the event data (for manual/debug control)
+ * 
+ * @param[in] evt Pointer to incoming event
+ * 
+ * @retval None
+ * 
+ * @note This function is now exposed for debugging/testing purposes.
+ *       It can be called from qspyHelper.c or other modules for manual balancer control.
+ */
+void MAIN_SM_charge_setBal(Evt_sys_data_t* evt)
+{
+    if (evt->setBank1Balancer == 1U) {
+        MAIN_enableBalancerSw(HAL_BMS_BANK1_MASK);
+    } else {
+        MAIN_disableBalancerSw(HAL_BMS_BANK1_MASK);
+    }
+    if (evt->setBank2Balancer == 1U) {
+        MAIN_enableBalancerSw(HAL_BMS_BANK2_MASK);
+    } else {
+        MAIN_disableBalancerSw(HAL_BMS_BANK2_MASK);
+    }
+    if (evt->setBank3Balancer == 1U) {
+        MAIN_enableBalancerSw(HAL_BMS_BANK3_MASK);
+    } else {
+        MAIN_disableBalancerSw(HAL_BMS_BANK3_MASK);
+    }
+    if (evt->setBank4Balancer == 1U) {
+        MAIN_enableBalancerSw(HAL_BMS_BANK4_MASK);
+    } else {
+        MAIN_disableBalancerSw(HAL_BMS_BANK4_MASK);
+    }
+}
+
 #if 0
 // Stub, test Discharge switch only for QN9080DK
 void MAIN_post_evt(Main_evt_t* evt, Evt_types_t eventType)

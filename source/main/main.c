@@ -1021,7 +1021,11 @@ static void MAIN_SM_handleAdcEvt(Evt_adc_data_t* evt)
 
         case BMS_STATE_DISCHARGE:
         {
-            if (evt->full_mv < ADC_BMS_FULL_VBAT_MIN) {
+            if ((evt->full_mv < ADC_BMS_FULL_VBAT_MIN) ||
+                (evt->bank1_mv < ASC_BMS_BANK_VOLTAGE_MIN) ||
+                (evt->bank2_mv < ASC_BMS_BANK_VOLTAGE_MIN) ||
+                (evt->bank3_mv < ASC_BMS_BANK_VOLTAGE_MIN) ||
+                (evt->bank4_mv < ASC_BMS_BANK_VOLTAGE_MIN)) {
                 Evt_sys_data_t evt = {0};
                 evt.setDischState = 0;
                 MAIN_post_evt((Main_evt_t*) &evt, EVT_SYSTEM);
@@ -1041,10 +1045,10 @@ static void MAIN_SM_handleAdcEvt(Evt_adc_data_t* evt)
         {
             // Stop charging if total voltage exceeds maximum OR any bank exceeds 4200mV
             if ((evt->full_mv > ADC_BMS_FULL_VBAT_MAX) ||
-                (evt->bank1_mv > 4200) ||
-                (evt->bank2_mv > 4200) ||
-                (evt->bank3_mv > 4200) ||
-                (evt->bank4_mv > 4200)) {
+                (evt->bank1_mv > ASC_BMS_BANK_VOLTAGE_MAX) ||
+                (evt->bank2_mv > ASC_BMS_BANK_VOLTAGE_MAX) ||
+                (evt->bank3_mv > ASC_BMS_BANK_VOLTAGE_MAX) ||
+                (evt->bank4_mv > ASC_BMS_BANK_VOLTAGE_MAX)) {
                 Evt_sys_data_t evt = {0};
                 evt.setChargeState = 0;
                 MAIN_post_evt((Main_evt_t*) &evt, EVT_SYSTEM);
