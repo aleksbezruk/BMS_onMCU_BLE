@@ -10,8 +10,8 @@
  *          3. Set Digital Output state
  *
  * @note PSOC63
- * 
- * @version 0.5.0
+ *
+ * @version 0.6.0
  */
 
 #ifndef HAL_GPIO_MODULE

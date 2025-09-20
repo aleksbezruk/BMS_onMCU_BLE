@@ -4,8 +4,8 @@
  * @brief Implementation of LED functions.
  *
  * @note PSOC63
- * 
- * @version 0.5.0
+ *
+ * @version 0.6.0
  */
 #include "cy_pdl.h"
 #include "BSP.h"

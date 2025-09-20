@@ -3,7 +3,7 @@
  * @brief GATT Database definitions for BMS application
  * @note Static GATT database definition using NXP macros
  * @details Contains GAP, Battery, BMS, and Device Information services
- * @version 0.5.0
+ * @version 0.6.0
  */
 
 #ifndef GATT_DB_H

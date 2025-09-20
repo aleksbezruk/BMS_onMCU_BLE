@@ -2,7 +2,7 @@
  * @file hal_nvm.h
  * @brief Header file for Non-Volatile Memory (NVM) HAL.
  * @note QN9080 specific implementation
- * @version 0.5.0
+ * @version 0.6.0
  */
 
 #ifndef HAL_NVM_H

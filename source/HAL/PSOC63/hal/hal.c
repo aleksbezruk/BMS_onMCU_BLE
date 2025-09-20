@@ -2,7 +2,7 @@
  * @file  hal.c
  * @brief Implementation of generic HAL functions like init board/hardware, generic utils
  * @note PSOC63
- * @version 0.5.0
+ * @version 0.6.0
  */
 
 #include "hal.h"

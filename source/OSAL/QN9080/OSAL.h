@@ -15,7 +15,7 @@
  * 
  * @note NXP QN9080 OSAL implementation.
  * 
- * @version 0.5.0
+ * @version 0.6.0
  */
 
 #ifndef OSAL_H

@@ -5,7 +5,7 @@
  *
  * @note QN9080
  * 
- * @version 0.5.0
+ * @version 0.6.0
  */
 
 #include "fsl_device_registers.h"
