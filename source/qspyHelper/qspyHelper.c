@@ -233,6 +233,28 @@ void QS_onCommand(uint8_t cmdId,
             MAIN_post_evt((Main_evt_t*) &evt, EVT_SYSTEM);
             break;
         }
+        case QS_CMD_BMS_MANUAL_BALANCE:
+        {
+            // Manual balancer control for debugging/testing
+            // param1: bit mask for balancer states (bit 0=bank1, bit 1=bank2, bit 2=bank3, bit 3=bank4)
+            // param2: unused (reserved for future)
+            // param3: unused (reserved for future)
+            Evt_sys_data_t evt = {0};
+            evt.setBank1Balancer = (param1 & 0x01) ? 1 : 0;
+            evt.setBank2Balancer = (param1 & 0x02) ? 1 : 0;
+            evt.setBank3Balancer = (param1 & 0x04) ? 1 : 0;
+            evt.setBank4Balancer = (param1 & 0x08) ? 1 : 0;
+            
+            // Call manual balancer control function directly
+            MAIN_SM_charge_setBal(&evt);
+
+            // Log the command for debugging
+            QS_BEGIN_ID(MAIN, 0 /*prio/ID for local Filters*/)
+                QS_STR("Sys evt, set switches state: ");
+                QS_U8(0, (param1<<2));
+            QS_END()
+            break;
+        }
 #ifndef BMS_DISABLE_BLE
         case QS_CMD_BLE_START_ADV:
         {

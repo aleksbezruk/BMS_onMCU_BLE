@@ -28,6 +28,17 @@ typedef enum {
 // ========================
 void MAIN_post_evt(Main_evt_t* evt, Evt_types_t eventType);
 
+// ========================
+/// Debug/Testing API
+// ========================
+/**
+ * @brief Manual balancer control function for debugging/testing
+ * @param[in] evt System event containing balancer switch states
+ * @note This function allows manual control of balancer switches,
+ *       useful for debugging and testing purposes from qspyHelper.c
+ */
+void MAIN_SM_charge_setBal(Evt_sys_data_t* evt);
+
 #endif // MAIN_MODULE_H
 
 /* [] END OF FILE */
