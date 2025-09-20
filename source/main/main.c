@@ -704,7 +704,7 @@ static void MAIN_enableBalancerSw(uint8_t balBanksEnMask)
 }
 
 /** 
- * @brief Disnable balancer banks by mask
+ * @brief Disable balancer banks by mask
  * 
  * @param[in] balBanksDisMask  mask that defines Banks to disable
  * 
@@ -808,6 +808,7 @@ static void MAIN_balanceBanks(Evt_adc_data_t* evt)
             
             // Individual bank hysteresis logic
             // Check current balancer state for this bank from switch state
+            // NOTE: It is assumed that swState_ is layout-compatible with Switch_state_t.
             Switch_state_t* sw_state = (Switch_state_t *) &swState_;
             bool bankCurrentlyBalancing = false;
             
