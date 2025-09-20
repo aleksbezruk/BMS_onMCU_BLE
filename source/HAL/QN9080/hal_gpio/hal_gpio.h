@@ -11,7 +11,7 @@
  *
  * @note QN9080
  * 
- * @version 0.5.0
+ * @version 0.6.0
  */
 
 #ifndef HAL_GPIO_MODULE

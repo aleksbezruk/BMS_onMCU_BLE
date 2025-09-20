@@ -4,8 +4,8 @@
  * @brief Implementation of GPIO functions.
  *
  * @note QN9080
- * 
- * @version 0.5.0
+ *
+ * @version 0.6.0
  */
 
 #include "hal_gpio.h"

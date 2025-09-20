@@ -11,7 +11,7 @@
  *          thats why I guess SIG group didn't put any restrictions to AIOS charactersitics definition
  *          because in almost all cases it's application dependent. 
  *
- * @version 0.5.0
+ * @version 0.6.0
  */
 
 #ifndef BLE_AIOS_MODULE_H

@@ -2,7 +2,7 @@
  * @file qutestHelper.c
  * @brief Implements helper functions for QUtest. 
  * 
- * @version 0.5.0
+ * @version 0.6.0
  */
 
 #include "qspyHelper.h"

@@ -3,7 +3,7 @@
  *
  * @brief Main task data & API definition.
  *
- * @version 0.5.0
+ * @version 0.6.0
  */
 
 #ifndef MAIN_MODULE_H
