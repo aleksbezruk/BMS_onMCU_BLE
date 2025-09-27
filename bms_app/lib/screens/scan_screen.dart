@@ -10,6 +10,7 @@ import '../utils/permissions.dart';
 import '../utils/targeted_permissions.dart';
 import 'debug_screen.dart';
 import 'simple_scanner.dart';
+import 'device_details_screen.dart';
 
 class ScanScreen extends StatefulWidget {
   @override
@@ -298,45 +299,6 @@ class _ScanScreenState extends State<ScanScreen> {
     await _bleService.startScan();
   }
   
-  void _showPermissionIssueDialog() {
-    showDialog(
-      context: context,
-      builder: (BuildContext context) {
-        return AlertDialog(
-          title: Text('BLE Permissions Issue'),
-          content: Column(
-            mainAxisSize: MainAxisSize.min,
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text('Based on your device, you need both:'),
-              SizedBox(height: 8),
-              Text('✅ Nearby devices (Bluetooth) - GRANTED'),
-              Text('❌ Location access - MISSING'),
-              SizedBox(height: 12),
-              Text(
-                'Location is required by Android for BLE scanning. Your location is NOT tracked.',
-                style: TextStyle(fontSize: 12, fontStyle: FontStyle.italic),
-              ),
-            ],
-          ),
-          actions: [
-            TextButton(
-              onPressed: () => Navigator.of(context).pop(),
-              child: Text('Cancel'),
-            ),
-            ElevatedButton(
-              onPressed: () {
-                Navigator.of(context).pop();
-                openAppSettings();
-              },
-              child: Text('Open Settings'),
-            ),
-          ],
-        );
-      },
-    );
-  }
-  
   void _stopScan() async {
     await _bleService.stopScan();
   }
@@ -362,11 +324,10 @@ class _ScanScreenState extends State<ScanScreen> {
     Navigator.pop(context); // Close loading dialog
     
     if (connected) {
-      // Navigate to monitoring screen (placeholder for now)
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text('Connected to ${device.name}'),
-          backgroundColor: Colors.green,
+      // Navigate to device details screen
+      Navigator.of(context).push(
+        MaterialPageRoute(
+          builder: (context) => DeviceDetailsScreen(device: device),
         ),
       );
     } else {
