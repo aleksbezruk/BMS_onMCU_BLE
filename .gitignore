@@ -17,3 +17,59 @@ mtb_shared/
 build/
 build-debug/
 build-test/
+
+# Flutter/Dart specific
+**/build/
+**/.dart_tool/
+**/.packages
+**/pubspec.lock
+**/.flutter-plugins
+**/.flutter-plugins-dependencies
+
+# Flutter Android specific
+**/android/**/gradle-wrapper.jar
+**/android/.gradle/
+**/android/captures/
+**/android/gradlew
+**/android/gradlew.bat
+**/android/local.properties
+**/android/**/GeneratedPluginRegistrant.java
+**/android/app/debug/
+**/android/app/profile/
+**/android/app/release/
+
+# Flutter iOS specific (if added later)
+**/ios/**/*.mode1v3
+**/ios/**/*.mode2v3
+**/ios/**/*.moved-aside
+**/ios/**/*.pbxuser
+**/ios/**/*.perspectivev3
+**/ios/**/*sync/
+**/ios/**/.sconsign.dblite
+**/ios/**/.tags*
+**/ios/**/.vagrant/
+**/ios/**/DerivedData/
+**/ios/**/Icon?
+**/ios/**/Pods/
+**/ios/**/.symlinks/
+**/ios/**/profile
+**/ios/**/xcuserdata
+**/ios/.generated/
+**/ios/Flutter/App.framework
+**/ios/Flutter/Flutter.framework
+**/ios/Flutter/Flutter.podspec
+**/ios/Flutter/Generated.xcconfig
+**/ios/Flutter/ephemeral
+**/ios/Flutter/app.flx
+**/ios/Flutter/app.zip
+**/ios/Flutter/flutter_assets/
+**/ios/Flutter/flutter_export_environment.sh
+**/ios/ServiceDefinitions.json
+**/ios/Runner/GeneratedPluginRegistrant.*
+
+# Flutter Linux specific
+**/linux/**/flutter/ephemeral/
+
+# Flutter generated files that should be ignored
+**/android/app/src/debug/AndroidManifest.xml
+**/android/app/src/profile/AndroidManifest.xml
