@@ -166,7 +166,6 @@ int32_t HAL_ADC_read(HAL_ADC_channel_t channel)
     /** Check if the channel is valid */
     HAL_ASSERT(((uint8_t)channel < HAL_ADC_NUM_CHNLS), __FILE__, __LINE__);
 
-    int32_t adc_value = 0;  // mV
     uint32_t adcConvResult = 0;
 
     /** Get ADC channel */
@@ -203,6 +202,7 @@ int32_t HAL_ADC_read(HAL_ADC_channel_t channel)
     #error "ADC_REFERENCE_SOURCE must be defined as either ADC_REFERENCE_VCC or ADC_REFERENCE_BANDGAP"
 #endif // ADC_REFERENCE_SOURCE
 
+    int32_t adc_value = 0;  // mV
     adc_value = ADC_ConversionResult2Mv(
         ADC,
         ch,

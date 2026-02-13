@@ -294,7 +294,6 @@ static int16_t calcBankAvgVolt_(HAL_ADC_channel_t chnl, float convRatio, int16_t
     int16_t mv;
     float avgAdcIn = 0;
     uint8_t i;
-    int16_t retVal;
     float adcMeasSum = 0;
 
     /** ADC measurements */
@@ -308,7 +307,40 @@ static int16_t calcBankAvgVolt_(HAL_ADC_channel_t chnl, float convRatio, int16_t
 
     /** Averaging & return */
     *pAdcInVolt = avgAdcIn / ADC_NUM_MEAS;
-    retVal = adcMeasSum / ADC_NUM_MEAS;
+#if !defined(ADC_FAKE_MEAS)
+    int16_t retVal = adcMeasSum / ADC_NUM_MEAS;
+#else
+    // fake measurements
+    static int16_t bankV = 2700;  // mV
+    static int16_t retVal;
+    static uint8_t bank_cntr;
+    bank_cntr++;
+    switch (bank_cntr)
+    {
+    case 1:
+        retVal = bankV;
+        break;
+    case 2:
+        retVal = bankV * 2u; 
+        break;
+    case 3:
+        retVal = bankV * 3u; 
+        break;
+    case 4:
+        retVal = bankV * 4u; 
+        break;
+    default:
+        break;
+    }
+    if (bank_cntr == 4u) {
+        bankV += 200;
+        bank_cntr = 0;
+    }
+    if (bankV >= 4200) {
+        bankV = 2700;
+    }
+#endif  // ADC_FAKE_MEAS
+
     return retVal;
 }
 

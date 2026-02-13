@@ -4,17 +4,18 @@
 1. Overcharge protection
 2. Overdischarge protection
 3. Cells balancing
-4. 4S scheme - 4*3.7 = 14.8 (16.8)V
+4. 4S battery schema - 4*3.7(4.2) = 14.8 (16.8)V
 5. Controlled via MCU with BLE feature support
 
 ### II. Software platform
-MCU firmware is untended be simple, there is no need for complex multitasking scheduling algorithm. <br>
+MCU firmware is intended to be simple, there is no need for complex multitasking scheduling algorithm. <br>
 Based on this, there is no need to use complex RTOS like FreeRTOS or QP framework. <br>
 It can be implemented on baremetal OR using lightweight custom RTOS. <br>
 Starting from __baremetal__ implementation.
 !!! UPDATE: Cypress/Infineon BLE stack requires multitasking environment and <br> 
-the manufacturer BLE stack porting layer is based on RTOS implementation (FreeRTOS, THtreadX etc.). <br>
-Decided to use FreeRTOS.  
+the manufacturer's BLE stack porting layer is based on RTOS implementation (FreeRTOS, ThtreadX etc.). <br>
+Decided to use FreeRTOS. <br>
+Development environment - Host PC/laptop with Ubuntu 22.04 or 24.04 <br>
 
 ### III. Tools
 1. Software tracing on target -> QSPY & Qview: https://www.state-machine.com/qtools/qpspy.html, <br>
@@ -28,7 +29,7 @@ https://www.state-machine.com/qtools/qview.html
 
 
 ### V. Integration testing framework
-In general, It's preferrable to use framework based on scripting language like Python <br>
+In general, it's preferrable to use framework based on scripting language like Python <br>
 pytest framework is used: <br>
 > pip install -U pytest <br>
 > pip install pytest-dependency <br>
@@ -50,15 +51,18 @@ In the project Target testing is used. To write coverage data to PC from targer,
 > Example -> LDFLAGS=-fprofile-arcs -lc -lgcov -lrdimon -specs=rdimon.specs
 
 ### VII. ModusToolbox -> system & peripheral config
-1. Device Configurator : <br>
+1. Install ModusToolbox Tools Package 3.2 from Infineon site. <br>
+> https://softwaretools.infineon.com/tools/com.ifx.tb.tool.modustoolbox <br>
+> before project build, get project libraries: make getlibs <br>
+2. Device Configurator : <br>
 > As described in the ModusToolbox™ tools package user guide build system chapter, you can run numerous <br>
 > make commands in the application directory, such as launching the Device Configurator. After you have created <br>
 > a ModusToolbox™ application, navigate to the application directory and type the following command in the <br>
 > appropriate bash terminal window: <br>
 > __*make device-configurator*__
-2. Bluetooth Configurator <br>
+3. Bluetooth Configurator <br>
 > __*make bt-configurator*__ <br>
-3. Project libraries manager <br>
+4. Project libraries manager <br>
 > To add, remove, or modify libraries, open the Library Manager using the following command: <br>
 > __*make library-manager*__
 

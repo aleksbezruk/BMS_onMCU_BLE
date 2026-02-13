@@ -73,3 +73,8 @@ build-test/
 # Flutter generated files that should be ignored
 **/android/app/src/debug/AndroidManifest.xml
 **/android/app/src/profile/AndroidManifest.xml
+
+# Allow specific JLink template inside CI-CD build
+!CI-CD/build/
+CI-CD/build/flash_qn9080.jlink
+!CI-CD/build/flash_qn9080_template.jlink

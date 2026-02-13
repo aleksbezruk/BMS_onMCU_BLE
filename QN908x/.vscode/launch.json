@@ -21,6 +21,11 @@
             "preLaunchCommands": [
                 "set debug remote 1",
                 "set remotetimeout 60"
+            ],
+            //"showDevDebugOutput": "raw",
+            "serverArgs": [
+                "-speed", "4000",
+                "-select", "USB"
             ]
         },
         {
@@ -40,7 +45,24 @@
             "preLaunchCommands": [
                 "set debug remote 1",
                 "set remotetimeout 60"
+            ],
+            //"showDevDebugOutput": "raw",
+            "serverArgs": [
+                "-speed", "4000",
+                "-select", "USB"
             ]
+        },
+        {
+            "name": "Attach QN9080",
+            "type": "cortex-debug",
+            "request": "attach",
+            "servertype": "jlink",
+            "gdbTarget": "localhost:2331",
+
+            "device": "QN9080C",
+            "executable": "${workspaceRoot}/build-debug/BMS_QN9080_Debug.elf",
+
+            "armToolchainPath": "/home/oleksandr/Toolchains/gcc-arm-none-eabi-10.3-2021.10-x86_64-linux/gcc-arm-none-eabi-10.3-2021.10/bin"
         }
     ]
 }

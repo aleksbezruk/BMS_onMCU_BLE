@@ -59,34 +59,6 @@ DEVICE_CYBLE-416045-02-device_SVD=$(SEARCH_mtb-pdl-cat1)/devices/COMPONENT_CAT1A
 # generate make targets for the graphical editors that are specific to this project
 #
 
-config_bt:
-	$(CY_TOOL_mtblaunch_EXE_ABS) --project . --short-name bt-configurator
-.PHONY: config_bt
-
-CY_HELP_config_bt=Launches the Bluetooth® Configurator 2.90 GUI for the target's cybt file
-CY_HELP_config_bt_VERBOSE=Launches the Bluetooth® Configurator 2.90 GUI. Check the Bluetooth® Configurator 2.90 User Guide for more information.
-mtb_help_tool_config_bt:
-	@:
-	$(info $(MTB__SPACE)config_bt           $(CY_HELP_config_bt))
-
-mtb_help_tools_end: mtb_help_tool_config_bt
-mtb_help_tool_config_bt: mtb_help_tools_start
-.PHONY: mtb_help_tool_config_bt
-
-bt-configurator:
-	$(CY_TOOL_mtblaunch_EXE_ABS) --project . --short-name bt-configurator
-.PHONY: bt-configurator
-
-CY_HELP_bt-configurator=Launches the Bluetooth® Configurator 2.90 GUI for the target's cybt file
-CY_HELP_bt-configurator_VERBOSE=Launches the Bluetooth® Configurator 2.90 GUI. Check the Bluetooth® Configurator 2.90 User Guide for more information.
-mtb_help_tool_bt-configurator:
-	@:
-	$(info $(MTB__SPACE)bt-configurator     $(CY_HELP_bt-configurator))
-
-mtb_help_tools_end: mtb_help_tool_bt-configurator
-mtb_help_tool_bt-configurator: mtb_help_tools_start
-.PHONY: mtb_help_tool_bt-configurator
-
 config:
 	$(CY_TOOL_mtblaunch_EXE_ABS) --project . --short-name device-configurator
 .PHONY: config
@@ -115,33 +87,33 @@ mtb_help_tools_end: mtb_help_tool_device-configurator
 mtb_help_tool_device-configurator: mtb_help_tools_start
 .PHONY: mtb_help_tool_device-configurator
 
-modlibs:
-	$(CY_TOOL_mtblaunch_EXE_ABS) --project . --short-name library-manager
-.PHONY: modlibs
+config_bt:
+	$(CY_TOOL_mtblaunch_EXE_ABS) --project . --short-name bt-configurator
+.PHONY: config_bt
 
-CY_HELP_modlibs=Launches the Library Manager 2.20 GUI
-CY_HELP_modlibs_VERBOSE=Launches the Library Manager 2.20 GUI. Check the Library Manager 2.20 User Guide for more information.
-mtb_help_tool_modlibs:
+CY_HELP_config_bt=Launches the Bluetooth® Configurator 2.90 GUI for the target's cybt file
+CY_HELP_config_bt_VERBOSE=Launches the Bluetooth® Configurator 2.90 GUI. Check the Bluetooth® Configurator 2.90 User Guide for more information.
+mtb_help_tool_config_bt:
 	@:
-	$(info $(MTB__SPACE)modlibs             $(CY_HELP_modlibs))
+	$(info $(MTB__SPACE)config_bt           $(CY_HELP_config_bt))
 
-mtb_help_tools_end: mtb_help_tool_modlibs
-mtb_help_tool_modlibs: mtb_help_tools_start
-.PHONY: mtb_help_tool_modlibs
+mtb_help_tools_end: mtb_help_tool_config_bt
+mtb_help_tool_config_bt: mtb_help_tools_start
+.PHONY: mtb_help_tool_config_bt
 
-library-manager:
-	$(CY_TOOL_mtblaunch_EXE_ABS) --project . --short-name library-manager
-.PHONY: library-manager
+bt-configurator:
+	$(CY_TOOL_mtblaunch_EXE_ABS) --project . --short-name bt-configurator
+.PHONY: bt-configurator
 
-CY_HELP_library-manager=Launches the Library Manager 2.20 GUI
-CY_HELP_library-manager_VERBOSE=Launches the Library Manager 2.20 GUI. Check the Library Manager 2.20 User Guide for more information.
-mtb_help_tool_library-manager:
+CY_HELP_bt-configurator=Launches the Bluetooth® Configurator 2.90 GUI for the target's cybt file
+CY_HELP_bt-configurator_VERBOSE=Launches the Bluetooth® Configurator 2.90 GUI. Check the Bluetooth® Configurator 2.90 User Guide for more information.
+mtb_help_tool_bt-configurator:
 	@:
-	$(info $(MTB__SPACE)library-manager     $(CY_HELP_library-manager))
+	$(info $(MTB__SPACE)bt-configurator     $(CY_HELP_bt-configurator))
 
-mtb_help_tools_end: mtb_help_tool_library-manager
-mtb_help_tool_library-manager: mtb_help_tools_start
-.PHONY: mtb_help_tool_library-manager
+mtb_help_tools_end: mtb_help_tool_bt-configurator
+mtb_help_tool_bt-configurator: mtb_help_tools_start
+.PHONY: mtb_help_tool_bt-configurator
 
 seglcd-configurator:
 	$(CY_TOOL_mtblaunch_EXE_ABS) --project . --short-name seglcd-configurator
@@ -156,34 +128,6 @@ mtb_help_tool_seglcd-configurator:
 mtb_help_tools_end: mtb_help_tool_seglcd-configurator
 mtb_help_tool_seglcd-configurator: mtb_help_tools_start
 .PHONY: mtb_help_tool_seglcd-configurator
-
-capsense-configurator:
-	$(CY_TOOL_mtblaunch_EXE_ABS) --project . --short-name capsense-configurator
-.PHONY: capsense-configurator
-
-CY_HELP_capsense-configurator=Launches the CAPSENSE™ Configurator 6.20 GUI for the target's cycapsense file
-CY_HELP_capsense-configurator_VERBOSE=Launches the CAPSENSE™ Configurator 6.20 GUI. Check the CAPSENSE™ Configurator 6.20 User Guide for more information.
-mtb_help_tool_capsense-configurator:
-	@:
-	$(info $(MTB__SPACE)capsense-configurator $(CY_HELP_capsense-configurator))
-
-mtb_help_tools_end: mtb_help_tool_capsense-configurator
-mtb_help_tool_capsense-configurator: mtb_help_tools_start
-.PHONY: mtb_help_tool_capsense-configurator
-
-capsense-tuner:
-	$(CY_TOOL_mtblaunch_EXE_ABS) --project . --short-name capsense-tuner
-.PHONY: capsense-tuner
-
-CY_HELP_capsense-tuner=Launches the CAPSENSE™ Tuner 6.20 GUI for the target's cycapsense file
-CY_HELP_capsense-tuner_VERBOSE=Launches the CAPSENSE™ Tuner 6.20 GUI. Check the CAPSENSE™ Tuner 6.20 User Guide for more information.
-mtb_help_tool_capsense-tuner:
-	@:
-	$(info $(MTB__SPACE)capsense-tuner      $(CY_HELP_capsense-tuner))
-
-mtb_help_tools_end: mtb_help_tool_capsense-tuner
-mtb_help_tool_capsense-tuner: mtb_help_tools_start
-.PHONY: mtb_help_tool_capsense-tuner
 
 config_lin:
 	$(CY_TOOL_mtblaunch_EXE_ABS) --project . --short-name lin-configurator
@@ -213,6 +157,34 @@ mtb_help_tools_end: mtb_help_tool_lin-configurator
 mtb_help_tool_lin-configurator: mtb_help_tools_start
 .PHONY: mtb_help_tool_lin-configurator
 
+capsense-configurator:
+	$(CY_TOOL_mtblaunch_EXE_ABS) --project . --short-name capsense-configurator
+.PHONY: capsense-configurator
+
+CY_HELP_capsense-configurator=Launches the CAPSENSE™ Configurator 6.20 GUI for the target's cycapsense file
+CY_HELP_capsense-configurator_VERBOSE=Launches the CAPSENSE™ Configurator 6.20 GUI. Check the CAPSENSE™ Configurator 6.20 User Guide for more information.
+mtb_help_tool_capsense-configurator:
+	@:
+	$(info $(MTB__SPACE)capsense-configurator $(CY_HELP_capsense-configurator))
+
+mtb_help_tools_end: mtb_help_tool_capsense-configurator
+mtb_help_tool_capsense-configurator: mtb_help_tools_start
+.PHONY: mtb_help_tool_capsense-configurator
+
+capsense-tuner:
+	$(CY_TOOL_mtblaunch_EXE_ABS) --project . --short-name capsense-tuner
+.PHONY: capsense-tuner
+
+CY_HELP_capsense-tuner=Launches the CAPSENSE™ Tuner 6.20 GUI for the target's cycapsense file
+CY_HELP_capsense-tuner_VERBOSE=Launches the CAPSENSE™ Tuner 6.20 GUI. Check the CAPSENSE™ Tuner 6.20 User Guide for more information.
+mtb_help_tool_capsense-tuner:
+	@:
+	$(info $(MTB__SPACE)capsense-tuner      $(CY_HELP_capsense-tuner))
+
+mtb_help_tools_end: mtb_help_tool_capsense-tuner
+mtb_help_tool_capsense-tuner: mtb_help_tools_start
+.PHONY: mtb_help_tool_capsense-tuner
+
 bsp-assistant:
 	$(CY_TOOL_mtblaunch_EXE_ABS) --project . --short-name bsp-assistant
 .PHONY: bsp-assistant
@@ -240,5 +212,33 @@ mtb_help_tool_smartio-configurator:
 mtb_help_tools_end: mtb_help_tool_smartio-configurator
 mtb_help_tool_smartio-configurator: mtb_help_tools_start
 .PHONY: mtb_help_tool_smartio-configurator
+
+modlibs:
+	$(CY_TOOL_mtblaunch_EXE_ABS) --project . --short-name library-manager
+.PHONY: modlibs
+
+CY_HELP_modlibs=Launches the Library Manager 2.20 GUI
+CY_HELP_modlibs_VERBOSE=Launches the Library Manager 2.20 GUI. Check the Library Manager 2.20 User Guide for more information.
+mtb_help_tool_modlibs:
+	@:
+	$(info $(MTB__SPACE)modlibs             $(CY_HELP_modlibs))
+
+mtb_help_tools_end: mtb_help_tool_modlibs
+mtb_help_tool_modlibs: mtb_help_tools_start
+.PHONY: mtb_help_tool_modlibs
+
+library-manager:
+	$(CY_TOOL_mtblaunch_EXE_ABS) --project . --short-name library-manager
+.PHONY: library-manager
+
+CY_HELP_library-manager=Launches the Library Manager 2.20 GUI
+CY_HELP_library-manager_VERBOSE=Launches the Library Manager 2.20 GUI. Check the Library Manager 2.20 User Guide for more information.
+mtb_help_tool_library-manager:
+	@:
+	$(info $(MTB__SPACE)library-manager     $(CY_HELP_library-manager))
+
+mtb_help_tools_end: mtb_help_tool_library-manager
+mtb_help_tool_library-manager: mtb_help_tools_start
+.PHONY: mtb_help_tool_library-manager
 
 .PHONY: mtb_help_tools_start mtb_help_tools_end

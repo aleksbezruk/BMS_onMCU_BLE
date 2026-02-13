@@ -68,6 +68,17 @@ static inline bool _HAL_isDebuggerConnected(void);
  */
 HAL_status_t HAL_init_hardware(void)
 {
+    /**
+     * Check id debugger is connected and add some delay before program execution.
+     * That helps to solve an issue during flash programming via JLink.
+     * The issue that CPU isn't halted for some reason (most probably due to clocks, 
+     * power domain reconfiguration performed by the firmware).
+     * The delay allows JLink script to halt CPU before program execution.
+     */
+    if (CoreDebug->DHCSR & CoreDebug_DHCSR_C_DEBUGEN_Msk) {
+        for (volatile int i = 0; i < 500000; i++);
+    }
+    
     /** Init DC-DC mode */
     POWER_EnableDCDC(gDCDC_Mode);
 
