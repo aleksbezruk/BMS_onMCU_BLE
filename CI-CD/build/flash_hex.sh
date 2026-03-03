@@ -46,7 +46,7 @@ if [ "$TARGET" == "PSOC63" ]; then
   pyocd load --target cy8c6xx7_nosmif --uid 1714186503068400 ../../bms_build_dir/${HEX_FILE}
 elif [ "$TARGET" == "QN9080" ]; then
   export BMS_HEX_FILE_PATH=../../bms_build_dir/${HEX_FILE}
-  envsubst < flash_qn9080_template.jlink > flash_qn9080.jlink
+  envsubst < ./CI-CD/build/flash_qn9080_template.jlink > ./CI-CD/build/flash_qn9080.jlink
   #~/IDEs/Segger/JLink_Linux_V792k_x86_64/JLinkExe -NoGui 1 -device QN9080C -if SWD -speed 100 -autoconnect 1 -CommanderScript ./flash_qn9080.jlink
   /opt/SEGGER/JLink/JLinkExe -NoGui 1 -device QN9080C -if SWD -speed 100 -autoconnect 1 -CommanderScript ./flash_qn9080.jlink
 else
