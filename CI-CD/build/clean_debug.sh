@@ -19,6 +19,7 @@ if [ "$TARGET" == "PSOC63" ]; then
 elif [ "$TARGET" == "QN9080" ]; then
   printf "Clean QN9080 build config\n"
   #cmake -S . -B ./build-debug -DBUILD_CONFIG=Debug
+  mkdir ./build-debug
   cmake --build ./build-debug --target clean
 else
   printf "Undefined build config\n"
