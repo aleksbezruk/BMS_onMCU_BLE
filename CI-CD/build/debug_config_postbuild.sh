@@ -22,8 +22,16 @@ else
   exit $RETURN
 fi
 
-cd build
-ls -a
+if [ "$TARGET" == "PSOC63" ]; then
+  cd build
+  ls -a
+elif [ "$TARGET" == "QN9080" ]; then
+  cd build-debug
+  ls -a
+else
+  printf "Undefined build config\n"
+  exit 1
+fi
 
 # Add  build version
 python3 --version

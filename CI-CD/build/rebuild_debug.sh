@@ -40,7 +40,14 @@ fi
 printf "${GREEN}===============================================\n"
 printf "${GREEN}Debug config postbuild job in progress ... \n"
 printf "${GREEN}===============================================\n"
-cd ../../BMS_PSOC63
+if [ "$TARGET" == "PSOC63" ]; then
+  cd ../../BMS_PSOC63
+elif [ "$TARGET" == "QN9080" ]; then
+  cd ../../QN908x
+else
+  printf "Undefined build config\n"
+  exit 1
+fi
 ../CI-CD/build/debug_config_postbuild.sh ${TARGET}
 RETURN=$?
 if [ $RETURN -eq 0 ];
