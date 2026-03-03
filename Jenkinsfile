@@ -8,7 +8,6 @@ pipeline {
         stage('Build Debug build configuration') {
             agent {label "jenkins-controller"}
             options {
-                // Timeout counter starts BEFORE agent is allocated
                 timeout(time: 200, unit: 'SECONDS')
             }
             steps {
@@ -32,13 +31,11 @@ pipeline {
         stage('Run BMS Integration tests') {
             agent {label "jenkins-agent"}
             steps {
-                // sh "./Integration_Tests/run_ITs_qspy.sh"
                 parallel(
                     qspy_logging: {
                         sh "./Integration_Tests/start_qspy.sh QN9080"
                     },
                     tests: {
-                        //sh "./Integration_Tests/run_ITs.sh QN9080"; sh "./Integration_Tests/close_qspy.sh QN9080"
                         sh "./Integration_Tests/run_ITs_QN9080.sh QN9080"; sh "./Integration_Tests/close_qspy.sh QN9080"
                     }
                 )
