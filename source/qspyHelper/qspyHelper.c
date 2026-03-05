@@ -4,7 +4,7 @@
  * @brief Implements helper functions for QSPY & QUtest framework. 
  *        Also includes API for Application.
  * 
- * @version 0.6.0
+ * @version 0.7.0
  */
 
 #include <string.h>

@@ -5,7 +5,7 @@
  *
  * @note PSOC63
  * 
- * @version 0.6.0
+ * @version 0.7.0
  */
 
 #ifndef HAL_LED_MODULE

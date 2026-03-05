@@ -15,7 +15,7 @@
  * 
  * @note PSOC63 OSAL implementation is based on FreeRTOS and uses the Cypress HAL/PSOC SDK.
  * 
- * @version 0.6.0
+ * @version 0.7.0
  */
 
 #ifndef OSAL_H

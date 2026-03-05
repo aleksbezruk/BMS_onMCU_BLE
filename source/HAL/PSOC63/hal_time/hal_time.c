@@ -2,7 +2,7 @@
  * @file hal_time.c
  * @brief HAL time management functions for PSoC63.
  * @note PSOC63 specific implementation details.
- * @version 0.6.0
+ * @version 0.7.0
  */
 
 #include "hal_time.h"

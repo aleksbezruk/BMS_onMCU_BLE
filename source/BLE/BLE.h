@@ -3,7 +3,7 @@
  *
  * @brief BLE module functions declaration
  *
- * @version 0.6.0
+ * @version 0.7.0
  */
 
 #ifndef BLE_MODULE_H

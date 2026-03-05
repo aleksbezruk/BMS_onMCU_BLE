@@ -2,7 +2,7 @@
  * @file hal_time.c
  * @brief HAL time management functions for QN9080.
  * @note QN9080 specific implementation details.
- * @version 0.6.0
+ * @version 0.7.0
  */
 
 #include "hal.h"

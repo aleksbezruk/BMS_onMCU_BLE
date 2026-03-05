@@ -1,7 +1,7 @@
 /**
  * @file hal_ble.c
  * @brief Source file for BLE (Bluetooth Low Energy) HAL (Hardware Abstraction Layer) functions.
- * @version 0.6.0
+ * @version 0.7.0
  * @note PSOC63 specific implementation
  * 
  *  @details  ## **Details**

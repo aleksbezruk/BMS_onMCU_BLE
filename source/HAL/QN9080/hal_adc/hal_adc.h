@@ -9,7 +9,7 @@
  *
  * @note QN9080
  * 
- * @version 0.6.0
+ * @version 0.7.0
  */
 
 #ifndef HAL_ADC_H_

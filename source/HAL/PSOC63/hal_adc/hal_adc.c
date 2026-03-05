@@ -5,7 +5,7 @@
  *
  * @note PSOC63
  * 
- * @version 0.6.0
+ * @version 0.7.0
  */
 #include "cy_pdl.h"
 #include "cyhal.h"
