@@ -3,10 +3,10 @@
 # Any edits to this file will be lost the next time the library manager is run or
 # the next time 'make getlibs' is run.
 #
-config_usbdev usbdev-configurator config device-configurator modlibs library-manager config_ezpd ez-pd-configurator seglcd-configurator capsense-configurator capsense-tuner bsp-assistant smartio-configurator qspi-configurator :
+config device-configurator seglcd-configurator qspi-configurator config_usbdev usbdev-configurator capsense-configurator capsense-tuner bsp-assistant smartio-configurator modlibs library-manager config_ezpd ez-pd-configurator :
 	make -C proj_cm4 $@
 
 config_bt bt-configurator config_lin lin-configurator :
 	$(error $@ configurator cannot be executed at the application level. Run this command from the desired project directory.)
 
-.PHONY: config_usbdev usbdev-configurator config_bt bt-configurator config device-configurator modlibs library-manager config_ezpd ez-pd-configurator seglcd-configurator capsense-configurator capsense-tuner config_lin lin-configurator bsp-assistant smartio-configurator qspi-configurator
+.PHONY: config device-configurator config_bt bt-configurator seglcd-configurator qspi-configurator config_lin lin-configurator config_usbdev usbdev-configurator capsense-configurator capsense-tuner bsp-assistant smartio-configurator modlibs library-manager config_ezpd ez-pd-configurator

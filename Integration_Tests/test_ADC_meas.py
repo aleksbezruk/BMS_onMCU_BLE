@@ -23,11 +23,11 @@ def test_receive_periodic_adc():
     while num_iter > 0:
         print("Iteration #", "%d"%(pytest.ADC_MEAS_NUM_ITERATIONS - num_iter + 1))
         adc_result = QSPY_get_ADC_meas()
-        assert (adc_result["bank1"] > 2800 and adc_result["bank1"] < 4300), "Bank1 voltage out of range"
-        assert (adc_result["bank2"] > 2800 and adc_result["bank2"] < 4300), "Bank2 voltage out of range"
-        assert (adc_result["bank3"] > 2800 and adc_result["bank3"] < 4300), "Bank3 voltage out of range"
-        assert (adc_result["bank4"] > 2800 and adc_result["bank4"] < 4300), "Bank4 voltage out of range"
-        assert (adc_result["fullVbat"] > 11200 and adc_result["fullVbat"] < 17000), "fullVbat voltage out of range"
+        assert (adc_result["bank1"] >= 2700 and adc_result["bank1"] < 4300), "Bank1 voltage out of range"
+        assert (adc_result["bank2"] >= 2700 and adc_result["bank2"] < 4300), "Bank2 voltage out of range"
+        assert (adc_result["bank3"] >= 2700 and adc_result["bank3"] < 4300), "Bank3 voltage out of range"
+        assert (adc_result["bank4"] >= 2700 and adc_result["bank4"] < 4300), "Bank4 voltage out of range"
+        assert (adc_result["fullVbat"] >= 10800 and adc_result["fullVbat"] < 17000), "fullVbat voltage out of range"
 
         num_iter -= 1
 

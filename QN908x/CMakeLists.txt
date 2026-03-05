@@ -211,6 +211,7 @@ target_compile_definitions(${EXECUTABLE} PRIVATE
         -DCPU_QN908X=1
         -DFSL_RTOS_FREE_RTOS
         -DCFG_BLE_PRJ=1
+        -DDEBUG_BUILD_CONFIG=1
 
         ${CONFIG_DEFINE}
         )

@@ -4,10 +4,13 @@ cd ./CI-CD/build
 GREEN='\033[0;32m'
 RED='\033[0;31m'
 
+TARGET=$1
+printf "Rebuild... Target is: ${TARGET}\n"
+
 printf "${GREEN}===============================================\n"
 printf "${GREEN}Cleaning Debug build configuration ... \n"
 printf "${GREEN}===============================================\n"
-./clean_debug.sh
+./clean_debug.sh ${TARGET}
 RETURN=$?
 if [ $RETURN -eq 0 ];
 then
@@ -22,7 +25,7 @@ fi
 printf "${GREEN}===============================================\n"
 printf "${GREEN}Building Debug configuration ... \n"
 printf "${GREEN}===============================================\n"
-./build_debug.sh
+./build_debug.sh ${TARGET}
 RETURN=$?
 if [ $RETURN -eq 0 ];
 then
@@ -37,8 +40,15 @@ fi
 printf "${GREEN}===============================================\n"
 printf "${GREEN}Debug config postbuild job in progress ... \n"
 printf "${GREEN}===============================================\n"
-cd ../../BMS_PSOC63
-../CI-CD/build//debug_config_postbuild.sh
+if [ "$TARGET" == "PSOC63" ]; then
+  cd ../../BMS_PSOC63
+elif [ "$TARGET" == "QN9080" ]; then
+  cd ../../QN908x
+else
+  printf "Undefined build config\n"
+  exit 1
+fi
+../CI-CD/build/debug_config_postbuild.sh ${TARGET}
 RETURN=$?
 if [ $RETURN -eq 0 ];
 then

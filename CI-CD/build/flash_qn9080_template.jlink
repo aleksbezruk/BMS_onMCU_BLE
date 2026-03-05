@@ -1,0 +1,9 @@
+si 1
+exec SetResetType = 3
+exec EnableEraseAllFlashBanks = 1
+exec EraseAll
+loadfile ${BMS_HEX_FILE_PATH}
+r
+r
+g
+exit

@@ -7,7 +7,7 @@
 * Bluetooth Configurator 2.90.0.2529
 *
 *******************************************************************************
-* Copyright 2025 Cypress Semiconductor Corporation (an Infineon company) or
+* Copyright 2026 Cypress Semiconductor Corporation (an Infineon company) or
 * an affiliate of Cypress Semiconductor Corporation.
 * SPDX-License-Identifier: Apache-2.0
 *
