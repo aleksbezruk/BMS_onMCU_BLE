@@ -19,7 +19,7 @@
 #define ADC_BMS_FULL_VBAT_MAX   (int16_t) 16800  // mV
 #define ASC_BMS_BANK_VOLTAGE_MIN (int16_t) 2800   // mV
 #define ASC_BMS_BANK_VOLTAGE_MAX (int16_t) 4200   // mV
-#define ADC_BMS_CALC_PERCENT(vbat) ( (100u * ((vbat) - ADC_BMS_FULL_VBAT_MIN)) / (ADC_BMS_FULL_VBAT_MAX - ADC_BMS_FULL_VBAT_MIN) )
+#define ADC_BMS_CALC_PERCENT(vbat) ( (vbat>=ADC_BMS_FULL_VBAT_MIN)? ((100u * ((vbat) - ADC_BMS_FULL_VBAT_MIN)) / (ADC_BMS_FULL_VBAT_MAX - ADC_BMS_FULL_VBAT_MIN)): 0 )
 
 /** ADC status */
 typedef enum {
