@@ -6,7 +6,7 @@
 *.png
 !docs/bms_schematic.png
 !docs/PSOC63-DK.png
-!docs/QN9080-DK_v1_3..png
+!docs/QN9080-DK_v1_3.png
 !docs/BMS_MCU_firmware-arch.png
 *.pyc
 *.svg
