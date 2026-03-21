@@ -23,6 +23,17 @@ typedef enum {
     BMS_STATE_SHELF
 } BMS_state_t;
 
+/*! System PCBA test and trim data stored in EEPROM */
+typedef struct {
+    uint8_t adcError;           /**< ADC error compensation [% x 100] */
+    uint8_t adcInterval;        /**< ADC measurements interval [seconds] */
+    uint16_t advInterval;       /**< BLE advertisement interval [ms] */
+    uint32_t bank1ConvRatio;    /**< ADC bank1 convertion ratio [x10^6] */
+    uint32_t bank2ConvRatio;    /**< ADC bank2 convertion ratio [x10^6] */
+    uint32_t bank3ConvRatio;    /**< ADC bank3 convertion ratio [x10^6] */
+    uint32_t bank4ConvRatio;    /**< ADC bank4 convertion ratio [x10^6] */
+} Trim_data_t;
+
 // ========================
 /// API
 // ========================

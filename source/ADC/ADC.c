@@ -33,46 +33,40 @@
 // HAL
 #include "hal.h"
 #include "hal_adc.h"
+#include "hal_eeprom.h"
+
+// std Lib
+#include <string.h>
 
 // =======================
 // Defines
 // =======================
-/** 
- * ADC error RATIO [-2 %]. 
- * 1. Maybe variable from sample to sample
- * 2. Maybe needed external precise VREF to improve accuracy 
- */
-#define ADC_ERR_RATIO 0.98f
+#define ADC_ERROR_DEFAULT 2.0f  // [%]
 
-/**
- * @brief Compensate ADC measurement error using integer arithmetic
- * @param val ADC value in mV
- * @return Compensated value in mV
- */
-static inline int16_t ADC_MEAS_COMPENSATE_ERR(int16_t val)
-{
-    return (int16_t)(val * ADC_ERR_RATIO);
-} 
 /**
  * Bank1
  * R1 = 1.2 MOhm, R2 = 1.2 MOhm
+ * x10^6
  */
-#define ADC_BANK1_CONV_RATIO    2.0f
+#define ADC_BANK1_CONV_RATIO_DEFAULT    2000000
 /**
  * Bank2
  * R1 = 1.2 MOhm, R2 = 390 kOhm
+ * x10^6
  */
-#define ADC_BANK2_CONV_RATIO    4.07692308f
+#define ADC_BANK2_CONV_RATIO_DEFAULT    4076923
 /**
  * Bank3
  * R1 = 2.4 MOhm, R2 = 390 kOhm
+ * x10^6
  */
-#define ADC_BANK3_CONV_RATIO    7.153843402f
+#define ADC_BANK3_CONV_RATIO_DEFAULT    7153843
 /**
  * Bank4
  * R1 = 2.4 MOhm, R2 = 390 kOhm
+ * x10^6
  */
-#define ADC_BANK4_CONV_RATIO    7.153843402f
+#define ADC_BANK4_CONV_RATIO_DEFAULT    7153843
 /**
  * mV
  */
@@ -91,7 +85,8 @@ static inline int16_t ADC_MEAS_COMPENSATE_ERR(int16_t val)
 #define ADC_NUM_MEAS 5U
 
 // RTOS task defines
-#define ADC_TASK_INTERVAL   30000U  /**< ms */
+#define ADC_TASK_INTERVAL_DEFAULT   30000U  /**< ms */
+#define ADC_TASK_INTERVAL(secs) (secs * 1000u)   /**< ms */
 #define ADC_TASK_STACK_SIZE 1024U   /**< bytes, aligned to 8 bytes */
 
 // =======================
@@ -114,16 +109,33 @@ static uint64_t adcTaskStack_[ADC_TASK_STACK_SIZE/8U];
 /*! ADC peripheral status flag */
 static volatile bool _adcEnabled = true;
 
+/*! Calibration data cache */
+static volatile Trim_data_t trimDataCache;
+
 // =======================
 // Functions prototype
 // =======================
 static void adcTask_(OSAL_arg_t arg);
-static int16_t calcBankAvgVolt_(HAL_ADC_channel_t chnl, float convRatio, int16_t* pAdcInVolt);
+static int16_t calcBankAvgVolt_(HAL_ADC_channel_t chnl, uint32_t convRatioMult, int16_t* pAdcInVolt);
 static ADC_status_t ADC_init_periph(void);
 
 // =======================
 // Code
 // =======================
+/**
+ * @brief Compensate ADC measurement error using integer arithmetic
+ * @param val ADC value in mV
+ * @return Compensated value in mV
+ */
+static inline int16_t ADC_MEAS_COMPENSATE_ERR(int16_t val)
+{
+    float adcComp = 1.0f - trimDataCache.adcError * 1e-2f;
+
+    int16_t res = val * adcComp;
+
+    return res;
+} 
+
 /**
  * @brief Init ADC peripheral
  * 
@@ -206,8 +218,35 @@ static void adcTask_(OSAL_arg_t arg)
     int16_t b1_v, b2_v, b3_v, b4_v, bankAdcIn;
     ADC_status_t status;
 
+    /** Get calibration/trim data */
+    Trim_data_t trimData;
+    uint16_t trimDataLen = sizeof(Trim_data_t);
+    HAL_EEPROM_status eepromStatus = HAL_EEPROM_getData(HAL_EEPROM_TAG_PCBA_TRIM, &trimDataLen, (uint8_t *) &trimData);
+    if (eepromStatus == HAL_EEPROM_OK) {
+        QS_BEGIN_ID(ADC_RCD, 0 /*prio/ID for local Filters*/)
+            QS_STR("Load trim from EEPROM:");
+            QS_U8(0, trimData.adcError);
+            QS_U8(0, trimData.adcInterval);
+            QS_U32(0, trimData.bank1ConvRatio);
+            QS_U32(0, trimData.bank2ConvRatio);
+            QS_U32(0, trimData.bank3ConvRatio);
+            QS_U32(0, trimData.bank4ConvRatio);  
+        QS_END()
+        memcpy((uint8_t *) &trimDataCache, (uint8_t *) &trimData, sizeof(Trim_data_t));
+    } else {
+        QS_BEGIN_ID(ADC_RCD, 0 /*prio/ID for local Filters*/)
+            QS_STR("Trim isn't stored. Loading default values");
+        QS_END()
+        trimDataCache.adcError = ADC_ERROR_DEFAULT;
+        trimDataCache.adcInterval = ADC_TASK_INTERVAL_DEFAULT/1000u;
+        trimDataCache.bank1ConvRatio = ADC_BANK1_CONV_RATIO_DEFAULT;
+        trimDataCache.bank2ConvRatio = ADC_BANK2_CONV_RATIO_DEFAULT;
+        trimDataCache.bank3ConvRatio = ADC_BANK3_CONV_RATIO_DEFAULT;
+        trimDataCache.bank4ConvRatio = ADC_BANK4_CONV_RATIO_DEFAULT;
+    }
+
     while(1) {
-        OSAL_TASK_DELAY(ADC_TASK_INTERVAL);
+        OSAL_TASK_DELAY(ADC_TASK_INTERVAL(trimDataCache.adcInterval));
 
         /** Enable ADC if disabled (during Deep Sleep) */
         if (!_adcEnabled) {
@@ -221,7 +260,7 @@ static void adcTask_(OSAL_arg_t arg)
         /** Measure Bat Cell1 */
         b1_v = calcBankAvgVolt_(
             HAL_ADC_CHANNEL_0,
-            ADC_BANK1_CONV_RATIO,
+            trimDataCache.bank1ConvRatio,
             &bankAdcIn
         );
         adcEvt.bank1_mv = b1_v;
@@ -234,7 +273,7 @@ static void adcTask_(OSAL_arg_t arg)
         /** Measure Bat Cell2 */
         b2_v = calcBankAvgVolt_(
             HAL_ADC_CHANNEL_1,
-            ADC_BANK2_CONV_RATIO,
+            trimDataCache.bank2ConvRatio,
             &bankAdcIn
         );
         adcEvt.bank2_mv = ADC_BANK_VOLT_CALC(b1_v, b2_v);
@@ -247,7 +286,7 @@ static void adcTask_(OSAL_arg_t arg)
         /** Measure Bat Cell3 */
         b3_v = calcBankAvgVolt_(
             HAL_ADC_CHANNEL_2,
-            ADC_BANK3_CONV_RATIO,
+            trimDataCache.bank3ConvRatio,
             &bankAdcIn
         );
         adcEvt.bank3_mv = ADC_BANK_VOLT_CALC(b2_v, b3_v);
@@ -260,7 +299,7 @@ static void adcTask_(OSAL_arg_t arg)
         /** Measure Bat Cell4 */
         b4_v = calcBankAvgVolt_(
             HAL_ADC_CHANNEL_3,
-            ADC_BANK4_CONV_RATIO,
+            trimDataCache.bank4ConvRatio,
             &bankAdcIn
         );
         adcEvt.full_mv = b4_v;
@@ -282,19 +321,21 @@ static void adcTask_(OSAL_arg_t arg)
  * 
  * @param[in] chnl - ADC chnl
  *
- * @param[in] convRatio - ADC conversion ratio
+ * @param[in] convRatioMult - ADC conversion ratio [x10^6]
  * 
  * @param[out] pAdcInVolt - ADC measured input/raw voltage
  * 
  * @retval Bank voltage in mV
  *
  */
-static int16_t calcBankAvgVolt_(HAL_ADC_channel_t chnl, float convRatio, int16_t* pAdcInVolt)
+static int16_t calcBankAvgVolt_(HAL_ADC_channel_t chnl, uint32_t convRatioMult, int16_t* pAdcInVolt)
 {
     int16_t mv;
     float avgAdcIn = 0;
     uint8_t i;
     float adcMeasSum = 0;
+
+    float convRatio = (float)convRatioMult * 1e-6f;
 
     /** ADC measurements */
     for(i = 0; i < ADC_NUM_MEAS; i++) {

@@ -102,6 +102,7 @@ if(BUILD_CONFIG STREQUAL "Debug")
         ../source/HAL/QN9080/hal_adc/hal_adc.c
         ../source/HAL/QN9080/hal_time/hal_time.c
         ../source/HAL/QN9080/hal_ble/hal_ble.c
+        ../source/HAL/QN9080/hal_eeprom/hal_eeprom.c
         ../source/qspy/qs_64bit.c
         ../source/qspy/qs_fp.c
         ../source/qspy/qs_rx.c
@@ -238,6 +239,7 @@ target_include_directories(${EXECUTABLE} PRIVATE
         ../source/HAL/QN9080/hal_time
         ../source/HAL/QN9080/hal_nvm
         ../source/HAL/QN9080/hal_ble
+        ../source/HAL/QN9080/hal_eeprom
         ../source/main
         ../source/qspy
         ../source/qspyHelper

@@ -199,7 +199,15 @@ typedef void (*OSAL_ThreadFunc_t)(OSAL_arg_t arg);
  */
 #define OSAL_QUEUE_GET(queueHandle, pItem, timeout, status) \
     if (queueHandle != NULL) { \
-        status = OSA_MsgQGet(queueHandle, pItem, timeout); \
+        osaStatus_t nxpOsaStatus; \
+        nxpOsaStatus = OSA_MsgQGet(queueHandle, pItem, timeout); \
+        if (nxpOsaStatus == osaStatus_Success) { \
+            status = OSAL_SUCCESS; \
+        } else if (nxpOsaStatus == osaStatus_Timeout) { \
+            status = OSAL_TIMEOUT; \
+        } else { \
+            status = OSAL_FAILURE; \
+        } \
     } else { \
         status = OSAL_FAILURE; \
     }
@@ -301,6 +309,11 @@ typedef void (*OSAL_TimerCallback_t)(OSAL_TimerArg_t arg);
     } else { \
         status = OSAL_FAILURE; \
     }
+
+// =======================
+// Utils
+// =======================
+#define OSAL_MS_TO_TCIKS(ms) pdMS_TO_TICKS(ms)
 
 #endif // OSAL_H
 

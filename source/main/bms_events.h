@@ -20,6 +20,7 @@ typedef enum {
     EVT_BLE_ADV_ON,
     EVT_BLE_ADV_OFF,
     EVT_BLE_VBAT,
+    EVT_PCBA_TEST_TRIM,
     EVT_TYPE_MAX
 } Evt_types_t;
 
@@ -52,6 +53,25 @@ typedef union {
     uint8_t swStates;
 } Evt_sys_data_t;
 
+/*! PCBA trim modes/commands */
+typedef enum {
+    PCBA_TRIM_CMD,
+    PCBA_REBOOT_CMD,
+    PCBA_MAX_CMD
+} Pcba_trim_cmds_t;
+
+/*! System PCBA test and trim data */
+typedef struct {
+    uint8_t mode;               /**< 1 - trim, 2 - reboot */
+    uint8_t adcError;           /**< ADC error compensation [% x 100] */
+    uint32_t bank1ConvRatio;    /**< ADC bank1 convertion ratio [x10^6] */
+    uint32_t bank2ConvRatio;    /**< ADC bank2 convertion ratio [x10^6] */
+    uint32_t bank3ConvRatio;    /**< ADC bank3 convertion ratio [x10^6] */
+    uint32_t bank4ConvRatio;    /**< ADC bank4 convertion ratio [x10^6] */
+    uint8_t adcInterval;        /**< ADC measurements interval [seconds] */
+    uint16_t advInterval;       /**< BLE advertisement interval [ms] */
+} Evt_sys_pcba_test_t;
+
 typedef Evt_sys_data_t Switch_state_t;
 
 // ==================
@@ -78,6 +98,7 @@ typedef struct {
 typedef union {
     Evt_adc_data_t adcData;
     Evt_sys_data_t sysEvtData;
+    Evt_sys_pcba_test_t pcbaTestTrim;
 } Main_evt_t;
 
 /*! BLE task generic event type */

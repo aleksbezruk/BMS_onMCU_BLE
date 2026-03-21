@@ -16,6 +16,7 @@
 #include "hal_gpio.h"
 #include "hal_time.h"
 #include "hal_nvm.h"
+#include "hal_eeprom.h"
 
 // BMS Application includes
 #include "qspyHelper.h"
@@ -47,6 +48,7 @@ static void mainTask_(OSAL_arg_t arg);
 static void parseQueueItem_(Main_queue_data_t* queueItem);
 static void handleAdcEvt_(Evt_adc_data_t* evt);
 static void handleSystemEvt_(Evt_sys_data_t* evt);
+static void handlePcbaTestTrimEvt_(Evt_sys_pcba_test_t* evt);
 
 static void MAIN_SM_handleSysEvt(Evt_sys_data_t* evt);
 static void MAIN_SM_print_onStateChange(void);
@@ -332,7 +334,7 @@ static void mainTask_(OSAL_arg_t arg)
             OSAL_QUEUE_TIMEOUT_NEVER, // wait forever
             status
         );
-        if (status != OSAL_SUCCESS) {
+        if (status == OSAL_FAILURE) {
             HAL_ASSERT(0, __FILE__, __LINE__);
         }
 
@@ -381,6 +383,10 @@ static void parseQueueItem_(Main_queue_data_t* queueItem)
 
         case EVT_SYSTEM:
             handleSystemEvt_(&queueItem->evtData.sysEvtData);
+            break;
+
+        case EVT_PCBA_TEST_TRIM:
+            handlePcbaTestTrimEvt_(&queueItem->evtData.pcbaTestTrim);
             break;
         
         default:
@@ -436,6 +442,62 @@ static void handleSystemEvt_(Evt_sys_data_t* evt)
     btEvt.sysData.swStates = swState_;
     BLE_post_evt(&btEvt, EVT_SYSTEM);
 #endif // !BMS_DISABLE_BLE
+}
+
+static void handlePcbaTestTrimEvt_(Evt_sys_pcba_test_t* evt)
+{
+    QS_BEGIN_ID(MAIN, 0 /*prio/ID for local Filters*/)
+        QS_STR("PCBA test/trim evt: ");
+        QS_U8(0, evt->mode);
+        QS_U8(0, evt->adcError);
+        QS_U32(0, evt->bank1ConvRatio);
+        QS_U32(0, evt->bank2ConvRatio);
+        QS_U32(0, evt->bank3ConvRatio);
+        QS_U32(0, evt->bank4ConvRatio);
+        QS_U8(0, evt->adcInterval);
+        QS_U16(0, evt->advInterval);
+    QS_END()
+
+    switch (evt->mode)
+    {
+        case PCBA_TRIM_CMD:
+        {
+            // save params into EEPROM
+            Trim_data_t trimData;
+            trimData.adcError = evt->adcError;
+            trimData.adcInterval = evt->adcInterval;
+            trimData.advInterval = evt->advInterval;
+            trimData.bank1ConvRatio = evt->bank1ConvRatio;
+            trimData.bank2ConvRatio = evt->bank2ConvRatio;
+            trimData.bank3ConvRatio = evt->bank3ConvRatio;
+            trimData.bank4ConvRatio = evt->bank4ConvRatio;
+            HAL_EEPROM_status eepromStatus = HAL_EEPROM_putData(HAL_EEPROM_TAG_PCBA_TRIM, 
+                                                                sizeof(Trim_data_t), (uint8_t *) &trimData);
+            if (eepromStatus == HAL_EEPROM_OK) {
+                QS_BEGIN_ID(ADC_RCD, 0 /*prio/ID for local Filters*/)
+                    QS_STR("Trim saved in EEPROM successfully");
+                QS_END()
+            } else {
+                HAL_ASSERT(0, __FILE__, __LINE__);
+            }
+            
+            // todo: Notify BLE task
+            break;
+        }
+
+        case PCBA_REBOOT_CMD:
+        {
+            QS_FLUSH();
+            NVIC_SystemReset();
+            break;
+        }
+        
+        default:
+        {
+            HAL_ASSERT(0, __FILE__, __LINE__);
+            break;
+        }
+    }
 }
 
 /**

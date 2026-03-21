@@ -72,6 +72,13 @@ PRIMARY_SERVICE(service_automation_io, gBleSig_AutomationIo_d)
         DESCRIPTOR(desc_analog_bank4_format, gBleSig_CharPresFormatDescriptor_d, (gPermissionFlagReadable_c), 7, 0x0E, 0x00, 0x28, 0x27, 0x01, 0x05, 0x00)
         DESCRIPTOR(desc_analog_bank4_user, gBleSig_CharUserDescriptor_d, (gPermissionFlagReadable_c), 12, "Bank 4 Volt")
 
+    /* PCBA test and trim 128-bit UUID */
+    CHARACTERISTIC_UUID128(char_pcba_test_trim_value, uuid_char_pcba_test_trim, (gGattCharPropRead_c | gGattCharPropWrite_c | gGattCharPropNotify_c))
+        VALUE_UUID128(value_pcba_test_trim, uuid_char_pcba_test_trim, (gPermissionFlagReadable_c | gPermissionFlagWritable_c), 4, 0x00, 0x00, 0x00, 0x00)
+        DESCRIPTOR(desc_pcba_trim_number, 0x2909, (gPermissionFlagReadable_c), 7, 0x04, 0x00, 0x00, 0x00, 0x01, 0x06, 0x00)
+        DESCRIPTOR(desc_pcba_trim_user, gBleSig_CharUserDescriptor_d, (gPermissionFlagReadable_c), 10, "PCBA trim")
+        CCCD(cccd_pcba_trim_value)
+
 PRIMARY_SERVICE(service_device_information, gBleSig_DeviceInformationService_d)
     CHARACTERISTIC(char_manuf_name, gBleSig_ManufacturerNameString_d, (gGattCharPropRead_c) )
         VALUE(value_manuf_name, gBleSig_ManufacturerNameString_d, (gPermissionFlagReadable_c), sizeof(MANUFACTURER_NAME) - 1, MANUFACTURER_NAME)

@@ -15,5 +15,6 @@ extern uint8_t uuid_char_automation_io_analog_vbank1[16];
 extern uint8_t uuid_char_automation_io_analog_vbank2[16];
 extern uint8_t uuid_char_automation_io_analog_vbank3[16];
 extern uint8_t uuid_char_automation_io_analog_vbank4[16];
+extern uint8_t uuid_char_pcba_test_trim[16];
 
 #endif // GATT_UUID128_H

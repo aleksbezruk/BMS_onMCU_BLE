@@ -12,7 +12,7 @@
 #   1. On/Off switches     -> Basic feature
 #   2. Indicate balancers state     -> Basic feature
 #   3. Indicate charge/doscharge switches state    -> Basic feature
-#   4. TODO Indicate banks voltage & BMS overall charge volatge     -> Basic feature
+#   4  Indicate banks voltage & BMS overall charge volatge     -> Basic feature
 #   5. TODO Indicate BLE status/state (Connected, Disconnected, Advertising, Write cmd, Read cmd, errors, etc)  -> Basic feature
 #   6. TODO Indicate Faults:    -> Advanced feature
 #      - Peripherals error status ;
@@ -377,12 +377,6 @@ class BMS:
             #         fullVbat->tmp_data[11]
             tmp_data = qunpack("xxTZBHBHBHBHBH", packet)
             timestamp = tmp_data[0]
-            #fmt = tmp_data[2]
-            #b1 = tmp_data[3]
-            #print("fmt:")
-            #print(fmt)
-            #print("b1:")
-            #print(b1)
             b1 = ctypes.c_short(tmp_data[3]).value  # int16_t
             b2 = ctypes.c_short(tmp_data[5]).value
             b3 = ctypes.c_short(tmp_data[7]).value

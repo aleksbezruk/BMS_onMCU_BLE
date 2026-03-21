@@ -314,6 +314,29 @@ void QS_onCommand(uint8_t cmdId,
             break;
         }
 #endif  // BMS_DISABLE_BLE
+
+        case QS_CMD_PCBA_TRIM:
+        {
+            /**
+             * 1. param1: mode(U8), adcError(U8), advInterval(U16)
+             * 2. param2: bank1ConvRatio(U32)
+             * 3. param3: bank2ConvRatio(U32)
+             * 4. For bank3ConvRatio, bank4ConvRatio 
+             *    and adcInterval use default value
+             */
+            Main_evt_t evt;
+            evt.pcbaTestTrim.mode = param1 & 0xFF;
+            evt.pcbaTestTrim.adcError = (param1 >> 8) & 0xFF;
+            evt.pcbaTestTrim.advInterval = (param1 >> 16) & 0xFFFF;
+            evt.pcbaTestTrim.bank1ConvRatio = param2;
+            evt.pcbaTestTrim.bank2ConvRatio = param3;
+            evt.pcbaTestTrim.bank3ConvRatio = 7153843;
+            evt.pcbaTestTrim.bank4ConvRatio = 7153843;
+            evt.pcbaTestTrim.adcInterval = 25;
+            MAIN_post_evt(&evt, EVT_PCBA_TEST_TRIM);
+            break;
+        }
+
         default:
         {
             break;  // just igmore if cmd isn't defined
