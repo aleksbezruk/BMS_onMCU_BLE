@@ -480,8 +480,11 @@ static void handlePcbaTestTrimEvt_(Evt_sys_pcba_test_t* evt)
             } else {
                 HAL_ASSERT(0, __FILE__, __LINE__);
             }
-            
-            // todo: Notify BLE task
+
+#if !defined(BMS_DISABLE_BLE)
+            /** Notify BLE task about trim values */
+            BLE_post_evt((Ble_evt_t *) evt, EVT_PCBA_TEST_TRIM);
+#endif // !BMS_DISABLE_BLE
             break;
         }
 

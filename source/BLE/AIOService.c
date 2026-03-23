@@ -21,6 +21,7 @@
 // Private data
 // =======================
 static volatile bool clientSubscribed;
+static volatile bool clientTrimSubscribed;
 static volatile uint8_t state;  // like app buffer to hold value while sending over BLE 
 
 // =======================
@@ -119,6 +120,23 @@ void AIOS_sendNotification(uint8_t swState, uint16_t conn_id)
     }
 }
 
+void AIOS_sendNotifTrimValue(Evt_sys_pcba_test_t *trim, uint16_t conn_id)
+{
+    (void) trim;    // UNUSED
+
+    if (clientTrimSubscribed) {
+        /** Send notification to Client */
+        HAL_BLE_attribute_t attr;
+        attr.attribute = HAL_BLE_ATTR_AIOS_TRIM_VALUE;
+        if (HAL_BLE_send_notif(&attr, conn_id) != HAL_BLE_SUCCESS) {
+            QS_BEGIN_ID(BLE_AIOS, 0 /*prio/ID for local Filters*/)
+                QS_STR("Send Trim value notif error");
+            QS_END()
+            HAL_ASSERT(0, __FILE__, __LINE__);
+        }
+    }
+}
+
 /**
  * @brief Handle CCCD written event.
  * 
@@ -147,6 +165,27 @@ void AIOS_handleCccdWritten(uint16_t cccd_val)
     }
 }
 
+void AIOS_handleTrimCccdWritten(uint16_t cccd_val)
+{
+    if (cccd_val == 0x0001U) {
+        QS_BEGIN_ID(BLE_AIOS, 0 /*prio/ID for local Filters*/)
+            QS_STR("Client subscribed to trim notif");
+        QS_END()
+        clientTrimSubscribed = true;
+    } else if (cccd_val == 0x0000U) {
+        QS_BEGIN_ID(BLE_AIOS, 0 /*prio/ID for local Filters*/)
+            QS_STR("Client unsubscribed from trim notif");
+        QS_END()
+        clientTrimSubscribed = false;
+    } else {
+        // Just ignore
+        QS_BEGIN_ID(BLE_AIOS, 0 /*prio/ID for local Filters*/)
+            QS_STR("Unexpected Trim CCCD val:");
+            QS_U16(0, cccd_val);
+        QS_END()
+    }
+}
+
 /**
  * @brief Handle user request to set switches' written event.
  * 
@@ -165,6 +204,11 @@ void AIOS_handleSetSwicthWritten(uint8_t swState_val)
     Evt_sys_data_t evt = {0};
     evt.swStates = swStates;
     MAIN_post_evt((Main_evt_t*) &evt, EVT_SYSTEM);
+}
+
+void AIOS_handleSetTrim(Evt_sys_pcba_test_t *trim)
+{
+    MAIN_post_evt((Main_evt_t*) trim, EVT_PCBA_TEST_TRIM);
 }
 
 /* [] END OF FILE */

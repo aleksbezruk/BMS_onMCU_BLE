@@ -72,6 +72,8 @@ typedef struct {
     uint16_t aiosBank2ValueHandle;          /*< AIOS Bank 2 characteristic value handle */
     uint16_t aiosBank3ValueHandle;          /*< AIOS Bank 3 characteristic value handle */
     uint16_t aiosBank4ValueHandle;          /*< AIOS Bank 4 characteristic value handle */
+    uint16_t pcbaTrimValueHandle;           /*< PCBA trim Value characteristic value handle */
+    uint16_t pcbaTrimCccdHandle;            /*< PCBA trim Value CCCD handle */
     bool     handlesDiscovered;             /*< Flag indicating if handles were successfully discovered */
 } gatt_handles_t;
 
@@ -757,6 +759,7 @@ static void _HAL_BLE_DiscoverGattHandles(void)
     bleUuid_t aiosBank2CharUuid;
     bleUuid_t aiosBank3CharUuid;
     bleUuid_t aiosBank4CharUuid;
+    bleUuid_t pcbaTrimCharUuid;
 
     // Reset handles
     g_gattHandles.batteryLevelValueHandle = 0x0000;
@@ -768,6 +771,8 @@ static void _HAL_BLE_DiscoverGattHandles(void)
     g_gattHandles.aiosBank2ValueHandle = 0x0000;
     g_gattHandles.aiosBank3ValueHandle = 0x0000;
     g_gattHandles.aiosBank4ValueHandle = 0x0000;
+    g_gattHandles.pcbaTrimValueHandle = 0x0000;
+    g_gattHandles.pcbaTrimCccdHandle = 0x0000;
     g_gattHandles.handlesDiscovered = false;
 
     // Use symbolic names from gatt_db.h for the service handles (NXP approach)
@@ -884,6 +889,57 @@ static void _HAL_BLE_DiscoverGattHandles(void)
         HAL_ASSERT(0, __FILE__, __LINE__);
     }
 
+    // Set up PCBA trim Characteristic UUID (128-bit PSOC63 compatible)
+    // PSOC63 UUID: 37AF9AE2-211D-4436-9D26-3A9ED02EFEEB
+    uint8_t pcbaTrimUuid128[] = {0xEB, 0xFE, 0x2E, 0xD0, 0x9E, 0x3A, 0x26, 0x9D, 0x36, 0x44, 0x1D, 0x21, 0xE2, 0x9A, 0xAF, 0x37};
+    FLib_MemCpy(pcbaTrimCharUuid.uuid128, pcbaTrimUuid128, 16);
+    
+    // Find PCBA trim characteristic value handle using NXP API with 128-bit UUID
+    result = GattDb_FindCharValueHandleInService(
+        g_gattHandles.aiosServiceHandle,
+        gBleUuidType128_c,
+        &pcbaTrimCharUuid,
+        &g_gattHandles.pcbaTrimValueHandle
+    );
+    if (result != gBleSuccess_c) {
+        QS_BEGIN_ID(BLE_HAL, 0)
+            QS_STR("Failed to find PCBA trim characteristic handle: ");
+            QS_U32(0, result);
+        QS_END()
+        return;
+    }
+
+#if (BLE_EXTENDED_LOGS == 1)
+    QS_BEGIN_ID(BLE_HAL, 0)
+        QS_STR("PCBA trim value handle found: 0x");
+        QS_U16(0, g_gattHandles.pcbaTrimValueHandle);
+    QS_END()
+
+#endif // (BLE_EXTENDED_LOGS == 1)
+
+    // Find PCBA trim CCCD handle using the proper NXP API
+    result = GattDb_FindCccdHandleForCharValueHandle(
+        g_gattHandles.pcbaTrimValueHandle,
+        &g_gattHandles.pcbaTrimCccdHandle
+    );
+    
+#if (BLE_EXTENDED_LOGS == 1)
+    QS_BEGIN_ID(BLE_HAL, 0)
+        QS_STR("PCBA trim CCCD handle result: ");
+        QS_U32(0, result);
+        QS_STR(" handle: 0x");
+        QS_U16(0, g_gattHandles.pcbaTrimCccdHandle);
+    QS_END()
+#endif // (BLE_EXTENDED_LOGS == 1)
+
+    if (result != gBleSuccess_c) {
+        QS_BEGIN_ID(BLE_HAL, 0)
+            QS_STR("PCBA trim CCCD discovery failed or returned invalid handle");
+        QS_END()
+        QS_FLUSH();
+        HAL_ASSERT(0, __FILE__, __LINE__);
+    }
+
     // Discover aiosFullBatteryValueHandle
     uint8_t aiosFullBatteryUuid128[] = {0xBA, 0x2B, 0x12, 0x99, 0x70, 0x41, 0x3E, 0x96, 0x26, 0x49, 0x44, 0x52, 0xDB, 0xD8, 0x0A, 0x17};
     FLib_MemCpy(aiosFullBatteryCharUuid.uuid128, aiosFullBatteryUuid128, 16);
@@ -974,11 +1030,15 @@ static void _HAL_BLE_InitializeGattDatabase(void)
         HAL_ASSERT(0, __FILE__, __LINE__); // Critical failure
     }
 
-    // Register char_digital_io_value characteristic for write notifications using discovered handle
-    result = GattServer_RegisterHandlesForWriteNotifications(1, &g_gattHandles.digitalIoValueHandle);
+    // Register char_digital_io_value and char_pcba_test_trim_value 
+    // characteristics for write notifications using discovered handle
+    uint16_t aAttributeHandles[2];
+    aAttributeHandles[0] = g_gattHandles.digitalIoValueHandle;
+    aAttributeHandles[1] = g_gattHandles.pcbaTrimValueHandle;
+    result = GattServer_RegisterHandlesForWriteNotifications(2, aAttributeHandles);
     if (result != gBleSuccess_c) {
         QS_BEGIN_ID(BLE_HAL, 0)
-            QS_STR("Failed to register digital IO value handle for write notifications: ");
+            QS_STR("Failed to register handles for write notifications: ");
             QS_U32(0, result);
         QS_END()
         QS_FLUSH();
@@ -1100,6 +1160,12 @@ HAL_BLE_status_t HAL_BLE_send_notif(HAL_BLE_attribute_t *attr, uint16_t conn_id)
         case HAL_BLE_ATTR_AIOS_DIGITAL_IO_VALUE:
         {
             handle = g_gattHandles.digitalIoValueHandle;
+            break;
+        }
+
+        case HAL_BLE_ATTR_AIOS_TRIM_VALUE:
+        {
+            handle = g_gattHandles.pcbaTrimValueHandle;
             break;
         }
 
@@ -1546,6 +1612,82 @@ static void _HAL_BLE_GattServerCallback(deviceId_t deviceId, gattServerEvent_t* 
                 bleResult_t statusResult = GattServer_SendAttributeWrittenStatus(deviceId, handle, gAttErrCodeNoError_c);
                 if (statusResult != gBleSuccess_c) {
                     QS_BEGIN_ID(BLE_HAL, 0)
+                        QS_STR("Failed to send Digital IO attribute written status: ");
+                        QS_U32(0, statusResult);
+                    QS_END()
+                }
+            } else if (handle == g_gattHandles.pcbaTrimValueHandle) {
+                // Write the attribute value to the database
+                if ((valueLength > 0) && (pValue != NULL)) {
+                    // Store received data directly
+                    uint8_t dbData[21] = {0};
+                    uint16_t storeLength = (valueLength > 21) ? 21 : valueLength;
+                    for (uint16_t i = 0; i < storeLength; i++) {
+                        dbData[i] = pValue[i];
+                    }
+
+                    // Write to database 
+                    bleResult_t writeResult = GattDb_WriteAttribute(handle, 21, dbData);
+                    if (writeResult != gBleSuccess_c) {
+                        QS_BEGIN_ID(BLE_HAL, 0)
+                            QS_STR("Failed to write PCBA trim value to database: ");
+                            QS_U32(0, writeResult);
+                        QS_END()
+
+                        // Send error response
+                        GattServer_SendAttributeWrittenStatus(deviceId, handle, gAttErrCodeWriteNotPermitted_c);
+                        break;
+                    } else {
+                        uint32_t b1ConvRatio = ((uint32_t) dbData[5] << 24) | \
+                                               ((uint32_t) dbData[4] << 16) | \
+                                               ((uint32_t) dbData[3] << 8) | \
+                                               (uint32_t) dbData[2];
+                        uint32_t b2ConvRatio = ((uint32_t) dbData[9] << 24) | \
+                                               ((uint32_t) dbData[8] << 16) | \
+                                               ((uint32_t) dbData[7] << 8) | \
+                                               (uint32_t) dbData[6];
+                        uint32_t b3ConvRatio = ((uint32_t) dbData[13] << 24) | \
+                                               ((uint32_t) dbData[12] << 16) | \
+                                               ((uint32_t) dbData[11] << 8) | \
+                                               (uint32_t) dbData[10];
+                        uint32_t b4ConvRatio = ((uint32_t) dbData[17] << 24) | \
+                                               ((uint32_t) dbData[16] << 16) | \
+                                               ((uint32_t) dbData[15] << 8) | \
+                                               (uint32_t) dbData[14];
+                        uint16_t advInterval = ((uint16_t) dbData[20] << 8) | \
+                                               (uint16_t) dbData[19];
+#if BLE_EXTENDED_LOGS == 1
+                        QS_BEGIN_ID(BLE_HAL, 0)
+                            QS_STR("Writen PCBA trim value to database.");
+                            QS_U8(0, dbData[0]);    // mode
+                            QS_U8(0, dbData[1]);    // adcError
+                            QS_U32(0, b1ConvRatio);
+                            QS_U32(0, b2ConvRatio);
+                            QS_U32(0, b3ConvRatio);
+                            QS_U32(0, b4ConvRatio);
+                            QS_U8(0, dbData[18]);   // adcInterval
+                            QS_U16(0, advInterval);
+                        QS_END()
+#endif // BLE_EXTENDED_LOGS
+
+                        // Database write successful - notify AIOS
+                        Evt_sys_pcba_test_t pcbaTrim;
+                        pcbaTrim.mode = dbData[0];
+                        pcbaTrim.adcError = dbData[1];
+                        pcbaTrim.bank1ConvRatio = b1ConvRatio;
+                        pcbaTrim.bank1ConvRatio = b2ConvRatio;
+                        pcbaTrim.bank3ConvRatio = b3ConvRatio;
+                        pcbaTrim.bank4ConvRatio = b4ConvRatio;
+                        pcbaTrim.adcInterval = dbData[18];
+                        pcbaTrim.advInterval = advInterval;
+                        AIOS_handleSetTrim(&pcbaTrim);
+                    }
+                }
+
+                // Send success response
+                bleResult_t statusResult = GattServer_SendAttributeWrittenStatus(deviceId, handle, gAttErrCodeNoError_c);
+                if (statusResult != gBleSuccess_c) {
+                    QS_BEGIN_ID(BLE_HAL, 0)
                         QS_STR("Failed to send attribute written status: ");
                         QS_U32(0, statusResult);
                     QS_END()
@@ -1646,8 +1788,29 @@ static void _HAL_BLE_GattServerCallback(deviceId_t deviceId, gattServerEvent_t* 
 
                 // Notify AIOS
                 AIOS_handleCccdWritten(cccdValue);
-            } 
-            else {
+            } else if (handle == g_gattHandles.pcbaTrimCccdHandle) {
+                // PCBA trim Value CCCD was written
+                bool isTrimSubscribed = (cccdValue == gCccdNotification_c);
+
+                // Save CCCD value to the device database (required by NXP stack)
+                bleResult_t saveResult = Gap_SaveCccd(deviceId, handle, cccdValue);
+                if (saveResult != gBleSuccess_c) {
+                    QS_BEGIN_ID(BLE_HAL, 0)
+                        QS_STR("Failed to save PCBA trim CCCD: ");
+                        QS_U32(0, saveResult);
+                    QS_END()
+                    HAL_ASSERT(0, __FILE__, __LINE__); // Critical failure
+                }
+
+                QS_BEGIN_ID(BLE_HAL, 0)
+                    QS_STR("PCBA trim Value CCCD updated: notifications ");
+                    QS_STR(isTrimSubscribed ? "ENABLED" : "DISABLED");
+                    QS_STR(" (saved to device DB)");
+                QS_END()
+
+                // Notify AIOS
+                AIOS_handleTrimCccdWritten(cccdValue);
+            } else {
                 // Unknown CCCD handle - show all known handles for comparison
                 QS_BEGIN_ID(BLE_HAL, 0)
                     QS_STR("Unknown CCCD handle: 0x");

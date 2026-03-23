@@ -32,6 +32,9 @@ void AIOS_updateSwitchState(uint8_t swStates);
 void AIOS_sendNotification(uint8_t swState, uint16_t conn_id);
 void AIOS_handleCccdWritten(uint16_t cccd_val);
 void AIOS_handleSetSwicthWritten(uint8_t swState_val);
+void AIOS_handleSetTrim(Evt_sys_pcba_test_t *trim);
+void AIOS_sendNotifTrimValue(Evt_sys_pcba_test_t *trim, uint16_t conn_id);
+void AIOS_handleTrimCccdWritten(uint16_t cccd_val);
 
 #endif //BLE_AIOS_MODULE_H
 

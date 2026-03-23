@@ -106,6 +106,7 @@ typedef union {
     Evt_ble_adv_param_t advParam;
     Evt_ble_vbat_t vbat;
     Evt_sys_data_t sysData;
+    Evt_sys_pcba_test_t pcbaTrim;
 } Ble_evt_t;
 
 /*! Main task queue's item data structure */

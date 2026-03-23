@@ -324,6 +324,15 @@ static void parseQueueItem_(Ble_queue_data_t* queueItem)
             break;
         }
 
+        case EVT_PCBA_TEST_TRIM:
+        {
+            /** Is client connected ? */
+            if (ble_adv_conn_state == BLE_ADV_OFF_CONN_ON) {
+                AIOS_sendNotifTrimValue(&queueItem->evtData.pcbaTrim, client_id);
+            }
+            break;
+        }
+
         default:
         {
             QS_BEGIN_ID(BLE_TRACE, 0 /*prio/ID for local Filters*/)

@@ -74,7 +74,7 @@ PRIMARY_SERVICE(service_automation_io, gBleSig_AutomationIo_d)
 
     /* PCBA test and trim 128-bit UUID */
     CHARACTERISTIC_UUID128(char_pcba_test_trim_value, uuid_char_pcba_test_trim, (gGattCharPropRead_c | gGattCharPropWrite_c | gGattCharPropNotify_c))
-        VALUE_UUID128(value_pcba_test_trim, uuid_char_pcba_test_trim, (gPermissionFlagReadable_c | gPermissionFlagWritable_c), 4, 0x00, 0x00, 0x00, 0x00)
+        VALUE_UUID128(value_pcba_test_trim, uuid_char_pcba_test_trim, (gPermissionFlagReadable_c | gPermissionFlagWritable_c), 21, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00)
         DESCRIPTOR(desc_pcba_trim_number, 0x2909, (gPermissionFlagReadable_c), 7, 0x04, 0x00, 0x00, 0x00, 0x01, 0x06, 0x00)
         DESCRIPTOR(desc_pcba_trim_user, gBleSig_CharUserDescriptor_d, (gPermissionFlagReadable_c), 10, "PCBA trim")
         CCCD(cccd_pcba_trim_value)
