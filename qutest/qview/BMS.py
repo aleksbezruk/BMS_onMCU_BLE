@@ -91,6 +91,7 @@ class BMS:
         self.init_charge_state_and_switch_gui()
         self.init_full_vbat_gui()
         self.init_bms_state_gui()
+        self.init_trim_pcba_gui()
  
     # on_reset() callback
     def on_reset(self):
@@ -323,6 +324,96 @@ class BMS:
     # Init GUI for BMS state indication
     def init_bms_state_gui(self):
         self.bms_state_obj = QView.canvas.create_text(400, 20, text="BMS state: Idle", fill="red", font=('freemono bold',16))
+
+    def init_trim_pcba_gui(self):
+        QView.canvas.create_text(400, 300, text="PCBA trim config", fill="blue", font=('freemono bold',16))
+        ### Trim mode
+        self.trim_mode = StringVar()    # variable to store the value
+        self.trim_mode_entry = Entry(QView.canvas, textvariable=self.trim_mode, width=10)
+        self.trim_mode_entry.place(x=500, y=315)
+        self.trim_mode_label = Label(QView.canvas, text="Trim mode: 0 - trim, 1 - reboot")
+        self.trim_mode_label.place(x=300, y=315)
+        ### ADC error
+        self.adc_error = StringVar()    # variable to store the value
+        self.adc_error_entry = Entry(QView.canvas, textvariable=self.adc_error, width=10)
+        self.adc_error_entry.place(x=500, y=345)
+        self.adc_error_label = Label(QView.canvas, text="ADC error in %")
+        self.adc_error_label.place(x=300, y=345)
+        ### Bank1 convetion ratio
+        self.bank1_conv_ratio = StringVar()    # variable to store the value
+        self.bank1_conv_ratio_entry = Entry(QView.canvas, textvariable=self.bank1_conv_ratio, width=10)
+        self.bank1_conv_ratio_entry.place(x=500, y=375)
+        self.bank1_conv_ratio_label = Label(QView.canvas, text="Bank1 convRatio [x10^6]")
+        self.bank1_conv_ratio_label.place(x=300, y=375)
+        ### Bank2 convetion ratio
+        self.bank2_conv_ratio = StringVar()    # variable to store the value
+        self.bank2_conv_ratio_entry = Entry(QView.canvas, textvariable=self.bank2_conv_ratio, width=10)
+        self.bank2_conv_ratio_entry.place(x=500, y=405)
+        self.bank2_conv_ratio_label = Label(QView.canvas, text="Bank2 convRatio [x10^6]")
+        self.bank2_conv_ratio_label.place(x=300, y=405)
+        ### Bank3 convetion ratio
+        self.bank3_conv_ratio = StringVar()    # variable to store the value
+        self.bank3_conv_ratio_entry = Entry(QView.canvas, textvariable=self.bank3_conv_ratio, width=10)
+        self.bank3_conv_ratio_entry.place(x=500, y=435)
+        self.bank3_conv_ratio_label = Label(QView.canvas, text="Bank3 convRatio [x10^6]")
+        self.bank3_conv_ratio_label.place(x=300, y=435)
+        ### Bank4 convetion ratio
+        self.bank4_conv_ratio = StringVar()    # variable to store the value
+        self.bank4_conv_ratio_entry = Entry(QView.canvas, textvariable=self.bank4_conv_ratio, width=10)
+        self.bank4_conv_ratio_entry.place(x=500, y=465)
+        self.bank4_conv_ratio_label = Label(QView.canvas, text="Bank4 convRatio [x10^6]")
+        self.bank4_conv_ratio_label.place(x=300, y=465)
+        ### ADC interval
+        self.adc_interval = StringVar()    # variable to store the value
+        self.adc_interval_entry = Entry(QView.canvas, textvariable=self.adc_interval, width=10)
+        self.adc_interval_entry.place(x=500, y=495)
+        self.adc_interval_label = Label(QView.canvas, text="ADC interval in seconds")
+        self.adc_interval_label.place(x=300, y=495)
+        ### BLE Advertising interval
+        self.adv_interval = StringVar()    # variable to store the value
+        self.adv_interval_entry = Entry(QView.canvas, textvariable=self.adv_interval, width=10)
+        self.adv_interval_entry.place(x=500, y=525)
+        self.adv_interval_label = Label(QView.canvas, text="Advertinbg interval in ms")
+        self.adv_interval_label.place(x=300, y=525)
+        ### Apply button
+        self.apply_btn = Button(QView.canvas,
+                                text="Apply trim",
+                                command=self.apply_trim_mode)
+        self.apply_btn.place(x=400, y=550)
+
+    def apply_trim_mode(self):
+        mode = int(self.trim_mode.get())
+        adc_error = int(self.adc_error.get())
+        b1 = int(self.bank1_conv_ratio.get())
+        b2 = int(self.bank2_conv_ratio.get())
+        b3 = int(self.bank3_conv_ratio.get())
+        b4 = int(self.bank4_conv_ratio.get())
+        adcInt = int(self.adc_interval.get())
+        advInt = int(self.adv_interval.get())
+        trimDataPacked = []
+        # uint8
+        trimDataPacked.append(mode & 0xFF)
+        trimDataPacked.append(adc_error & 0xFF)
+        # uint32 (b1..b4)
+        for v in [b1, b2, b3, b4]:
+            trimDataPacked.extend([
+                (v >> 0)  & 0xFF,
+                (v >> 8)  & 0xFF,
+                (v >> 16) & 0xFF,
+                (v >> 24) & 0xFF,
+            ])
+        # uint8
+        trimDataPacked.append(adcInt & 0xFF)
+        # uint16
+        trimDataPacked.extend([
+            advInt & 0xFF,
+            (advInt >> 8) & 0xFF
+        ])
+        print("Apply trim:", " ".join(f"{b:02X}" for b in trimDataPacked))
+        param1 = (mode & 0xFF) | ((adc_error<<8) & 0xFFFF) | ((advInt<<16) & 0xFFFFFFFF) 
+        param2 = b1
+        param3 = b2
+        command(9, param1, param2, param3)
 
     # intercept the QS_USER_00 application-specific packet(s) from Main task
     # this packet has the following structure:
