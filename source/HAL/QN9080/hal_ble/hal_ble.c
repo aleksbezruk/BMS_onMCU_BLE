@@ -1675,7 +1675,7 @@ static void _HAL_BLE_GattServerCallback(deviceId_t deviceId, gattServerEvent_t* 
                         pcbaTrim.mode = dbData[0];
                         pcbaTrim.adcError = dbData[1];
                         pcbaTrim.bank1ConvRatio = b1ConvRatio;
-                        pcbaTrim.bank1ConvRatio = b2ConvRatio;
+                        pcbaTrim.bank2ConvRatio = b2ConvRatio;
                         pcbaTrim.bank3ConvRatio = b3ConvRatio;
                         pcbaTrim.bank4ConvRatio = b4ConvRatio;
                         pcbaTrim.adcInterval = dbData[18];
