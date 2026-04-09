@@ -995,6 +995,9 @@ static void _HAL_BLE_DiscoverGattHandles(void)
         &g_gattHandles.aiosBank4ValueHandle
     );
 
+    // read calibration/trim value from EEPROM and update GATT DB
+    AIOS_updateTrim();
+
     g_gattHandles.handlesDiscovered = true;
 }
 
@@ -1122,6 +1125,14 @@ void HAL_BLE_updateAttribute(HAL_BLE_attribute_t *attr)
             uint8_t digitalIoValue[4] = { 0 };
             digitalIoValue[0] = *(uint8_t *)attr->p_value;
             bleResult_t writeResult = GattDb_WriteAttribute(g_gattHandles.digitalIoValueHandle, sizeof(digitalIoValue), (uint8_t *)&digitalIoValue);
+            HAL_ASSERT((writeResult == gBleSuccess_c), __FILE__, __LINE__);
+            break;
+        }
+
+        case HAL_BLE_ATTR_AIOS_TRIM_VALUE:
+        {
+            // Update AIOS Bank 4 characteristic
+            bleResult_t writeResult = GattDb_WriteAttribute(g_gattHandles.pcbaTrimValueHandle, attr->length, (uint8_t *)attr->p_value);
             HAL_ASSERT((writeResult == gBleSuccess_c), __FILE__, __LINE__);
             break;
         }
@@ -1724,6 +1735,8 @@ static void _HAL_BLE_GattServerCallback(deviceId_t deviceId, gattServerEvent_t* 
               * and update the database value
               * @note Handling for the event isn't needed for now.
               */
+            // uint16_t handle = pServerEvent->eventData.attributeReadEvent.handle;
+
             break;
         }
         

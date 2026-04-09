@@ -16,6 +16,7 @@
 // HAL
 #include "hal.h"
 #include "hal_ble.h"
+#include "hal_eeprom.h"
 
 // =======================
 // Private data
@@ -89,6 +90,44 @@ void AIOS_updateSwitchState(uint8_t swStates)
     attr.attribute = HAL_BLE_ATTR_AIOS_DIGITAL_IO_VALUE;
     attr.length = sizeof(swStates);
     attr.p_value = (uint8_t*)&swStates;
+    HAL_BLE_updateAttribute(&attr);
+}
+
+void AIOS_updateTrim(void)
+{
+    // Read EEPROM
+    Trim_data_t trimData;
+    uint16_t trimDataLen = sizeof(Trim_data_t);
+    HAL_EEPROM_status eepromStatus = HAL_EEPROM_getData(HAL_EEPROM_TAG_PCBA_TRIM, &trimDataLen, (uint8_t *) &trimData);
+    if (eepromStatus == HAL_EEPROM_OK) {
+        QS_BEGIN_ID(BLE_AIOS, 0 /*prio/ ID for local Filters*/)
+            QS_STR("Raed trim from EEPROM:");
+            QS_U8(0, trimData.adcError);
+            QS_U8(0, trimData.adcInterval);
+            QS_U32(0, trimData.bank1ConvRatio);
+            QS_U32(0, trimData.bank2ConvRatio);
+            QS_U32(0, trimData.bank3ConvRatio);
+            QS_U32(0, trimData.bank4ConvRatio);  
+        QS_END()
+    } else {
+        HAL_ASSERT(0, __FILE__, __LINE__);
+    }
+
+    // Update GATT DB
+    HAL_BLE_attribute_t attr;
+    uint8_t trimBuf[21U];    // packed Trim_data_t
+    trimBuf[0] = 0U;
+    trimBuf[1] = trimData.adcError;
+    memcpy(&trimBuf[2], (uint8_t *) &trimData.bank1ConvRatio, sizeof(trimData.bank1ConvRatio));
+    memcpy(&trimBuf[6], (uint8_t *) &trimData.bank2ConvRatio, sizeof(trimData.bank2ConvRatio));
+    memcpy(&trimBuf[10], (uint8_t *) &trimData.bank3ConvRatio, sizeof(trimData.bank3ConvRatio));
+    memcpy(&trimBuf[14], (uint8_t *) &trimData.bank4ConvRatio, sizeof(trimData.bank4ConvRatio));
+    trimBuf[18] = trimData.adcInterval;
+    memcpy(&trimBuf[19], (uint8_t *) &trimData.advInterval, sizeof(trimData.advInterval));
+
+    attr.attribute = HAL_BLE_ATTR_AIOS_TRIM_VALUE;
+    attr.length = sizeof(trimBuf);
+    attr.p_value = trimBuf;
     HAL_BLE_updateAttribute(&attr);
 }
 
